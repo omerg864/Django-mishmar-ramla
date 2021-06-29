@@ -1,0 +1,600 @@
+{% extends "Schedule/base.html" %}
+{% load crispy_forms_filters %}
+{% load crispy_forms_tags %}
+<html dir = rtl lang="he">
+{% block content %}
+    {% if is_empty %}
+    <div>
+        <h3 style="align-items: center">אין סידור עדיין</h3>
+            </div>
+    {% else %}
+            <div>
+        <h3 style="align-items: center">סידור בין תאריך {{ days.day0|date:"d.m" }} לתאריך {{ days.day13|date:"d.m" }}</h3>
+            </div>
+    <div class="content-section row">
+        <div>
+<table class="responsive-table-input-matrix" style="align-items: center">
+		<thead>
+        <tr>
+			<th>תאריך</th>
+			<th>{{ days.day0|date:"d.m" }}</th>
+			<th>{{ days.day1|date:"d.m" }}</th>
+			<th>{{ days.day2|date:"d.m" }}</th>
+			<th>{{ days.day3|date:"d.m" }}</th>
+			<th>{{ days.day4|date:"d.m" }}</th>
+			<th>{{ days.day5|date:"d.m" }}</th>
+			<th>{{ days.day6|date:"d.m" }}</th>
+		</tr>
+		<tr>
+			<th></th>
+			<th>ראשון</th>
+			<th>שני</th>
+			<th>שלישי</th>
+			<th>רביעי</th>
+			<th>חמישי</th>
+			<th>שישי</th>
+			<th>שבת</th>
+		</tr>
+		</thead>
+		<tbody>
+
+		<tr style="align-content: end">
+			<td>6:30-14:30</td>
+        {% for vr in organization_input.z_630|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+		<tr>
+			<td>7:00-15:00<br/>סריקה</td>
+            {% for vr in organization_input.z_700_search|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+		<tr>
+		<td>7:00-15:00<br/>אחמ"ש</td>
+            {% for vr in organization_input.z_700_manager|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>7:20-15:20</td>
+            {% for vr in organization_input.z_720_1|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+		<tr>
+			<td>7:20-17:20<br/>משיכה</td>
+        {% for vr in organization_input.z_720_pull|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>7:20-15:20</td>
+            {% for vr in organization_input.z_720_2|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>7:20-15:20</td>
+            {% for vr in organization_input.z_720_3|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>14:00-22:00</td>
+            {% for vr in organization_input.z_1400|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>15:00-19:00</td>
+            {% for vr in organization_input.z_1500_1900|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>15:00-23:00</td>
+            {% for vr in organization_input.z_1500|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>לילה</td>
+            {% for vr in organization_input.z_2300|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>הערות</td>
+            {% for vr in organization_input.z_notes|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+		</tbody>
+	</table>
+            </div>
+        <div style="margin-right: 1em">
+        <table class="responsive-table-input-matrix" style="align-items: center">
+            <thead>
+        <tr>
+			<th>תאריך</th>
+			<th>{{ days.day7|date:"d.m" }}</th>
+			<th>{{ days.day8|date:"d.m" }}</th>
+			<th>{{ days.day9|date:"d.m" }}</th>
+			<th>{{ days.day10|date:"d.m" }}</th>
+			<th>{{ days.day11|date:"d.m" }}</th>
+			<th>{{ days.day12|date:"d.m" }}</th>
+			<th>{{ days.day13|date:"d.m" }}</th>
+		</tr>
+		<tr>
+			<th></th>
+			<th>ראשון</th>
+			<th>שני</th>
+			<th>שלישי</th>
+			<th>רביעי</th>
+			<th>חמישי</th>
+			<th>שישי</th>
+			<th>שבת</th>
+		</tr>
+		</thead>
+		<tbody>
+
+		<tr style="align-content: end">
+			<td>6:30-14:30</td>
+            {% for vr in organization_input.z_630|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+		<tr>
+			<td>7:00-15:00<br/>סריקה</td>
+            {% for vr in organization_input.z_700_search|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+		<tr>
+		<td>7:00-15:00<br/>אחמ"ש</td>
+            {% for vr in organization_input.z_700_manager|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>7:20-15:20</td>
+            {% for vr in organization_input.z_720_1|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+		<tr>
+			<td>7:20-17:20<br/>משיכה</td>
+            {% for vr in organization_input.z_720_pull|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>7:20-15:20</td>
+            {% for vr in organization_input.z_720_2|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>7:20-15:20</td>
+            {% for vr in organization_input.z_720_3|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>14:00-22:00</td>
+            {% for vr in organization_input.z_1400|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>15:00-19:00</td>
+            {% for vr in organization_input.z_1500_1900|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>15:00-23:00</td>
+            {% for vr in organization_input.z_1500|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>לילה</td>
+            {% for vr in organization_input.z_2300|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>הערות</td>
+            {% for vr in organization_input.z_notes|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+		</tbody>
+    </table>
+            </div>
+    </div>
+        {% if is_couple %}
+    <div>
+        <h3 style="align-items: center">סידור בין תאריך {{ days_before.day0|date:"d.m" }} לתאריך {{ days_before.day13|date:"d.m" }}</h3>
+            </div>
+    <div class="content-section row">
+        <div>
+<table class="responsive-table-input-matrix" style="align-items: center">
+		<thead>
+        <tr>
+			<th>תאריך</th>
+			<th>{{ days_before.day0|date:"d.m" }}</th>
+			<th>{{ days_before.day1|date:"d.m" }}</th>
+			<th>{{ days_before.day2|date:"d.m" }}</th>
+			<th>{{ days_before.day3|date:"d.m" }}</th>
+			<th>{{ days_before.day4|date:"d.m" }}</th>
+			<th>{{ days_before.day5|date:"d.m" }}</th>
+			<th>{{ days_before.day6|date:"d.m" }}</th>
+		</tr>
+		<tr>
+			<th></th>
+			<th>ראשון</th>
+			<th>שני</th>
+			<th>שלישי</th>
+			<th>רביעי</th>
+			<th>חמישי</th>
+			<th>שישי</th>
+			<th>שבת</th>
+		</tr>
+		</thead>
+		<tbody>
+
+		<tr style="align-content: end">
+			<td>6:30-14:30</td>
+            {% for vr in organization_before_input.z_630|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+		<tr>
+			<td>7:00-15:00<br/>סריקה</td>
+            {% for vr in organization_before_input.z_700_search|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+		<tr>
+		<td>7:00-15:00<br/>אחמ"ש</td>
+            {% for vr in organization_before_input.z_700_manager|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>7:20-15:20</td>
+            {% for vr in organization_before_input.z_720_1|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+		<tr>
+			<td>7:20-17:20<br/>משיכה</td>
+            {% for vr in organization_before_input.z_720_pull|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>7:20-15:20</td>
+            {% for vr in organization_before_input.z_720_2|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>7:20-15:20</td>
+            {% for vr in organization_before_input.z_720_3|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>14:00-22:00</td>
+            {% for vr in organization_before_input.z_1400|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>15:00-23:00</td>
+            {% for vr in organization_before_input.z_1500|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>לילה</td>
+            {% for vr in organization_before_input.z_2300|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>הערות</td>
+            {% for vr in organization_before_input.z_notes|cut_list:1 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+		</tbody>
+	</table>
+            </div>
+        <div style="margin-right: 1em">
+        <table class="responsive-table-input-matrix" style="align-items: center">
+            <thead>
+        <tr>
+			<th>תאריך</th>
+			<th>{{ days_before.day7|date:"d.m" }}</th>
+			<th>{{ days_before.day8|date:"d.m" }}</th>
+			<th>{{ days_before.day9|date:"d.m" }}</th>
+			<th>{{ days_before.day10|date:"d.m" }}</th>
+			<th>{{ days_before.day11|date:"d.m" }}</th>
+			<th>{{ days_before.day12|date:"d.m" }}</th>
+			<th>{{ days_before.day13|date:"d.m" }}</th>
+		</tr>
+		<tr>
+			<th></th>
+			<th>ראשון</th>
+			<th>שני</th>
+			<th>שלישי</th>
+			<th>רביעי</th>
+			<th>חמישי</th>
+			<th>שישי</th>
+			<th>שבת</th>
+		</tr>
+		</thead>
+		<tbody>
+
+		<tr style="align-content: end">
+			<td>6:30-14:30</td>
+            {% for vr in organization_before_input.z_630|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+		<tr>
+			<td>7:00-15:00<br/>סריקה</td>
+            {% for vr in organization_before_input.z_700_search|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+		<tr>
+		<td>7:00-15:00<br/>אחמ"ש</td>
+            {% for vr in organization_before_input.z_700_manager|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>7:20-15:20</td>
+            {% for vr in organization_before_input.z_720_1|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+		<tr>
+			<td>7:20-17:20<br/>משיכה</td>
+            {% for vr in organization_before_input.z_720_pull|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>7:20-15:20</td>
+            {% for vr in organization_before_input.z_720_2|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>7:20-15:20</td>
+            {% for vr in organization_before_input.z_720_3|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>14:00-22:00</td>
+            {% for vr in organization_before_input.z_1400|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>15:00-23:00</td>
+            {% for vr in organization_before_input.z_1500|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>לילה</td>
+            {% for vr in organization_before_input.z_2300|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+        <tr>
+			<td>הערות</td>
+            {% for vr in organization_before_input.z_notes|cut_list:2 %}
+            {% if vr|is_in_td:nickname %}
+                <td class="greed_td">{{ vr }}</td>
+            {% else %}
+                <td>{{ vr }}</td>
+            {% endif %}
+        {% endfor %}
+		</tr>
+		</tbody>
+    </table>
+            </div>
+    </div>
+    {% endif %}
+    {% endif %}
+{% endblock content %}

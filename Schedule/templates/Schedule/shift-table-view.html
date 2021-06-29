@@ -1,0 +1,39 @@
+{% extends "Schedule/base.html" %}
+{% block content %}
+     <div>
+        <h3 style="align-items: center">סידור בין תאריך {{ day0|date:"d.m" }} לתאריך {{ day13|date:"d.m" }}</h3>
+            </div>
+    <div class="content-section row">
+        <div>
+<table class="responsive-table-input-matrix" style="align-items: center">
+		<thead>
+        <tr>
+            <th>שם</th>
+            <th>בוקר 1</th>
+            <th>צהריים 1</th>
+            <th>בוקר 2</th>
+            <th>צהריים 2</th>
+            <th>לילה</th>
+            <th>סופ"ש</th>
+		</tr>
+		</thead>
+		<tbody>
+        {% for user, value in table.items %}
+            <tr style="align-content: end">
+            <td>{{ user }}</td>
+                {% for count in value %}
+                    <td>{{ value|get_item:count }}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        <tr style="align-content: end">
+            <td>סה"כ</td>
+        {% for user, value in sum.items %}
+            <td>{{ value }}</td>
+        {% endfor %}
+        </tr>
+		</tbody>
+	</table>
+            </div>
+        </div>
+{% endblock content %}

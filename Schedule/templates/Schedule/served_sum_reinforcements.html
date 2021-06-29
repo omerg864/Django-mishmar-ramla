@@ -1,0 +1,126 @@
+{% extends "Schedule/base.html" %}
+<html dir = rtl lang="he">
+{% block content %}
+    <div>
+    {% if calculated %}
+        <h2>תגבורים - מחושב לפי משמרות</h2>
+    {% else %}
+        <h2>תגבורים</h2>
+    {% endif %}
+    </div>
+    <div>
+        <h3>מתאריך {{ days.day0|date:"d/m" }} עד לתאריך {{ days.day13|date:"d/m" }}</h3>
+    </div>
+    <div class="row" style="align: bottom">
+    <div>
+    <form method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            <div class="con buttons">
+                {% if calculated %}
+                    <button name="calculated" value="{{ calculated }}" class="but effect01" type="submit"><span>הצג הכל</span></button>
+                {% else %}
+                    <button name="calculated" value="{{ calculated }}" class="but effect01" type="submit"><span>הצג מחושב לפי משמרות</span></button>
+                {% endif %}
+    </div>
+        </div>
+    </form>
+    </div>
+    <div style="margin-top: 3.5em">
+        <a>מספר אנשים שהגישו: {{ num_served }}</a>
+    </div>
+    <div style="margin-top: 3.5em">
+    {% for user in users %}
+        <a href="{% url 'shift-update' users|get_item:user %}"> {{ user }}, </a>
+        {% if forloop.counter|is_divided5 %}
+            </br>
+        {% endif %}
+    {% endfor %}
+    </div>
+    </div>
+<table class="responsive-table-input-matrix" style="align-items: center">
+		<thead>
+		<tr>
+			<th></th>
+			<th>ראשון {{ days.day0|date:"d.m" }}</th>
+			<th>שני {{ days.day1|date:"d.m" }}</th>
+			<th>שלישי {{ days.day2|date:"d.m" }}</th>
+			<th>רביעי {{ days.day3|date:"d.m" }}</th>
+			<th>חמישי {{ days.day4|date:"d.m" }}</th>
+			<th>שישי {{ days.day5|date:"d.m" }}</th>
+			<th>שבת {{ days.day6|date:"d.m" }}</th>
+		</tr>
+		</thead>
+		<tbody>
+
+		<tr style="align-content: end">
+			<td>תגבור</td>
+			<td>{{served.day1}}</td>
+			<td>{{served.day2}}</td>
+            <td>{{served.day3}}</td>
+            <td>{{served.day4}}</td>
+            <td>{{served.day5}}</td>
+            <td>{{served.day6}}</td>
+            <td>{{served.day7}}</td>
+		</tr>
+		<tr>
+			<td>הודעות</td>
+            <td><textarea class="notes_organization"></textarea></td>
+			<td><textarea class="notes_organization"></textarea></td>
+            <td><textarea class="notes_organization"></textarea></td>
+            <td><textarea class="notes_organization"></textarea></td>
+            <td><textarea class="notes_organization"></textarea></td>
+            <td><textarea class="notes_organization"></textarea></td>
+            <td><textarea class="notes_organization"></textarea></td>
+		</tr>
+		</tbody>
+</table>
+    <div style="margin-top: 2em; margin-bottom: 3em; font-size: 20px">
+        <a style="margin-top: 4em">הערות שבוע ראשון:</a>
+        <p>{{ notes.week1 }}</p>
+    </div>
+    <table class="responsive-table-input-matrix" style="align-items: center; margin-top: 2em">
+    <thead>
+		<tr>
+			<th></th>
+			<th>ראשון {{ days.day7|date:"d.m" }}</th>
+			<th>שני {{ days.day8|date:"d.m" }}</th>
+			<th>שלישי {{ days.day9|date:"d.m" }}</th>
+			<th>רביעי {{ days.day10|date:"d.m" }}</th>
+			<th>חמישי {{ days.day11|date:"d.m" }}</th>
+			<th>שישי {{ days.day12|date:"d.m" }}</th>
+			<th>שבת {{ days.day13|date:"d.m" }}</th>
+		</tr>
+		</thead>
+    <tbody>
+		<tr style="align-content: end">
+			<td>תגבור</td>
+			<td>{{served.day8}}</td>
+			<td>{{served.day9}}</td>
+            <td>{{served.day10}}</td>
+            <td>{{served.day11}}</td>
+            <td>{{served.day12}}</td>
+            <td>{{served.day13}}</td>
+            <td>{{served.day14}}</td>
+		</tr>
+		<tr>
+			<td>הודעות</td>
+			<td><textarea class="notes_organization"></textarea></td>
+			<td><textarea class="notes_organization"></textarea></td>
+            <td><textarea class="notes_organization"></textarea></td>
+            <td><textarea class="notes_organization"></textarea></td>
+            <td><textarea class="notes_organization"></textarea></td>
+            <td><textarea class="notes_organization"></textarea></td>
+            <td><textarea class="notes_organization"></textarea></td>
+		</tr>
+		</tbody>
+	</table>
+    <div style="margin-top: 2em; margin-bottom: 3em; font-size: 20px">
+        <a style="margin-top: 4em">הערות שבוע שני:</a>
+    <p>{{ notes.week2 }}</p>
+    </div>
+    <div style="margin-top: 2em; margin-bottom: 3em; font-size: 20px">
+        <a style="margin-top: 4em">הערות:</a>
+    <p>{{ notes.general }}</p>
+    </div>
+{% endblock content %}

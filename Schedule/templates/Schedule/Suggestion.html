@@ -1,0 +1,177 @@
+{% extends "Schedule/base.html" %}
+{% block content %}
+    <h1>הצעה לסידור</h1>
+    <h3>מתאריך {{ days.day0|date:"d/m" }} עד לתאריך {{ days.day13|date:"d/m" }}</h3>
+    <div class="row">
+    <form method="POST">
+        {% csrf_token %}
+        <fieldset class="form-group">
+    <div>
+    <table class="responsive-table-input-matrix" style="align-items: center">
+		<thead>
+		<tr>
+			<th></th>
+			<th>ראשון {{ days.day0|date:"d.m" }}</th>
+			<th>שני {{ days.day1|date:"d.m" }}</th>
+			<th>שלישי {{ days.day2|date:"d.m" }}</th>
+			<th>רביעי {{ days.day3|date:"d.m" }}</th>
+			<th>חמישי {{ days.day4|date:"d.m" }}</th>
+			<th>שישי {{ days.day5|date:"d.m" }}</th>
+			<th>שבת {{ days.day6|date:"d.m" }}</th>
+		</tr>
+		</thead>
+		<tbody>
+        <tr style="align-items: center">
+			<td>כמות מאבטחים<br>בוקר</td>
+			<td><input class="integerSpinner" name="M0" type="number" min="0" value="{{ guardsnumbers.M0 }}"></td>
+			<td><input class="integerSpinner" name="M1" type="number" min="0" value="{{ guardsnumbers.M1 }}"></td>
+            <td><input class="integerSpinner" name="M2" type="number" min="0" value="{{ guardsnumbers.M2 }}"></td>
+            <td><input class="integerSpinner" name="M3" type="number" min="0" value="{{ guardsnumbers.M3 }}"></td>
+            <td><input class="integerSpinner" name="M4" type="number" min="0" value="{{ guardsnumbers.M4 }}"></td>
+            <td><input class="integerSpinner" name="M5" type="number" min="0" value="{{ guardsnumbers.M5 }}"></td>
+            <td><input class="integerSpinner" name="M6" type="number" min="0" value="{{ guardsnumbers.M6 }}"></td>
+		</tr>
+		<tr style="align-content: end">
+			<td>בוקר</td>
+            <td><textarea class="suggestion_morning">{{ organized.M0 }}</textarea></td>
+			<td><textarea class="suggestion_morning">{{ organized.M1 }}</textarea></td>
+            <td><textarea class="suggestion_morning">{{ organized.M2 }}</textarea></td>
+            <td><textarea class="suggestion_morning">{{ organized.M3 }}</textarea></td>
+            <td><textarea class="suggestion_morning">{{ organized.M4 }}</textarea></td>
+            <td><textarea class="suggestion_morning">{{ organized.M5 }}</textarea></td>
+            <td><textarea class="suggestion_morning">{{ organized.M6 }}</textarea></td>
+		</tr>
+        <tr style="align-items: center">
+			<td>כמות מאבטחים<br>צהריים</td>
+			<td><input class="integerSpinner" name="A0" type="number" min="0" value="{{ guardsnumbers.A0 }}"></td>
+			<td><input class="integerSpinner" name="A1" type="number" min="0" value="{{ guardsnumbers.A1 }}"></td>
+            <td><input class="integerSpinner" name="A2" type="number" min="0" value="{{ guardsnumbers.A2 }}"></td>
+            <td><input class="integerSpinner" name="A3" type="number" min="0" value="{{ guardsnumbers.A3 }}"></td>
+            <td><input class="integerSpinner" name="A4" type="number" min="0" value="{{ guardsnumbers.A4 }}"></td>
+            <td><input class="integerSpinner" name="A5" type="number" min="0" value="{{ guardsnumbers.A5 }}"></td>
+            <td><input class="integerSpinner" name="A6" type="number" min="0" value="{{ guardsnumbers.A6 }}"></td>
+		</tr>
+		<tr>
+			<td>צהריים</td>
+			<td><textarea class="suggestion_noon">{{ organized.A0 }}</textarea></td>
+			<td><textarea class="suggestion_noon">{{ organized.A1 }}</textarea></td>
+            <td><textarea class="suggestion_noon">{{ organized.A2 }}</textarea></td>
+            <td><textarea class="suggestion_noon">{{ organized.A3 }}</textarea></td>
+            <td><textarea class="suggestion_noon">{{ organized.A4 }}</textarea></td>
+            <td><textarea class="suggestion_noon">{{ organized.A5 }}</textarea></td>
+            <td><textarea class="suggestion_noon">{{ organized.A6 }}</textarea></td>
+		</tr>
+        <tr style="align-items: center">
+			<td>כמות מאבטחים<br>לילה</td>
+			<td><input class="integerSpinner" name="N0" type="number" min="0" value="{{ guardsnumbers.N0 }}"></td>
+			<td><input class="integerSpinner" name="N1" type="number" min="0" value="{{ guardsnumbers.N1 }}"></td>
+            <td><input class="integerSpinner" name="N2" type="number" min="0" value="{{ guardsnumbers.N2 }}"></td>
+            <td><input class="integerSpinner" name="N3" type="number" min="0" value="{{ guardsnumbers.N3 }}"></td>
+            <td><input class="integerSpinner" name="N4" type="number" min="0" value="{{ guardsnumbers.N4 }}"></td>
+            <td><input class="integerSpinner" name="N5" type="number" min="0" value="{{ guardsnumbers.N5 }}"></td>
+            <td><input class="integerSpinner" name="N6" type="number" min="0" value="{{ guardsnumbers.N6 }}"></td>
+		</tr>
+		<tr>
+		<td>לילה</td>
+			<td><textarea class="suggestion_night">{{ organized.N0 }}</textarea></td>
+			<td><textarea class="suggestion_night">{{ organized.N1 }}</textarea></td>
+            <td><textarea class="suggestion_night">{{ organized.N2 }}</textarea></td>
+            <td><textarea class="suggestion_night">{{ organized.N3 }}</textarea></td>
+            <td><textarea class="suggestion_night">{{ organized.N4 }}</textarea></td>
+            <td><textarea class="suggestion_night">{{ organized.N5 }}</textarea></td>
+            <td><textarea class="suggestion_night">{{ organized.N6 }}</textarea></td>
+		</tr>
+		</tbody>
+    <thead>
+		<tr>
+			<th></th>
+			<th>ראשון {{ days.day7|date:"d.m" }}</th>
+			<th>שני {{ days.day8|date:"d.m" }}</th>
+			<th>שלישי {{ days.day9|date:"d.m" }}</th>
+			<th>רביעי {{ days.day10|date:"d.m" }}</th>
+			<th>חמישי {{ days.day11|date:"d.m" }}</th>
+			<th>שישי {{ days.day12|date:"d.m" }}</th>
+			<th>שבת {{ days.day13|date:"d.m" }}</th>
+		</tr>
+		</thead>
+    <tbody>
+    <tr style="align-items: center">
+			<td>כמות מאבטחים<br>בוקר</td>
+			<td><input class="integerSpinner" name="M7" type="number" min="0" value="{{ guardsnumbers.M7 }}"></td>
+			<td><input class="integerSpinner" name="M8" type="number" min="0" value="{{ guardsnumbers.M8 }}"></td>
+            <td><input class="integerSpinner" name="M9" type="number" min="0" value="{{ guardsnumbers.M9 }}"></td>
+            <td><input class="integerSpinner" name="M10" type="number" min="0" value="{{ guardsnumbers.M10 }}"></td>
+            <td><input class="integerSpinner" name="M11" type="number" min="0" value="{{ guardsnumbers.M11 }}"></td>
+            <td><input class="integerSpinner" name="M12" type="number" min="0" value="{{ guardsnumbers.M12 }}"></td>
+            <td><input class="integerSpinner" name="M13" type="number" min="0" value="{{ guardsnumbers.M13 }}"></td>
+		</tr>
+		<tr style="align-content: end">
+			<td>בוקר</td>
+			<td><textarea class="suggestion_morning">{{ organized.M7 }}</textarea></td>
+			<td><textarea class="suggestion_morning">{{ organized.M8 }}</textarea></td>
+            <td><textarea class="suggestion_morning">{{ organized.M9 }}</textarea></td>
+            <td><textarea class="suggestion_morning">{{ organized.M10 }}</textarea></td>
+            <td><textarea class="suggestion_morning">{{ organized.M11 }}</textarea></td>
+            <td><textarea class="suggestion_morning">{{ organized.M12 }}</textarea></td>
+            <td><textarea class="suggestion_morning">{{ organized.M13 }}</textarea></td>
+		</tr>
+        <tr style="align-items: center">
+			<td>כמות מאבטחים<br>צהריים</td>
+			<td><input class="integerSpinner" name="A7" type="number" min="0" value="{{ guardsnumbers.A7 }}"></td>
+			<td><input class="integerSpinner" name="A8" type="number" min="0" value="{{ guardsnumbers.A8 }}"></td>
+            <td><input class="integerSpinner" name="A9" type="number" min="0" value="{{ guardsnumbers.A9 }}"></td>
+            <td><input class="integerSpinner" name="A10" type="number" min="0" value="{{ guardsnumbers.A10 }}"></td>
+            <td><input class="integerSpinner" name="A11" type="number" min="0" value="{{ guardsnumbers.A11 }}"></td>
+            <td><input class="integerSpinner" name="A12" type="number" min="0" value="{{ guardsnumbers.A12 }}"></td>
+            <td><input class="integerSpinner" name="A13" type="number" min="0" value="{{ guardsnumbers.A13 }}"></td>
+		</tr>
+		<tr>
+			<td>צהריים</td>
+			<td><textarea class="suggestion_noon">{{ organized.A7 }}</textarea></td>
+			<td><textarea class="suggestion_noon">{{ organized.A8 }}</textarea></td>
+            <td><textarea class="suggestion_noon">{{ organized.A9 }}</textarea></td>
+            <td><textarea class="suggestion_noon">{{ organized.A10 }}</textarea></td>
+            <td><textarea class="suggestion_noon">{{ organized.A11 }}</textarea></td>
+            <td><textarea class="suggestion_noon">{{ organized.A12 }}</textarea></td>
+            <td><textarea class="suggestion_noon">{{ organized.A13 }}</textarea></td>
+		</tr>
+        <tr style="align-items: center">
+			<td>כמות מאבטחים<br>לילה</td>
+			<td><input class="integerSpinner" name="N7" type="number" min="0" value="{{ guardsnumbers.N7 }}"></td>
+			<td><input class="integerSpinner" name="N8" type="number" min="0" value="{{ guardsnumbers.N8 }}"></td>
+            <td><input class="integerSpinner" name="N9" type="number" min="0" value="{{ guardsnumbers.N9 }}"></td>
+            <td><input class="integerSpinner" name="N10" type="number" min="0" value="{{ guardsnumbers.N10 }}"></td>
+            <td><input class="integerSpinner" name="N11" type="number" min="0" value="{{ guardsnumbers.N11 }}"></td>
+            <td><input class="integerSpinner" name="N12" type="number" min="0" value="{{ guardsnumbers.N12 }}"></td>
+            <td><input class="integerSpinner" name="N13" type="number" min="0" value="{{ guardsnumbers.N13 }}"></td>
+		</tr>
+		<tr>
+		<td>לילה</td>
+			<td><textarea class="suggestion_night">{{ organized.N7 }}</textarea></td>
+			<td><textarea class="suggestion_night">{{ organized.N8 }}</textarea></td>
+            <td><textarea class="suggestion_night">{{ organized.N9 }}</textarea></td>
+            <td><textarea class="suggestion_night">{{ organized.N10 }}</textarea></td>
+            <td><textarea class="suggestion_night">{{ organized.N11 }}</textarea></td>
+            <td><textarea class="suggestion_night">{{ organized.N12 }}</textarea></td>
+            <td><textarea class="suggestion_night">{{ organized.N13 }}</textarea></td>
+		</tr>
+		</tbody>
+	</table>
+        </div>
+        </fieldset>
+        <div class="form-group">
+    <div class="con buttons">
+      <button class="but effect01" type="submit" ><span>סדר</span></button>
+    </div>
+        </div>
+        </form>
+    </div>
+            <div dir="rtl" class="row">
+                <notes >
+                    <a>הערות:</a>
+                </notes>
+                <div STYLE="margin-top: 1.5em; white-space: pre-line;">
+                    {{ notes }}
+                </div>
+            </div>
+{% endblock content %}
