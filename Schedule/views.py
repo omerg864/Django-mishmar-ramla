@@ -838,7 +838,7 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                                     form.data[f'Day{x + 1}_2300'] += "\n" + night
                                     names_days[f'day{x}_night'].remove(night)
                                 count += 1
-                        # morning 630
+                        # morning 630 and 700 search
                         else:
                             chosen = False
                             for name in names_days[f'day{x}_morning']:
@@ -859,6 +859,11 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                                     form.data[f'Day{x + 1}_700_search'] = name
                                     names_days[f'day{x}_morning'].remove(name)
                                     break
+                            if not chosen and len(names_days[f'day{x}_morning']) > 0:
+                                r = random.randint(0, len(names_days[f'day{x}_morning']) - 1)
+                                form.data[f'Day{x + 1}_700_search'] = names_days[f'day{x}_morning'][r]
+                                names_days[f'day{x}_morning'].pop(r)
+                                chosen = True
                             # noon
                             count = 0
                             if len(names_days[f'day{x}_noon']) > 2:
