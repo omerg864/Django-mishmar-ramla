@@ -87,7 +87,7 @@ def settings_view(request):
         # transfer data from old table
         shifts2 = Shift.objects.all()
         for s in shifts2:
-            new_shift = s
+            new_shift = Shift(s)
             new_shift.save()
         settings_form = SettingsForm(request.POST, instance=settings)
         if settings_form.is_valid():
