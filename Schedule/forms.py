@@ -60,6 +60,8 @@ class ShiftForm(forms.ModelForm):
             fields_temp.append("P" + str(i))
             fields_temp.append("R" + str(i))
             fields_temp.append("notes" + str(i))
+        fields_temp.append("seq_night")
+        fields_temp.append("seq_noon")
         model = Shift
         fields = fields_temp
 
@@ -75,6 +77,8 @@ class ShiftViewForm(forms.ModelForm):
             fields_temp.append("P" + str(i))
             fields_temp.append("R" + str(i))
             fields_temp.append("notes" + str(i))
+        fields_temp.append("seq_night")
+        fields_temp.append("seq_noon")
         for field in fields_temp:
             self.fields[field].disabled = True
 
@@ -87,5 +91,7 @@ class ShiftViewForm(forms.ModelForm):
             fields_temp.append("P" + str(i))
             fields_temp.append("R" + str(i))
             fields_temp.append("notes" + str(i))
+        fields_temp.append("seq_night")
+        fields_temp.append("seq_noon")
         model = Shift
         fields = fields_temp
