@@ -1,7 +1,7 @@
 from django import forms
 from users.models import Profile2 as Profile
 from .models import Settings as Settings
-from .models import Shift2 as Shift
+from .models import Shift1 as Shift
 from .models import Organization2 as Organization
 from django.contrib.auth.models import User
 
