@@ -663,6 +663,29 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                 return HttpResponseRedirect(self.request.path_info)
             elif 'table' in request.POST:
                 return redirect("organization-table-shift", self.get_object().id)
+            elif 'clear' in request.POST:
+                form = OrganizationUpdateForm(request.POST, instance=self.get_object())
+                form.data._mutable = True
+                fields_temp = []
+                for i in range(1, 15):
+                    form.data["Day" + str(i) + "_630"] = ""
+                    form.data["Day" + str(i) + "_700_search"] = ""
+                    form.data["Day" + str(i) + "_700_manager"] = ""
+                    form.data["Day" + str(i) + "_720_1"] = ""
+                    form.data["Day" + str(i) + "_720_pull"] = ""
+                    form.data["Day" + str(i) + "_720_2"] = ""
+                    form.data["Day" + str(i) + "_720_3"] = ""
+                    form.data["Day" + str(i) + "_1400"] = ""
+                    form.data["Day" + str(i) + "_1500"] = ""
+                    form.data["Day" + str(i) + "_1500_1900"] = ""
+                    form.data["Day" + str(i) + "_2300"] = ""
+                form.data._mutable = False
+                if form.is_valid():
+                    self.object = form.save()
+                    messages.success(self.request, f'איפוס הושלם')
+                else:
+                    messages.info(self.request, f'איפוס לא הושלם תקלה טכנית')
+                return HttpResponseRedirect(self.request.path_info)
 
     def organization_valid(self):
         organization1 = get_input(self.get_object())
@@ -732,7 +755,8 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         if valid:
             messages.success(self.request, "סידור תקין")
 
-    def extract_from_excel(self, request):
+    def extract_data(self, request):
+        # extract from excel
         myfile = request.FILES['myfile']
         file_object = myfile.file
         wb = openpyxl.load_workbook(file_object)
@@ -793,12 +817,31 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
             for j in range(end_noon + 1, end_night + 1):
                 if str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFC6EFCE':
                     names_days[f'day{x}_night'].append(str(sheet.cell(j, col).value))
-        return [names_days, no_pull_names]
+        # extract from database
+        shifts = Shift.objects.all().filter(date=self.get_object().date)
+        users = User.objects.all()
+        max_seq0 = 2
+        max_seq1 = 2
+        sequence_count = {}
+        max_out_names = [[], []]
+        for s in shifts:
+            name = users.filter(username=s.username).first().profile2.nickname
+            sequence_count[f'{name}0'] = s.seq_night
+            sequence_count[f'{name}1'] = s.seq_noon
+            if sequence_count[f'{name}0'] >= max_seq0:
+                max_out_names[0].append(name)
+            if sequence_count[f'{name}1'] >= max_seq1:
+                max_out_names[1].append(name)
+        return [names_days, no_pull_names, sequence_count, max_out_names, max_seq0, max_seq1]
 
     def uplaod_organize(self, request):
-        extracted_excel = self.extract_from_excel(request)
-        names_days = extracted_excel[0]
-        no_pull_names = extracted_excel[1]
+        extracted_data = self.extract_data(request)
+        names_days = extracted_data[0]
+        no_pull_names = extracted_data[1]
+        sequence_count = extracted_data[2]
+        max_out_names = extracted_data[3]
+        max_seq0 = extracted_data[4]
+        max_seq1 = extracted_data[5]
         before_organization = Organization.objects.all().filter(
             date=self.get_object().date - datetime.timedelta(days=14)).first()
         if before_organization is not None:
@@ -828,39 +871,42 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         for x in range(13, -1, -1):
             if x != 5 and x != 6 and x != 12 and x != 13:
                 is_manager = False
-                for name in names_days[f'day{x}_morning']:
-                    if name in managers:
+                for name in managers:
+                    if name in names_days[f'day{x}_morning']:
                         form.data[f'Day{x + 1}_700_manager'] = name
                         names_days[f'day{x}_morning'].remove(name)
                         is_manager = True
                         break
                 if not is_manager:
-                    for name in names_days[f'day{x}_morning']:
-                        if name == Settings.objects.last().officer:
-                            form.data[f'Day{x + 1}_700_manager'] = name
-                            names_days[f'day{x}_morning'].remove(name)
-                            break
+                    if Settings.objects.last().officer in names_days[f'day{x}_morning']:
+                        form.data[f'Day{x + 1}_700_manager'] = Settings.objects.last().officer
+                        names_days[f'day{x}_morning'].remove(Settings.objects.last().officer)
                 chosen = False
                 if x == 0:
                     for name in before_names["noon"]:
-                        if name in names_days[f'day{x}_morning']:
+                        if name in names_days[f'day{x}_morning'] and name not in max_out_names[0]:
+                            sequence_count[f'{name}0'] += 1
+                            if sequence_count[f'{name}0'] >= max_seq0:
+                                max_out_names[0].append(name)
                             chosen = True
                             form.data[f'Day{x + 1}_630'] = name
                             names_days[f'day{x}_morning'].remove(name)
                             break
                     if not chosen:
                         for name in before_names["morning"]:
-                            if name in names_days[f'day{x}_morning']:
+                            if name in names_days[f'day{x}_morning'] and name not in max_out_names[0]:
+                                sequence_count[f'{name}0'] += 1
+                                if sequence_count[f'{name}0'] >= max_seq0:
+                                    max_out_names[0].append(name)
                                 chosen = True
                                 form.data[f'Day{x + 1}_630'] = name
                                 names_days[f'day{x}_morning'].remove(name)
                                 break
                     if not chosen:
-                        for name in names_days[f'day{x}_morning']:
-                            chosen = True
-                            form.data[f'Day{x + 1}_630'] = name
-                            names_days[f'day{x}_morning'].remove(name)
-                            break
+                        r = random.randint(0, len(names_days[f'day{x}_morning']) - 1)
+                        chosen = True
+                        form.data[f'Day{x + 1}_630'] = names_days[f'day{x}_morning'][r]
+                        names_days[f'day{x}_morning'].pop(r)
                     chosen = False
                     for name in before_names["noon"]:
                         if name in names_days[f'day{x}_morning']:
@@ -876,14 +922,16 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                                 names_days[f'day{x}_morning'].remove(name)
                                 break
                     if not chosen:
-                        for name in names_days[f'day{x}_morning']:
-                            chosen = True
-                            form.data[f'Day{x + 1}_700_search'] = name
-                            names_days[f'day{x}_morning'].remove(name)
-                            break
+                        r = random.randint(0, len(names_days[f'day{x}_morning']) - 1)
+                        chosen = True
+                        form.data[f'Day{x + 1}_700_search'] = names_days[f'day{x}_morning'][r]
+                        names_days[f'day{x}_morning'].pop(r)
                     count = 0
                     for name in before_names["motsash"]:
-                        if name in names_days[f'day{x}_noon']:
+                        if name in names_days[f'day{x}_noon'] and name not in max_out_names[0]:
+                            sequence_count[f'{name}0'] += 1
+                            if sequence_count[f'{name}0'] >= max_seq0:
+                                max_out_names[0].append(name)
                             if count == 0:
                                 form.data[f'Day{x + 1}_1400'] = name
                             else:
@@ -924,7 +972,10 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                 else:
                     chosen = False
                     for name in names_days[f'day{x}_morning']:
-                        if name in names_days[f'day{x - 1}_noon']:
+                        if name in names_days[f'day{x - 1}_noon'] and name not in max_out_names[1]:
+                            sequence_count[f'{name}1'] += 1
+                            if sequence_count[f'{name}1'] >= max_seq1:
+                                max_out_names[1].append(name)
                             chosen = True
                             form.data[f'Day{x + 1}_630'] = name
                             names_days[f'day{x}_morning'].remove(name)
@@ -950,7 +1001,10 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                     count = 0
                     if len(names_days[f'day{x}_noon']) > 2:
                         for name in names_days[f'day{x}_noon']:
-                            if name in names_days[f'day{x - 1}_night']:
+                            if name in names_days[f'day{x - 1}_night'] and name not in max_out_names[0]:
+                                sequence_count[f'{name}0'] += 1
+                                if sequence_count[f'{name}0'] >= max_seq0:
+                                    max_out_names[0].append(name)
                                 if count == 2:
                                     break
                                 if count == 0:
@@ -972,7 +1026,10 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                     else:
                         chosen = False
                         for name in names_days[f'day{x}_noon']:
-                            if name in names_days[f'day{x - 1}_night']:
+                            if name in names_days[f'day{x - 1}_night'] and name not in max_out_names[0]:
+                                sequence_count[f'{name}0'] += 1
+                                if sequence_count[f'{name}0'] >= max_seq0:
+                                    max_out_names[0].append(name)
                                 chosen = True
                                 form.data[f'Day{x + 1}_1400'] = name
                                 names_days[f'day{x}_noon'].remove(name)
