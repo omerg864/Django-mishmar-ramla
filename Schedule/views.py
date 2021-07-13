@@ -659,357 +659,7 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                     messages.info(self.request, f'עדכון לא הושלם תקלה טכנית')
                 return HttpResponseRedirect(self.request.path_info)
             elif 'upload' in request.POST:
-                myfile = request.FILES['myfile']
-                file_object = myfile.file
-                wb = openpyxl.load_workbook(file_object)
-                sheet = wb.active
-                ## Green background FFC6EFCE
-                ## Green font FF006100
-                ## Red background FFFFC7CE
-                ## Red font with red background FF9C0006
-                ## White background 00000000
-                ## Black font Values must be of type <class 'str'> rgb=None, indexed=None, auto=None, theme=1, tint=0.0, type='theme'
-                ## Red font FFFF0000
-                ## Empty font Values must be of type <class 'str'> rgb=None, indexed=None, auto=None, theme=1, tint=0.0, type='theme'
-                ## Empty value None
-                ## orange background FFFFEB9C
-                # print(str(sheet.cell(10, 3).value))
-                # print(str(sheet.cell(10, 3).font.color.rgb))  # Get the font color in the table
-                # print(str(sheet.cell(10, 3).fill.fgColor.rgb)) # background color
-                # if str(sheet.cell(10, 3).font.color.rgb) == "Values must be of type <class 'str'>":
-                end_morning_str = ""
-                end_noon_str = ""
-                end_night_str = ""
-                for rng in sheet.merged_cells.ranges:
-                    if 'A5' in rng:
-                        end_morning_str = str(rng)
-                        break
-                end_morning_str = end_morning_str.replace("A5:A", "")
-                end_morning = int(end_morning_str)
-                for rng in sheet.merged_cells.ranges:
-                    if f'A{end_morning + 1}' in rng:
-                        end_noon_str = str(rng)
-                        break
-                end_noon_str = end_noon_str.replace(f'A{end_morning + 1}:A', "")
-                end_noon = int(end_noon_str)
-                for rng in sheet.merged_cells.ranges:
-                    if f'A{end_noon + 1}' in rng:
-                        end_night_str = str(rng)
-                        break
-                end_night_str = end_night_str.replace(f'A{end_noon + 1}:A', "")
-                end_night = int(end_night_str)
-                col = 1
-                names_days = {}
-                no_pull_names = {}
-                for x in range(14):
-                    col += 1
-                    names_days[f'day{x}_morning'] = []
-                    no_pull_names[f'day{x}'] = []
-                    names_days[f'day{x}_noon'] = []
-                    names_days[f'day{x}_night'] = []
-                    for j in range(5, end_morning + 1):
-                        if str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFC6EFCE' \
-                                or str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFFFEB9C':
-                            names_days[f'day{x}_morning'].append(str(sheet.cell(j, col).value))
-                            if str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFFFEB9C':
-                                no_pull_names[f'day{x}'].append(str(sheet.cell(j, col).value))
-                    for j in range(end_morning + 1, end_noon + 1):
-                        if str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFC6EFCE':
-                            names_days[f'day{x}_noon'].append(str(sheet.cell(j, col).value))
-                    for j in range(end_noon + 1, end_night + 1):
-                        if str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFC6EFCE':
-                            names_days[f'day{x}_night'].append(str(sheet.cell(j, col).value))
-                before_organization = Organization.objects.all().filter(
-                    date=self.get_object().date - datetime.timedelta(days=14)).first()
-                if before_organization is not None:
-                    before_names = {"motsash": before_organization.Day14_2300.split("\n"),
-                                    "noon": before_organization.Day14_1500.split("\n"),
-                                    "morning": before_organization.Day14_630.split("\n") +
-                                               before_organization.Day14_700_search.split("\n") +
-                                               before_organization.Day14_700_manager.split("\n") +
-                                               before_organization.Day14_720_1.split("\n")}
-                    for key in before_names:
-                        for v in before_names[key]:
-                            if v == '' or v == '\r' or v == ' ':
-                                count = before_names[key].count(v)
-                                for x in range(count):
-                                    before_names[key].remove(v)
-                            else:
-                                before_names[key][before_names[key].index(v)] = v.replace("\r", "")
-                else:
-                    before_names = {"motsash": [], "noon": [], "morning": []}
-                form = OrganizationUpdateForm(request.POST, instance=self.get_object())
-                form.data._mutable = True
-                manager_group = Group.objects.filter(name="manager").first()
-                manager_group_users = User.objects.filter(groups=manager_group)
-                managers = []
-                for m in manager_group_users:
-                    managers.append(m.profile2.nickname)
-                for x in range(13, -1, -1):
-                    if x != 5 and x != 6 and x != 12 and x != 13:
-                        is_manager = False
-                        for name in names_days[f'day{x}_morning']:
-                            if name in managers:
-                                form.data[f'Day{x + 1}_700_manager'] = name
-                                names_days[f'day{x}_morning'].remove(name)
-                                is_manager = True
-                                break
-                        if not is_manager:
-                            for name in names_days[f'day{x}_morning']:
-                                if name == Settings.objects.last().officer:
-                                    form.data[f'Day{x + 1}_700_manager'] = name
-                                    names_days[f'day{x}_morning'].remove(name)
-                                    break
-                        chosen = False
-                        if x == 0:
-                            for name in before_names["noon"]:
-                                if name in names_days[f'day{x}_morning']:
-                                    chosen = True
-                                    form.data[f'Day{x + 1}_630'] = name
-                                    names_days[f'day{x}_morning'].remove(name)
-                                    break
-                            if not chosen:
-                                for name in before_names["morning"]:
-                                    if name in names_days[f'day{x}_morning']:
-                                        chosen = True
-                                        form.data[f'Day{x + 1}_630'] = name
-                                        names_days[f'day{x}_morning'].remove(name)
-                                        break
-                            if not chosen:
-                                for name in names_days[f'day{x}_morning']:
-                                    chosen = True
-                                    form.data[f'Day{x + 1}_630'] = name
-                                    names_days[f'day{x}_morning'].remove(name)
-                                    break
-                            chosen = False
-                            for name in before_names["noon"]:
-                                if name in names_days[f'day{x}_morning']:
-                                    chosen = True
-                                    form.data[f'Day{x + 1}_700_search'] = name
-                                    names_days[f'day{x}_morning'].remove(name)
-                                    break
-                            if not chosen:
-                                for name in before_names["morning"]:
-                                    if name in names_days[f'day{x}_morning']:
-                                        chosen = True
-                                        form.data[f'Day{x + 1}_700_search'] = name
-                                        names_days[f'day{x}_morning'].remove(name)
-                                        break
-                            if not chosen:
-                                for name in names_days[f'day{x}_morning']:
-                                    chosen = True
-                                    form.data[f'Day{x + 1}_700_search'] = name
-                                    names_days[f'day{x}_morning'].remove(name)
-                                    break
-                            count = 0
-                            for name in before_names["motsash"]:
-                                if name in names_days[f'day{x}_noon']:
-                                    if count == 0:
-                                        form.data[f'Day{x + 1}_1400'] = name
-                                    else:
-                                        form.data[f'Day{x + 1}_1400'] += "\n" + name
-                                    names_days[f'day{x}_noon'].remove(name)
-                                    count += 1
-                                    if count == 2:
-                                        break
-                            if count < 2:
-                                for name in names_days[f'day{x}_noon']:
-                                    if count == 0:
-                                        form.data[f'Day{x + 1}_1400'] = name
-                                    else:
-                                        form.data[f'Day{x + 1}_1400'] += "\n" + name
-                                    names_days[f'day{x}_noon'].remove(name)
-                                    count += 1
-                                    if count == 2:
-                                        break
-                            count = 0
-                            for name in names_days[f'day{x}_noon']:
-                                if count == 0:
-                                    form.data[f'Day{x + 1}_1500'] = name
-                                else:
-                                    form.data[f'Day{x + 1}_1500'] += "\n" + name
-                                count += 1
-                            names_days[f'day{x}_noon'] = []
-                            # night
-                            count = 0
-                            for night in names_days[f'day{x}_night']:
-                                if count == 0:
-                                    form.data[f'Day{x + 1}_2300'] = night
-                                    names_days[f'day{x}_night'].remove(night)
-                                else:
-                                    form.data[f'Day{x + 1}_2300'] += "\n" + night
-                                    names_days[f'day{x}_night'].remove(night)
-                                count += 1
-                        # morning 630 and 700 search
-                        else:
-                            chosen = False
-                            for name in names_days[f'day{x}_morning']:
-                                if name in names_days[f'day{x - 1}_noon']:
-                                    chosen = True
-                                    form.data[f'Day{x + 1}_630'] = name
-                                    names_days[f'day{x}_morning'].remove(name)
-                                    break
-                            if not chosen and len(names_days[f'day{x}_morning']) > 0:
-                                r = random.randint(0, len(names_days[f'day{x}_morning']) - 1)
-                                form.data[f'Day{x + 1}_630'] = names_days[f'day{x}_morning'][r]
-                                names_days[f'day{x}_morning'].pop(r)
-                                chosen = True
-                            chosen = False
-                            for name in names_days[f'day{x}_morning']:
-                                if name in names_days[f'day{x - 1}_noon']:
-                                    chosen = True
-                                    form.data[f'Day{x + 1}_700_search'] = name
-                                    names_days[f'day{x}_morning'].remove(name)
-                                    break
-                            if not chosen and len(names_days[f'day{x}_morning']) > 0:
-                                r = random.randint(0, len(names_days[f'day{x}_morning']) - 1)
-                                form.data[f'Day{x + 1}_700_search'] = names_days[f'day{x}_morning'][r]
-                                names_days[f'day{x}_morning'].pop(r)
-                                chosen = True
-                            # noon
-                            count = 0
-                            if len(names_days[f'day{x}_noon']) > 2:
-                                for name in names_days[f'day{x}_noon']:
-                                    if name in names_days[f'day{x - 1}_night']:
-                                        if count == 2:
-                                            break
-                                        if count == 0:
-                                            form.data[f'Day{x + 1}_1400'] = name
-                                        else:
-                                            form.data[f'Day{x + 1}_1400'] += "\n" + name
-                                        count += 1
-                                        names_days[f'day{x}_noon'].remove(name)
-                                if count < 2:
-                                    while count < 2:
-                                        r = random.randint(0, len(names_days[f'day{x}_noon']) - 1)
-                                        if count == 0:
-                                            form.data[f'Day{x + 1}_1400'] = names_days[f'day{x}_noon'][r]
-                                            names_days[f'day{x}_noon'].pop(r)
-                                        else:
-                                            form.data[f'Day{x + 1}_1400'] += "\n" + names_days[f'day{x}_noon'][r]
-                                            names_days[f'day{x}_noon'].pop(r)
-                                        count += 1
-                            else:
-                                chosen = False
-                                for name in names_days[f'day{x}_noon']:
-                                    if name in names_days[f'day{x - 1}_night']:
-                                        chosen = True
-                                        form.data[f'Day{x + 1}_1400'] = name
-                                        names_days[f'day{x}_noon'].remove(name)
-                                        break
-                                if not chosen and len(names_days[f'day{x}_noon']) > 0:
-                                    r = random.randint(0, len(names_days[f'day{x}_noon']) - 1)
-                                    form.data[f'Day{x + 1}_1400'] = names_days[f'day{x}_noon'][r]
-                                    names_days[f'day{x}_noon'].pop(r)
-                                    chosen = True
-                            count = 0
-                            for noon in range(len(names_days[f'day{x}_noon'])):
-                                r = random.randint(0, len(names_days[f'day{x}_noon']) - 1)
-                                if count == 0:
-                                    form.data[f'Day{x + 1}_1500'] = names_days[f'day{x}_noon'][r]
-                                    names_days[f'day{x}_noon'].pop(r)
-                                else:
-                                    form.data[f'Day{x + 1}_1500'] += "\n" + names_days[f'day{x}_noon'][r]
-                                    names_days[f'day{x}_noon'].pop(r)
-                                count += 1
-                        # morning
-                        count = 0
-                        temp_morning = []
-                        if len(names_days[f'day{x}_morning']) > 0:
-                            for name in names_days[f'day{x}_morning']:
-                                temp_morning.append(name)
-                            for name in temp_morning:
-                                if name in no_pull_names[f'day{x}']:
-                                    temp_morning.remove(name)
-                            if len(temp_morning) > 0:
-                                r = random.randint(0, len(temp_morning) - 1)
-                                form.data[f'Day{x + 1}_720_pull'] = temp_morning[r]
-                                names_days[f'day{x}_morning'].remove(temp_morning[r])
-                            else:
-                                r = random.randint(0, len(names_days[f'day{x}_morning']) - 1)
-                                form.data[f'Day{x + 1}_720_pull'] = names_days[f'day{x}_morning'][r]
-                                names_days[f'day{x}_morning'].pop(r)
-                        if not chosen and len(names_days[f'day{x}_morning']) > 0:
-                            r = random.randint(0, len(names_days[f'day{x}_morning']) - 1)
-                            form.data[f'Day{x + 1}_700_search'] = names_days[f'day{x}_morning'][r]
-                            names_days[f'day{x}_morning'].pop(r)
-                        chosen = False
-                        for morning in range(len(names_days[f'day{x}_morning'])):
-                            r = random.randint(0, len(names_days[f'day{x}_morning']) - 1)
-                            if count < 3:
-                                form.data[f'Day{x + 1}_720_{count + 1}'] = names_days[f'day{x}_morning'][r]
-                            else:
-                                form.data[f'Day{x + 1}_720_3'] += "\n" + names_days[f'day{x}_morning'][r]
-                            names_days[f'day{x}_morning'].pop(r)
-                            count += 1
-                        # night
-                        count = 0
-                        for night in names_days[f'day{x}_night']:
-                            if count == 0:
-                                form.data[f'Day{x + 1}_2300'] = night
-                                names_days[f'day{x}_night'].remove(night)
-                            else:
-                                form.data[f'Day{x + 1}_2300'] += "\n" + night
-                                names_days[f'day{x}_night'].remove(night)
-                            count += 1
-                    else:
-                        count = 0
-                        shift = "_700_search"
-                        # morning
-                        for name in names_days[f'day{x}_morning']:
-                            if count == 2:
-                                shift = "_700_manager"
-                            if count == 0 or count == 2:
-                                form.data[f'Day{x + 1}{shift}'] = name
-                            else:
-                                form.data[f'Day{x + 1}{shift}'] += "\n" + name
-                            count += 1
-                        # noon
-                        count = 0
-                        for name in names_days[f'day{x}_noon']:
-                            if count == 0:
-                                form.data[f'Day{x + 1}_1500'] = name
-                            else:
-                                form.data[f'Day{x + 1}_1500'] += "\n" + name
-                            count += 1
-                        # night
-                        count = 0
-                        for name in names_days[f'day{x}_night']:
-                            if count == 0:
-                                form.data[f'Day{x + 1}_2300'] = name
-                            else:
-                                form.data[f'Day{x + 1}_2300'] += "\n" + name
-                            count += 1
-                form.data._mutable = False
-                if form.is_valid():
-                    self.object = form.save()
-                    messages.success(self.request, f'העלאה הושלמה')
-                else:
-                    messages.info(self.request, f'עדכון לא הושלם תקלה טכנית')
-                # print(sheet.merged_cells.ranges)
-                return HttpResponseRedirect(self.request.path_info)
-            elif 'clear' in request.POST:
-                form = OrganizationUpdateForm(request.POST, instance=self.get_object())
-                form.data._mutable = True
-                fields_temp = []
-                for i in range(1, 15):
-                    form.data["Day" + str(i) + "_630"] = ""
-                    form.data["Day" + str(i) + "_700_search"] = ""
-                    form.data["Day" + str(i) + "_700_manager"] = ""
-                    form.data["Day" + str(i) + "_720_1"] = ""
-                    form.data["Day" + str(i) + "_720_pull"] = ""
-                    form.data["Day" + str(i) + "_720_2"] = ""
-                    form.data["Day" + str(i) + "_720_3"] = ""
-                    form.data["Day" + str(i) + "_1400"] = ""
-                    form.data["Day" + str(i) + "_1500"] = ""
-                    form.data["Day" + str(i) + "_1500_1900"] = ""
-                    form.data["Day" + str(i) + "_2300"] = ""
-                form.data._mutable = False
-                if form.is_valid():
-                    self.object = form.save()
-                    messages.success(self.request, f'איפוס הושלם')
-                else:
-                    messages.info(self.request, f'איפוס לא הושלם תקלה טכנית')
+                self.uplaod_organize(request)
                 return HttpResponseRedirect(self.request.path_info)
             elif 'table' in request.POST:
                 return redirect("organization-table-shift", self.get_object().id)
@@ -1081,6 +731,341 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                             valid = False
         if valid:
             messages.success(self.request, "סידור תקין")
+
+    def extract_from_excel(self, request):
+        myfile = request.FILES['myfile']
+        file_object = myfile.file
+        wb = openpyxl.load_workbook(file_object)
+        sheet = wb.active
+        ## Green background FFC6EFCE
+        ## Green font FF006100
+        ## Red background FFFFC7CE
+        ## Red font with red background FF9C0006
+        ## White background 00000000
+        ## Black font Values must be of type <class 'str'> rgb=None, indexed=None, auto=None, theme=1, tint=0.0, type='theme'
+        ## Red font FFFF0000
+        ## Empty font Values must be of type <class 'str'> rgb=None, indexed=None, auto=None, theme=1, tint=0.0, type='theme'
+        ## Empty value None
+        ## orange background FFFFEB9C
+        # print(str(sheet.cell(10, 3).value))
+        # print(str(sheet.cell(10, 3).font.color.rgb))  # Get the font color in the table
+        # print(str(sheet.cell(10, 3).fill.fgColor.rgb)) # background color
+        # if str(sheet.cell(10, 3).font.color.rgb) == "Values must be of type <class 'str'>":
+        end_morning_str = ""
+        end_noon_str = ""
+        end_night_str = ""
+        for rng in sheet.merged_cells.ranges:
+            if 'A5' in rng:
+                end_morning_str = str(rng)
+                break
+        end_morning_str = end_morning_str.replace("A5:A", "")
+        end_morning = int(end_morning_str)
+        for rng in sheet.merged_cells.ranges:
+            if f'A{end_morning + 1}' in rng:
+                end_noon_str = str(rng)
+                break
+        end_noon_str = end_noon_str.replace(f'A{end_morning + 1}:A', "")
+        end_noon = int(end_noon_str)
+        for rng in sheet.merged_cells.ranges:
+            if f'A{end_noon + 1}' in rng:
+                end_night_str = str(rng)
+                break
+        end_night_str = end_night_str.replace(f'A{end_noon + 1}:A', "")
+        end_night = int(end_night_str)
+        col = 1
+        names_days = {}
+        no_pull_names = {}
+        for x in range(14):
+            col += 1
+            names_days[f'day{x}_morning'] = []
+            no_pull_names[f'day{x}'] = []
+            names_days[f'day{x}_noon'] = []
+            names_days[f'day{x}_night'] = []
+            for j in range(5, end_morning + 1):
+                if str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFC6EFCE' \
+                        or str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFFFEB9C':
+                    names_days[f'day{x}_morning'].append(str(sheet.cell(j, col).value))
+                    if str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFFFEB9C':
+                        no_pull_names[f'day{x}'].append(str(sheet.cell(j, col).value))
+            for j in range(end_morning + 1, end_noon + 1):
+                if str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFC6EFCE':
+                    names_days[f'day{x}_noon'].append(str(sheet.cell(j, col).value))
+            for j in range(end_noon + 1, end_night + 1):
+                if str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFC6EFCE':
+                    names_days[f'day{x}_night'].append(str(sheet.cell(j, col).value))
+        return [names_days, no_pull_names]
+
+    def uplaod_organize(self, request):
+        extracted_excel = self.extract_from_excel(request)
+        names_days = extracted_excel[0]
+        no_pull_names = extracted_excel[1]
+        before_organization = Organization.objects.all().filter(
+            date=self.get_object().date - datetime.timedelta(days=14)).first()
+        if before_organization is not None:
+            before_names = {"motsash": before_organization.Day14_2300.split("\n"),
+                            "noon": before_organization.Day14_1500.split("\n"),
+                            "morning": before_organization.Day14_630.split("\n") +
+                                       before_organization.Day14_700_search.split("\n") +
+                                       before_organization.Day14_700_manager.split("\n") +
+                                       before_organization.Day14_720_1.split("\n")}
+            for key in before_names:
+                for v in before_names[key]:
+                    if v == '' or v == '\r' or v == ' ':
+                        count = before_names[key].count(v)
+                        for x in range(count):
+                            before_names[key].remove(v)
+                    else:
+                        before_names[key][before_names[key].index(v)] = v.replace("\r", "")
+        else:
+            before_names = {"motsash": [], "noon": [], "morning": []}
+        form = OrganizationUpdateForm(request.POST, instance=self.get_object())
+        form.data._mutable = True
+        manager_group = Group.objects.filter(name="manager").first()
+        manager_group_users = User.objects.filter(groups=manager_group)
+        managers = []
+        for m in manager_group_users:
+            managers.append(m.profile2.nickname)
+        for x in range(13, -1, -1):
+            if x != 5 and x != 6 and x != 12 and x != 13:
+                is_manager = False
+                for name in names_days[f'day{x}_morning']:
+                    if name in managers:
+                        form.data[f'Day{x + 1}_700_manager'] = name
+                        names_days[f'day{x}_morning'].remove(name)
+                        is_manager = True
+                        break
+                if not is_manager:
+                    for name in names_days[f'day{x}_morning']:
+                        if name == Settings.objects.last().officer:
+                            form.data[f'Day{x + 1}_700_manager'] = name
+                            names_days[f'day{x}_morning'].remove(name)
+                            break
+                chosen = False
+                if x == 0:
+                    for name in before_names["noon"]:
+                        if name in names_days[f'day{x}_morning']:
+                            chosen = True
+                            form.data[f'Day{x + 1}_630'] = name
+                            names_days[f'day{x}_morning'].remove(name)
+                            break
+                    if not chosen:
+                        for name in before_names["morning"]:
+                            if name in names_days[f'day{x}_morning']:
+                                chosen = True
+                                form.data[f'Day{x + 1}_630'] = name
+                                names_days[f'day{x}_morning'].remove(name)
+                                break
+                    if not chosen:
+                        for name in names_days[f'day{x}_morning']:
+                            chosen = True
+                            form.data[f'Day{x + 1}_630'] = name
+                            names_days[f'day{x}_morning'].remove(name)
+                            break
+                    chosen = False
+                    for name in before_names["noon"]:
+                        if name in names_days[f'day{x}_morning']:
+                            chosen = True
+                            form.data[f'Day{x + 1}_700_search'] = name
+                            names_days[f'day{x}_morning'].remove(name)
+                            break
+                    if not chosen:
+                        for name in before_names["morning"]:
+                            if name in names_days[f'day{x}_morning']:
+                                chosen = True
+                                form.data[f'Day{x + 1}_700_search'] = name
+                                names_days[f'day{x}_morning'].remove(name)
+                                break
+                    if not chosen:
+                        for name in names_days[f'day{x}_morning']:
+                            chosen = True
+                            form.data[f'Day{x + 1}_700_search'] = name
+                            names_days[f'day{x}_morning'].remove(name)
+                            break
+                    count = 0
+                    for name in before_names["motsash"]:
+                        if name in names_days[f'day{x}_noon']:
+                            if count == 0:
+                                form.data[f'Day{x + 1}_1400'] = name
+                            else:
+                                form.data[f'Day{x + 1}_1400'] += "\n" + name
+                            names_days[f'day{x}_noon'].remove(name)
+                            count += 1
+                            if count == 2:
+                                break
+                    if count < 2:
+                        for name in names_days[f'day{x}_noon']:
+                            if count == 0:
+                                form.data[f'Day{x + 1}_1400'] = name
+                            else:
+                                form.data[f'Day{x + 1}_1400'] += "\n" + name
+                            names_days[f'day{x}_noon'].remove(name)
+                            count += 1
+                            if count == 2:
+                                break
+                    count = 0
+                    for name in names_days[f'day{x}_noon']:
+                        if count == 0:
+                            form.data[f'Day{x + 1}_1500'] = name
+                        else:
+                            form.data[f'Day{x + 1}_1500'] += "\n" + name
+                        count += 1
+                    names_days[f'day{x}_noon'] = []
+                    # night
+                    count = 0
+                    for night in names_days[f'day{x}_night']:
+                        if count == 0:
+                            form.data[f'Day{x + 1}_2300'] = night
+                            names_days[f'day{x}_night'].remove(night)
+                        else:
+                            form.data[f'Day{x + 1}_2300'] += "\n" + night
+                            names_days[f'day{x}_night'].remove(night)
+                        count += 1
+                # morning 630 and 700 search
+                else:
+                    chosen = False
+                    for name in names_days[f'day{x}_morning']:
+                        if name in names_days[f'day{x - 1}_noon']:
+                            chosen = True
+                            form.data[f'Day{x + 1}_630'] = name
+                            names_days[f'day{x}_morning'].remove(name)
+                            break
+                    if not chosen and len(names_days[f'day{x}_morning']) > 0:
+                        r = random.randint(0, len(names_days[f'day{x}_morning']) - 1)
+                        form.data[f'Day{x + 1}_630'] = names_days[f'day{x}_morning'][r]
+                        names_days[f'day{x}_morning'].pop(r)
+                        chosen = True
+                    chosen = False
+                    for name in names_days[f'day{x}_morning']:
+                        if name in names_days[f'day{x - 1}_noon']:
+                            chosen = True
+                            form.data[f'Day{x + 1}_700_search'] = name
+                            names_days[f'day{x}_morning'].remove(name)
+                            break
+                    if not chosen and len(names_days[f'day{x}_morning']) > 0:
+                        r = random.randint(0, len(names_days[f'day{x}_morning']) - 1)
+                        form.data[f'Day{x + 1}_700_search'] = names_days[f'day{x}_morning'][r]
+                        names_days[f'day{x}_morning'].pop(r)
+                        chosen = True
+                    # noon
+                    count = 0
+                    if len(names_days[f'day{x}_noon']) > 2:
+                        for name in names_days[f'day{x}_noon']:
+                            if name in names_days[f'day{x - 1}_night']:
+                                if count == 2:
+                                    break
+                                if count == 0:
+                                    form.data[f'Day{x + 1}_1400'] = name
+                                else:
+                                    form.data[f'Day{x + 1}_1400'] += "\n" + name
+                                count += 1
+                                names_days[f'day{x}_noon'].remove(name)
+                        if count < 2:
+                            while count < 2:
+                                r = random.randint(0, len(names_days[f'day{x}_noon']) - 1)
+                                if count == 0:
+                                    form.data[f'Day{x + 1}_1400'] = names_days[f'day{x}_noon'][r]
+                                    names_days[f'day{x}_noon'].pop(r)
+                                else:
+                                    form.data[f'Day{x + 1}_1400'] += "\n" + names_days[f'day{x}_noon'][r]
+                                    names_days[f'day{x}_noon'].pop(r)
+                                count += 1
+                    else:
+                        chosen = False
+                        for name in names_days[f'day{x}_noon']:
+                            if name in names_days[f'day{x - 1}_night']:
+                                chosen = True
+                                form.data[f'Day{x + 1}_1400'] = name
+                                names_days[f'day{x}_noon'].remove(name)
+                                break
+                        if not chosen and len(names_days[f'day{x}_noon']) > 0:
+                            r = random.randint(0, len(names_days[f'day{x}_noon']) - 1)
+                            form.data[f'Day{x + 1}_1400'] = names_days[f'day{x}_noon'][r]
+                            names_days[f'day{x}_noon'].pop(r)
+                            chosen = True
+                    count = 0
+                    for noon in range(len(names_days[f'day{x}_noon'])):
+                        r = random.randint(0, len(names_days[f'day{x}_noon']) - 1)
+                        if count == 0:
+                            form.data[f'Day{x + 1}_1500'] = names_days[f'day{x}_noon'][r]
+                            names_days[f'day{x}_noon'].pop(r)
+                        else:
+                            form.data[f'Day{x + 1}_1500'] += "\n" + names_days[f'day{x}_noon'][r]
+                            names_days[f'day{x}_noon'].pop(r)
+                        count += 1
+                # morning
+                count = 0
+                temp_morning = []
+                if len(names_days[f'day{x}_morning']) > 0:
+                    for name in names_days[f'day{x}_morning']:
+                        temp_morning.append(name)
+                    for name in temp_morning:
+                        if name in no_pull_names[f'day{x}']:
+                            temp_morning.remove(name)
+                    if len(temp_morning) > 0:
+                        r = random.randint(0, len(temp_morning) - 1)
+                        form.data[f'Day{x + 1}_720_pull'] = temp_morning[r]
+                        names_days[f'day{x}_morning'].remove(temp_morning[r])
+                    else:
+                        r = random.randint(0, len(names_days[f'day{x}_morning']) - 1)
+                        form.data[f'Day{x + 1}_720_pull'] = names_days[f'day{x}_morning'][r]
+                        names_days[f'day{x}_morning'].pop(r)
+                if not chosen and len(names_days[f'day{x}_morning']) > 0:
+                    r = random.randint(0, len(names_days[f'day{x}_morning']) - 1)
+                    form.data[f'Day{x + 1}_700_search'] = names_days[f'day{x}_morning'][r]
+                    names_days[f'day{x}_morning'].pop(r)
+                chosen = False
+                for morning in range(len(names_days[f'day{x}_morning'])):
+                    r = random.randint(0, len(names_days[f'day{x}_morning']) - 1)
+                    if count < 3:
+                        form.data[f'Day{x + 1}_720_{count + 1}'] = names_days[f'day{x}_morning'][r]
+                    else:
+                        form.data[f'Day{x + 1}_720_3'] += "\n" + names_days[f'day{x}_morning'][r]
+                    names_days[f'day{x}_morning'].pop(r)
+                    count += 1
+                # night
+                count = 0
+                for night in names_days[f'day{x}_night']:
+                    if count == 0:
+                        form.data[f'Day{x + 1}_2300'] = night
+                        names_days[f'day{x}_night'].remove(night)
+                    else:
+                        form.data[f'Day{x + 1}_2300'] += "\n" + night
+                        names_days[f'day{x}_night'].remove(night)
+                    count += 1
+            else:
+                count = 0
+                shift = "_700_search"
+                # morning
+                for name in names_days[f'day{x}_morning']:
+                    if count == 2:
+                        shift = "_700_manager"
+                    if count == 0 or count == 2:
+                        form.data[f'Day{x + 1}{shift}'] = name
+                    else:
+                        form.data[f'Day{x + 1}{shift}'] += "\n" + name
+                    count += 1
+                # noon
+                count = 0
+                for name in names_days[f'day{x}_noon']:
+                    if count == 0:
+                        form.data[f'Day{x + 1}_1500'] = name
+                    else:
+                        form.data[f'Day{x + 1}_1500'] += "\n" + name
+                    count += 1
+                # night
+                count = 0
+                for name in names_days[f'day{x}_night']:
+                    if count == 0:
+                        form.data[f'Day{x + 1}_2300'] = name
+                    else:
+                        form.data[f'Day{x + 1}_2300'] += "\n" + name
+                    count += 1
+        form.data._mutable = False
+        if form.is_valid():
+            self.object = form.save()
+            messages.success(self.request, f'העלאה הושלמה')
+        else:
+            messages.info(self.request, f'עדכון לא הושלם תקלה טכנית')
 
 
 def is_more_than_once(list, name):
