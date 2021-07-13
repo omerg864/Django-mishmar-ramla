@@ -87,7 +87,18 @@ def settings_view(request):
         # transfer data from old table
         shifts2 = Shift.objects.all()
         for s in shifts2:
-            new_shift = Shift(s)
+            new_shift = Shift1(username=s.username, date=s.date, M1=s.M1, A1=s.A1, N1=s.N1, P1=s.P1, R1=s.R1,
+                              notes1=s.notes1, M2=s.M2, A2=s.A2, N2=s.N2, P2=s.P2, R2=s.R2, notes2=s.notes2,
+                              M3=s.M3, A3=s.A3, N3=s.N3, P3=s.P3, R3=s.R3, notes3=s.notes3, M4=s.M4, A4=s.A4, N4=s.N4,
+                              P4=s.P4, R4=s.R4, notes4=s.notes4, M5=s.M5, A5=s.A5, N5=s.N5, P5=s.P5, R5=s.R5,
+                              notes5=s.notes5, M6=s.M6, A6=s.A6, N6=s.N6, P6=s.P6, R6=s.R6, notes6=s.notes6, M7=s.M7,
+                              A7=s.A7, N7=s.N7, P7=s.P7, R7=s.R7, notes7=s.notes7, M8=s.M8, A8=s.A8, N8=s.N8, P8=s.P8,
+                              R8=s.R8, notes8=s.notes8, M9=s.M9, A9=s.A9, N9=s.N9, P9=s.P9, R9=s.R9, notes9=s.notes9,
+                              M10=s.M10, A10=s.A10, N10=s.N10, P10=s.P10, R10=s.R10, notes10=s.notes10, M11=s.M11, A11=s.A11, N11=s.N11,
+                              P11=s.P11, R11=s.R11, notes11=s.notes11, M12=s.M12, A12=s.A12, N12=s.N12, P12=s.P12, R12=s.R12,
+                              notes12=s.notes12, M13=s.M13, A13=s.A13, N13=s.N13, P13=s.P13, R13=s.R13, notes13=s.notes13, M14=s.M14,
+                              A14=s.A14, N14=s.N14, P14=s.P14, R14=s.R14, notes14=s.notes14, notes=s.notes,
+                               seq_night=0, seq_noon=0)
             new_shift.save()
         settings_form = SettingsForm(request.POST, instance=settings)
         if settings_form.is_valid():
