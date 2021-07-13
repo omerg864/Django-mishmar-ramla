@@ -1,10 +1,12 @@
 from django.contrib import admin
 from .models import Shift2 as Shift
+from .models import Shift1
 from .models import Post
 from .models import Event
 from .models import Organization2 as Organization
 
 admin.site.register(Shift)
+admin.site.register(Shift1)
 
 
 class OrganizationAdmin(admin.ModelAdmin):

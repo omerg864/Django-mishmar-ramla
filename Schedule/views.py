@@ -18,6 +18,7 @@ from .forms import SettingsForm, ShiftForm, ShiftViewForm, OrganizationUpdateFor
 from .models import Post
 from .models import Settings as Settings
 from .models import Shift2 as Shift
+from .models import Shift1
 from .models import Event
 from .models import Organization2 as Organization
 from django.utils.translation import activate
@@ -83,6 +84,11 @@ else:
 def settings_view(request):
     settings = Settings.objects.all().last()
     if request.method == 'POST':
+        # transfer data from old table
+        shifts2 = Shift.objects.all()
+        for s in shifts2:
+            new_shift = s
+            new_shift.save()
         settings_form = SettingsForm(request.POST, instance=settings)
         if settings_form.is_valid():
             messages.success(request, f'שינויים נשמרו!')
