@@ -236,6 +236,8 @@ class ShiftUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         fields_temp.append("P" + str(i))
         fields_temp.append("R" + str(i))
         fields_temp.append("notes" + str(i))
+    fields_temp.append("seq_night")
+    fields_temp.append("seq_noon")
     fields = fields_temp
 
     def form_valid(self, form):
