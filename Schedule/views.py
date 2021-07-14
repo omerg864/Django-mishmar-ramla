@@ -12,7 +12,6 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect
 from django.template.defaulttags import register
 from django.views.generic import UpdateView, ListView, DetailView
-from googletrans import Translator
 from .backend.Schedule.Organizer import Organizer
 from .forms import SettingsForm, ShiftForm, ShiftViewForm, OrganizationUpdateForm
 from .models import Post
@@ -22,6 +21,7 @@ from .models import Event
 from .models import Organization2 as Organization
 from django.utils.translation import activate
 import openpyxl
+import requests
 
 activate('he')
 
@@ -34,38 +34,26 @@ api_key = "4cba4792d5c0c0222cc84e409138af7a"
 base_url = "http://api.openweathermap.org/data/2.5/weather?"
 city_name = "Ramla"
 try:
-    # complete_url = base_url + "appid=" + api_key + "&q=" + city_name
-    # response = requests.get(complete_url)
-    # data = response.json()
-    pass
+    complete_url = base_url + "appid=" + api_key + "&q=" + city_name
+    response = requests.get(complete_url)
+    data = response.json()
 except ConnectionError:
     data = {"Not Found:": ""}
-    raise
-data["cod"] = "404"
+
 if data["cod"] != "404":
     try:
         y = data["main"]
-        translator = Translator()
-        current_temperature = int(y["temp"] - 273.15)
+        current_temperature = str(int(y["temp"] - 273.15)) + " °C"
         current_pressure = str(y["pressure"]) + " hPa"
         current_humidiy = str(y["humidity"]) + "%"
-        weather_description = translator.translate(data["weather"][0]["description"], dest="iw").text
-
-        # print following values
-        print(" Temperature (in kelvin unit) = " +
-              str(current_temperature) +
-              "\n atmospheric pressure (in hPa unit) = " +
-              str(current_pressure) +
-              "\n humidity (in percentage) = " +
-              str(current_humidiy) +
-              "\n description = " +
-              str(weather_description))
+        weather_description = data["weather"][0]["description"]
         weather = {
-            translator.translate("Temperature", dest="iw").text: current_temperature,
-            translator.translate("atmospheric pressure", dest="iw").text: current_pressure,
-            translator.translate("humidity", dest="iw").text: current_humidiy,
-            translator.translate("description", dest="iw").text: weather_description
+            "Temperature": current_temperature,
+            "Atmospheric Pressure": current_pressure,
+            "Humidity": current_humidiy,
+            "Description": weather_description
         }
+        print(weather)
     except AttributeError:
         print("Weather Error")
         weather = {
