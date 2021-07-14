@@ -826,15 +826,47 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         max_out_names = [[], []]
         for s in shifts:
             name = users.filter(username=s.username).first().profile2.nickname
-            print(name)
             sequence_count[f'{name}0'] = s.seq_night
             sequence_count[f'{name}1'] = s.seq_noon
             if sequence_count[f'{name}0'] >= max_seq0:
                 max_out_names[0].append(name)
             if sequence_count[f'{name}1'] >= max_seq1:
                 max_out_names[1].append(name)
-        print(sequence_count)
         return [names_days, no_pull_names, sequence_count, max_out_names, max_seq0, max_seq1]
+
+    def search_and_put(self, form, for_list, check_list, day, time, max_out_names, seq,
+                       sequence_count, max_seq0, max_seq1, is_seq):
+        if seq == 0:
+            max_seq = max_seq0
+        else:
+            max_seq = max_seq1
+        for name in for_list:
+            if name in check_list:
+                if is_seq:
+                    if name not in max_out_names:
+                        if f'{name}{seq}' in sequence_count.keys():
+                            sequence_count[f'{name}{seq}'] += 1
+                            if sequence_count[f'{name}{seq}'] >= max_seq:
+                                max_out_names[seq].append(name)
+                        form.data[f'Day{day + 1}_{time}'] = name
+                        check_list.remove(name)
+                        return True
+                else:
+                    form.data[f'Day{day + 1}_{time}'] = name
+                    check_list.remove(name)
+                    return True
+        return
+
+    def insert_all_to_form(self, form, for_list, day, time):
+        count = 0
+        for name in for_list:
+            if count == 0:
+                form.data[f'Day{day + 1}_{time}'] = name
+            else:
+                form.data[f'Day{day + 1}_{time}'] += "\n" + name
+            for_list.remove(name)
+
+            count += 1
 
     def uplaod_organize(self, request):
         extracted_data = self.extract_data(request)
@@ -885,46 +917,24 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                         names_days[f'day{x}_morning'].remove(Settings.objects.last().officer)
                 chosen = False
                 if x == 0:
-                    for name in before_names["noon"]:
-                        if name in names_days[f'day{x}_morning'] and name not in max_out_names[0]:
-                            if f'{name}0' in sequence_count.keys():
-                                sequence_count[f'{name}0'] += 1
-                                if sequence_count[f'{name}0'] >= max_seq0:
-                                    max_out_names[0].append(name)
-                            chosen = True
-                            form.data[f'Day{x + 1}_630'] = name
-                            names_days[f'day{x}_morning'].remove(name)
-                            break
+                    chosen = self.search_and_put(form,  before_names["noon"], names_days[f'day{x}_morning'], x,
+                                                 "630", max_out_names[0], 0, sequence_count, max_seq0,
+                                                 max_seq1, True)
                     if not chosen:
-                        for name in before_names["morning"]:
-                            if name in names_days[f'day{x}_morning'] and name not in max_out_names[0]:
-                                if f'{name}0' in sequence_count.keys():
-                                    sequence_count[f'{name}0'] += 1
-                                    if sequence_count[f'{name}0'] >= max_seq0:
-                                        max_out_names[0].append(name)
-                                chosen = True
-                                form.data[f'Day{x + 1}_630'] = name
-                                names_days[f'day{x}_morning'].remove(name)
-                                break
+                        chosen = self.search_and_put(form, before_names["morning"], names_days[f'day{x}_morning'], x,
+                                                     "630", max_out_names[0], 0, sequence_count, max_seq0,
+                                                     max_seq1, True)
                     if not chosen:
                         r = random.randint(0, len(names_days[f'day{x}_morning']) - 1)
-                        chosen = True
                         form.data[f'Day{x + 1}_630'] = names_days[f'day{x}_morning'][r]
                         names_days[f'day{x}_morning'].pop(r)
-                    chosen = False
-                    for name in before_names["noon"]:
-                        if name in names_days[f'day{x}_morning']:
-                            chosen = True
-                            form.data[f'Day{x + 1}_700_search'] = name
-                            names_days[f'day{x}_morning'].remove(name)
-                            break
+                    chosen = self.search_and_put(form, before_names["noon"], names_days[f'day{x}_morning'], x,
+                                                 "700_search", max_out_names[0], 0, sequence_count, max_seq0,
+                                                 max_seq1, False)
                     if not chosen:
-                        for name in before_names["morning"]:
-                            if name in names_days[f'day{x}_morning']:
-                                chosen = True
-                                form.data[f'Day{x + 1}_700_search'] = name
-                                names_days[f'day{x}_morning'].remove(name)
-                                break
+                        chosen = self.search_and_put(form, before_names["morning"], names_days[f'day{x}_morning'], x,
+                                                     "700_search", max_out_names[0], 0, sequence_count, max_seq0,
+                                                     max_seq1, False)
                     if not chosen:
                         r = random.randint(0, len(names_days[f'day{x}_morning']) - 1)
                         chosen = True
@@ -955,49 +965,22 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                             count += 1
                             if count == 2:
                                 break
-                    count = 0
-                    for name in names_days[f'day{x}_noon']:
-                        if count == 0:
-                            form.data[f'Day{x + 1}_1500'] = name
-                        else:
-                            form.data[f'Day{x + 1}_1500'] += "\n" + name
-                        count += 1
-                    names_days[f'day{x}_noon'] = []
+                    # noon
+                    self.insert_all_to_form(form, names_days[f'day{x}_noon'], x, "1500")
                     # night
-                    count = 0
-                    for night in names_days[f'day{x}_night']:
-                        if count == 0:
-                            form.data[f'Day{x + 1}_2300'] = night
-                            names_days[f'day{x}_night'].remove(night)
-                        else:
-                            form.data[f'Day{x + 1}_2300'] += "\n" + night
-                            names_days[f'day{x}_night'].remove(night)
-                        count += 1
+                    self.insert_all_to_form(form, names_days[f'day{x}_night'], x, "2300")
                 # morning 630 and 700 search
                 else:
-                    chosen = False
-                    for name in names_days[f'day{x}_morning']:
-                        if name in names_days[f'day{x - 1}_noon'] and name not in max_out_names[1]:
-                            if f'{name}1' in sequence_count.keys():
-                                sequence_count[f'{name}1'] += 1
-                                if sequence_count[f'{name}1'] >= max_seq1:
-                                    max_out_names[1].append(name)
-                            chosen = True
-                            form.data[f'Day{x + 1}_630'] = name
-                            names_days[f'day{x}_morning'].remove(name)
-                            break
+                    chosen = self.search_and_put(form, names_days[f'day{x - 1}_noon'], names_days[f'day{x}_morning'], x,
+                                                 "630", max_out_names[1], 1, sequence_count, max_seq0,
+                                                 max_seq1, True)
                     if not chosen and len(names_days[f'day{x}_morning']) > 0:
                         r = random.randint(0, len(names_days[f'day{x}_morning']) - 1)
                         form.data[f'Day{x + 1}_630'] = names_days[f'day{x}_morning'][r]
                         names_days[f'day{x}_morning'].pop(r)
-                        chosen = True
-                    chosen = False
-                    for name in names_days[f'day{x}_morning']:
-                        if name in names_days[f'day{x - 1}_noon']:
-                            chosen = True
-                            form.data[f'Day{x + 1}_700_search'] = name
-                            names_days[f'day{x}_morning'].remove(name)
-                            break
+                    chosen = self.search_and_put(form, names_days[f'day{x - 1}_noon'], names_days[f'day{x}_morning'], x,
+                                                 "700_search", max_out_names[1], 1, sequence_count, max_seq0,
+                                                 max_seq1, False)
                     if not chosen and len(names_days[f'day{x}_morning']) > 0:
                         r = random.randint(0, len(names_days[f'day{x}_morning']) - 1)
                         form.data[f'Day{x + 1}_700_search'] = names_days[f'day{x}_morning'][r]
@@ -1031,32 +1014,17 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                                     names_days[f'day{x}_noon'].pop(r)
                                 count += 1
                     else:
-                        chosen = False
-                        for name in names_days[f'day{x}_noon']:
-                            if name in names_days[f'day{x - 1}_night'] and name not in max_out_names[0]:
-                                if f'{name}0' in sequence_count.keys():
-                                    sequence_count[f'{name}0'] += 1
-                                    if sequence_count[f'{name}0'] >= max_seq0:
-                                        max_out_names[0].append(name)
-                                chosen = True
-                                form.data[f'Day{x + 1}_1400'] = name
-                                names_days[f'day{x}_noon'].remove(name)
-                                break
+                        chosen = self.search_and_put(form, names_days[f'day{x - 1}_night'],
+                                                     names_days[f'day{x}_noon'], x,
+                                                     "1400", max_out_names[0], 0, sequence_count, max_seq0,
+                                                     max_seq1, True)
                         if not chosen and len(names_days[f'day{x}_noon']) > 0:
                             r = random.randint(0, len(names_days[f'day{x}_noon']) - 1)
                             form.data[f'Day{x + 1}_1400'] = names_days[f'day{x}_noon'][r]
                             names_days[f'day{x}_noon'].pop(r)
                             chosen = True
-                    count = 0
-                    for noon in range(len(names_days[f'day{x}_noon'])):
-                        r = random.randint(0, len(names_days[f'day{x}_noon']) - 1)
-                        if count == 0:
-                            form.data[f'Day{x + 1}_1500'] = names_days[f'day{x}_noon'][r]
-                            names_days[f'day{x}_noon'].pop(r)
-                        else:
-                            form.data[f'Day{x + 1}_1500'] += "\n" + names_days[f'day{x}_noon'][r]
-                            names_days[f'day{x}_noon'].pop(r)
-                        count += 1
+                    # noon
+                    self.insert_all_to_form(form, names_days[f'day{x}_noon'], x, "1500")
                 # morning
                 count = 0
                 temp_morning = []
@@ -1088,15 +1056,7 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                     names_days[f'day{x}_morning'].pop(r)
                     count += 1
                 # night
-                count = 0
-                for night in names_days[f'day{x}_night']:
-                    if count == 0:
-                        form.data[f'Day{x + 1}_2300'] = night
-                        names_days[f'day{x}_night'].remove(night)
-                    else:
-                        form.data[f'Day{x + 1}_2300'] += "\n" + night
-                        names_days[f'day{x}_night'].remove(night)
-                    count += 1
+                self.insert_all_to_form(form, names_days[f'day{x}_night'], x, "2300")
             else:
                 count = 0
                 shift = "_700_search"
@@ -1110,21 +1070,9 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                         form.data[f'Day{x + 1}{shift}'] += "\n" + name
                     count += 1
                 # noon
-                count = 0
-                for name in names_days[f'day{x}_noon']:
-                    if count == 0:
-                        form.data[f'Day{x + 1}_1500'] = name
-                    else:
-                        form.data[f'Day{x + 1}_1500'] += "\n" + name
-                    count += 1
+                self.insert_all_to_form(form, names_days[f'day{x}_noon'], x, "1500")
                 # night
-                count = 0
-                for name in names_days[f'day{x}_night']:
-                    if count == 0:
-                        form.data[f'Day{x + 1}_2300'] = name
-                    else:
-                        form.data[f'Day{x + 1}_2300'] += "\n" + name
-                    count += 1
+                self.insert_all_to_form(form, names_days[f'day{x}_night'], x, "2300")
         form.data._mutable = False
         if form.is_valid():
             self.object = form.save()
