@@ -835,7 +835,7 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         return [names_days, no_pull_names, sequence_count, max_out_names, max_seq0, max_seq1]
 
     def search_and_put(self, form, for_list, check_list, day, time, max_out_names, seq,
-                       sequence_count, max_seq0, max_seq1, is_seq, count, is_counted):
+                       sequence_count, max_seq0, max_seq1, is_seq):
         if seq == 0:
             max_seq = max_seq0
         else:
@@ -848,24 +848,18 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                             sequence_count[f'{name}{seq}'] += 1
                             if sequence_count[f'{name}{seq}'] >= max_seq:
                                 max_out_names[seq].append(name)
-                        if count == 0:
+                        if form.data[f'Day{day + 1}_{time}'] == "":
                             form.data[f'Day{day + 1}_{time}'] = name
                         else:
                             form.data[f'Day{day + 1}_{time}'] += "\n" + name
                         check_list.remove(name)
-                        count += 1
-                        if not is_counted:
-                            return True
+                        return True
                 else:
-                    if count == 0:
+                    if form.data[f'Day{day + 1}_{time}'] == "":
                         form.data[f'Day{day + 1}_{time}'] = name
                     else:
                         form.data[f'Day{day + 1}_{time}'] += "\n" + name
                     check_list.remove(name)
-                    count += 1
-                    if not is_counted:
-                        return True
-                if is_counted:
                     return True
         return False
 
@@ -948,11 +942,11 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                 if x == 0:
                     chosen = self.search_and_put(form, before_names["noon"], names_days[f'day{x}_morning'], x,
                                                  "630", max_out_names[0], 0, sequence_count, max_seq0,
-                                                 max_seq1, True, 0, False)
+                                                 max_seq1, True)
                     if not chosen:
                         chosen = self.search_and_put(form, before_names["morning"], names_days[f'day{x}_morning'], x,
                                                      "630", max_out_names[0], 0, sequence_count, max_seq0,
-                                                     max_seq1, True, 0, False)
+                                                     max_seq1, True)
                     if not chosen:
                         temp_morning = self.seperate_list(names_days[f'day{x}_morning'], max_out_names)
                         if len(temp_morning) > 0:
@@ -963,11 +957,11 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                             self.insert_random(form, names_days[f'day{x}_morning'], "630", x, 0)
                     chosen = self.search_and_put(form, before_names["noon"], names_days[f'day{x}_morning'], x,
                                                  "700_search", max_out_names[0], 0, sequence_count, max_seq0,
-                                                 max_seq1, False, 0, False)
+                                                 max_seq1, False)
                     if not chosen:
                         chosen = self.search_and_put(form, before_names["morning"], names_days[f'day{x}_morning'], x,
                                                      "700_search", max_out_names[0], 0, sequence_count, max_seq0,
-                                                     max_seq1, False, 0, False)
+                                                     max_seq1, False)
                     if not chosen:
                         self.insert_random(form, names_days[f'day{x}_morning'], "700_search", x, 0)
                     count = 0
@@ -1003,7 +997,7 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                 else:
                     chosen = self.search_and_put(form, names_days[f'day{x - 1}_noon'], names_days[f'day{x}_morning'], x,
                                                  "630", max_out_names[1], 1, sequence_count, max_seq0,
-                                                 max_seq1, True, 0, False)
+                                                 max_seq1, True)
                     if not chosen:
                         temp_morning = self.seperate_list(names_days[f'day{x}_morning'], max_out_names)
                         if len(temp_morning) > 0:
@@ -1014,7 +1008,7 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                             self.insert_random(form, names_days[f'day{x}_morning'], "630", x, 0)
                     chosen = self.search_and_put(form, names_days[f'day{x - 1}_noon'], names_days[f'day{x}_morning'], x,
                                                  "700_search", max_out_names[1], 1, sequence_count, max_seq0,
-                                                 max_seq1, False, 0, False)
+                                                 max_seq1, False)
                     if not chosen and len(names_days[f'day{x}_morning']) > 0:
                         chosen = self.insert_random(form, names_days[f'day{x}_morning'], "700_search", x, 0)
                     # noon
@@ -1042,7 +1036,7 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                         chosen = self.search_and_put(form, names_days[f'day{x - 1}_night'],
                                                      names_days[f'day{x}_noon'], x,
                                                      "1400", max_out_names[0], 0, sequence_count, max_seq0,
-                                                     max_seq1, True, 0, False)
+                                                     max_seq1, True)
                         if not chosen:
                             self.insert_random(form, names_days[f'day{x}_noon'], "1400", x, 0)
                             chosen = True
