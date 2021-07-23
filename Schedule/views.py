@@ -834,7 +834,7 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                         if f'{name}{seq}' in sequence_count.keys():
                             sequence_count[f'{name}{seq}'] += 1
                             if sequence_count[f'{name}{seq}'] >= max_seq:
-                                max_out_names[seq].append(name)
+                                max_out_names.append(name)
                         if form.data[f'Day{day + 1}_{time}'] == "":
                             form.data[f'Day{day + 1}_{time}'] = name
                         else:
