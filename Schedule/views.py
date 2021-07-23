@@ -53,7 +53,6 @@ if data["cod"] != "404":
             "Humidity": current_humidiy,
             "Description": weather_description
         }
-        print(weather)
     except AttributeError:
         print("Weather Error")
         weather = {
