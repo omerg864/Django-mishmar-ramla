@@ -31,7 +31,6 @@
                 <a  class="nav-item nav-link" href="{% url 'Schedule-Organization' %}">סידור</a>
                 {% if user.is_staff %}
                     <a  class="nav-item nav-link" href="{% url 'Schedule-Served-sum' %}">סידורים</a>
-                    <a  class="nav-item nav-link" href="{% url 'Schedule-Suggestion' %}">הצעה לסידור</a>
                     <a  class="nav-item nav-link" href="{% url 'Schedule-Settings' %}">הגדרות</a>
                     <a  class="nav-item nav-link" href="https://mishmarramla.herokuapp.com/admin">ניהול נתונים</a>
                 {% endif %}
