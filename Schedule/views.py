@@ -19,6 +19,8 @@ from .models import Settings as Settings
 from .models import Shift1 as Shift
 from .models import Event
 from .models import Organization2 as Organization
+from users.models import Profile as p
+from users.models import Profile2 as p2
 from django.utils.translation import activate
 import openpyxl
 import requests
@@ -72,6 +74,12 @@ def settings_view(request):
     if request.method == 'POST':
         settings_form = SettingsForm(request.POST, instance=settings)
         if settings_form.is_valid():
+            # transfer data to new table
+            profiles = p2.objects.all()
+            for i in profiles:
+                new_p = p(user=i.user, nickname=i.nickname, night=i.night, sat_noon=i.sat_noon,
+                          sat_morning=i.sat_morning, sat_night=i.sat_night, image=i.image, sat=False)
+                new_p.save()
             messages.success(request, f'שינויים נשמרו!')
             settings_form.save()
         else:
