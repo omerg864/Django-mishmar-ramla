@@ -442,7 +442,7 @@ class Organizer:
         users = User.objects.all()
         self.initialize_dictionaries()
         num_guards = len(User.objects.all())
-        for x in range(num_guards):
+        for i in range(num_guards):
             self.guards.append(Guard())
         self.build_guards()
         startDate = datetime.date(2020, 8, 20)

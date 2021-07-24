@@ -106,12 +106,12 @@ def shift_view(request):
     empty = False
     settings = Settings.objects.last()
     submitting = settings.submitting
-    for x in range(14):
-        days["day" + str(x)] = Organization.objects.order_by('-date')[0].date + datetime.timedelta(days=x)
+    for i in range(14):
+        days["day" + str(i)] = Organization.objects.order_by('-date')[0].date + datetime.timedelta(days=i)
     events = Event.objects.all()
-    for x in range(14):
-        if len(events.filter(date2=days["day" + str(x)])) > 0:
-            for ev in events.filter(date2=days["day" + str(x)]):
+    for i in range(14):
+        if len(events.filter(date2=days["day" + str(i)])) > 0:
+            for ev in events.filter(date2=days["day" + str(i)]):
                 if request.user.profile.nickname == ev.nickname:
                     message = f'לא לשכוח בתאריך {ev.date2} יש {ev.description}. אם יש שינוי להודיע!'
                     messages.info(request, message)
@@ -146,8 +146,8 @@ def shift_view(request):
             if len(shifts.filter(username=request.user).order_by('-date')) > 0:
                 shift = shifts.filter(username=request.user).order_by('-date')[0]
                 notes_text = str(shift.notes)
-                for x in range(14):
-                    days["day" + str(x)] = shift.date + datetime.timedelta(days=x)
+                for i in range(14):
+                    days["day" + str(i)] = shift.date + datetime.timedelta(days=i)
                 form = ShiftViewForm(instance=shift)
             else:
                 empty = True
@@ -237,8 +237,8 @@ class ShiftUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def get_context_data(self, **kwargs):
         ctx = super(ShiftUpdateView, self).get_context_data(**kwargs)
         ctx["days"] = {}
-        for x in range(14):
-            ctx["days"]["day" + str(x)] = self.object.date + datetime.timedelta(days=x)
+        for i in range(14):
+            ctx["days"]["day" + str(i)] = self.object.date + datetime.timedelta(days=i)
         ctx["notes_text"] = str(self.object.notes)
         ctx["submitting"] = True
         ctx["empty"] = False
@@ -259,8 +259,8 @@ class OrganizationDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         ctx = super(OrganizationDetailView, self).get_context_data(**kwargs)
-        for x in range(14):
-            ctx["day" + str(x)] = self.object.date + datetime.timedelta(days=x)
+        for i in range(14):
+            ctx["day" + str(i)] = self.object.date + datetime.timedelta(days=i)
         return ctx
 
 
@@ -289,17 +289,17 @@ class ShifttableView(LoginRequiredMixin, DetailView):
             table_content[user] = {"morning1": 0, "noon1": 0, "morning2": 0, "noon2": 0, "night": 0, "end": 0}
         morning_shifts = ["630", "700_search", "700_manager", "720_pull", "720_1", "720_2", "720_3"]
         noon_shifts = ["1400", "1500", "1500_1900"]
-        for x in range(1, 15):
-            day = f'day{x}_'
+        for i in range(1, 15):
+            day = f'day{i}_'
             for shift in morning_shifts:
                 split = organization[f'{day}{shift}'].split("\n")
                 for s in split:
                     s = s.replace(" ", "")
                     if s != "":
-                        if x < 6:
+                        if i < 6:
                             table_content[s]["morning1"] += 1
                             sum_content["morning1"] += 1
-                        elif 7 < x < 13:
+                        elif 7 < i < 13:
                             table_content[s]["morning2"] += 1
                             sum_content["morning2"] += 1
                         else:
@@ -310,10 +310,10 @@ class ShifttableView(LoginRequiredMixin, DetailView):
                 for s in split:
                     s = s.replace(" ", "")
                     if s != "":
-                        if x < 6:
+                        if i < 6:
                             table_content[s]["noon1"] += 1
                             sum_content["noon1"] += 1
-                        elif 7 < x < 13:
+                        elif 7 < i < 13:
                             table_content[s]["noon2"] += 1
                             sum_content["noon2"] += 1
                         else:
@@ -323,7 +323,7 @@ class ShifttableView(LoginRequiredMixin, DetailView):
             for s in split:
                 s = s.replace(" ", "")
                 if s != "":
-                    if x != 6 and x != 7 and x != 13 and x != 14:
+                    if i != 6 and i != 7 and i != 13 and i != 14:
                         table_content[s]["night"] += 1
                         sum_content["night"] += 1
                     else:
@@ -331,8 +331,8 @@ class ShifttableView(LoginRequiredMixin, DetailView):
                         sum_content["end"] += 1
         ctx["table"] = table_content
         ctx["sum"] = sum_content
-        for x in range(14):
-            ctx["day" + str(x)] = self.get_object().date + datetime.timedelta(days=x)
+        for i in range(14):
+            ctx["day" + str(i)] = self.get_object().date + datetime.timedelta(days=i)
         return ctx
 
 
@@ -357,13 +357,13 @@ class ServedSumReinforcementsDetailView(LoginRequiredMixin, DetailView):
                 input_days[day + "M"] = []
                 input_days[day + "A"] = []
                 input_days[day + "N"] = []
-                for x in range(10):
-                    if x < 6:
-                        input_days[day + "M"] += organization_input[day + keys[x]].split("\n")
-                    elif x < 9:
-                        input_days[day + "A"] += organization_input[day + keys[x]].split("\n")
+                for i in range(10):
+                    if i < 6:
+                        input_days[day + "M"] += organization_input[day + keys[i]].split("\n")
+                    elif i < 9:
+                        input_days[day + "A"] += organization_input[day + keys[i]].split("\n")
                     else:
-                        input_days[day + "N"] += organization_input[day + keys[x]].split("\n")
+                        input_days[day + "N"] += organization_input[day + keys[i]].split("\n")
         if calculated:
             for key in input_days:
                 for i in range(len(input_days[key])):
@@ -405,21 +405,21 @@ class ServedSumReinforcementsDetailView(LoginRequiredMixin, DetailView):
             if shift.notes != "":
                 notes["general"] = notes["general"] + name + ": " + shift.notes + "\n"
         days = {}
-        for x in range(14):
-            days["day" + str(x)] = self.get_object().date + datetime.timedelta(days=x)
+        for i in range(14):
+            days["day" + str(i)] = self.get_object().date + datetime.timedelta(days=i)
         ##
         # Calculated Part
         if calculated:
             calc_served = {}
-            for x in range(1, 15):
-                day = "day" + str(x)
+            for i in range(1, 15):
+                day = "day" + str(i)
                 calc_served[day] = ""
                 split = served[day].split("\n")
                 for s in split:
                     if s not in input_days[day + "A"] and s != "" and s != " " and s != "\n":
-                        day_before = "day" + str(x - 1)
-                        day_after = "day" + str(x + 1)
-                        if x != 1 and x != 14:
+                        day_before = "day" + str(i - 1)
+                        day_after = "day" + str(i + 1)
+                        if i != 1 and i != 14:
                             if s not in input_days[day + "M"] and s not in input_days[day + "N"] and \
                                     s not in input_days[day_before + "N"] and s not in input_days[day_after + "M"]:
                                 calc_served[day] += s + "\n"
@@ -433,7 +433,7 @@ class ServedSumReinforcementsDetailView(LoginRequiredMixin, DetailView):
                                 calc_served[day] += s + "\n" + " (יכול רק צהריים ולילה) " + "\n"
                             elif s not in input_days[day + "N"] and s not in input_days[day_after + "M"]:
                                 calc_served[day] += s + "\n" + " (יכול רק לילה) " + "\n"
-                        elif x == 1:
+                        elif i == 1:
                             if s not in input_days[day + "M"] and s not in input_days[day + "N"] and \
                                     s not in input_days[day_after + "M"]:
                                 calc_served[day] += s + "\n"
@@ -568,8 +568,8 @@ class ServedSumShiftDetailView(LoginRequiredMixin, DetailView):
             if shift.notes != "":
                 notes["general"] = notes["general"] + name + ": " + shift.notes + "\n"
         days = {}
-        for x in range(14):
-            days["day" + str(x)] = self.get_object().date + datetime.timedelta(days=x)
+        for i in range(14):
+            days["day" + str(i)] = self.get_object().date + datetime.timedelta(days=i)
         ctx["days"] = days
         ctx["served"] = served
         ctx["notes"] = notes
@@ -617,8 +617,8 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
 
     def get_context_data(self, **kwargs):
         ctx = super(OrganizationUpdateView, self).get_context_data(**kwargs)
-        for x in range(14):
-            ctx["day" + str(x)] = self.object.date + datetime.timedelta(days=x)
+        for i in range(14):
+            ctx["day" + str(i)] = self.object.date + datetime.timedelta(days=i)
         ctx["organization_id"] = self.object.id
         return ctx
 
@@ -687,13 +687,13 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
             input_days[day + "M"] = []
             input_days[day + "A"] = []
             input_days[day + "N"] = []
-            for x in range(10):
-                if x < 6:
-                    input_days[day + "M"] += organization1[day + keys[x]].split("\n")
-                elif x < 9:
-                    input_days[day + "A"] += organization1[day + keys[x]].split("\n")
+            for i in range(10):
+                if i < 6:
+                    input_days[day + "M"] += organization1[day + keys[i]].split("\n")
+                elif i < 9:
+                    input_days[day + "A"] += organization1[day + keys[i]].split("\n")
                 else:
-                    input_days[day + "N"] += organization1[day + keys[x]].split("\n")
+                    input_days[day + "N"] += organization1[day + keys[i]].split("\n")
         for key in input_days:
             for i in range(len(input_days[key])):
                 input_days[key][i] = input_days[key][i].replace(" ", "")
@@ -703,17 +703,17 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         for u in User.objects.all():
             users.append(u.profile.nickname)
         for name in users:
-            for x in range(1, 15):
-                message1 = name + " ביום ה-" + str(x) + " בשתי משמרות רצופות"
-                message2 = name + " ביום ה-" + str(x) + " באותה משמרת פעמיים"
-                day = "day" + str(x)
-                day_before = "day" + str(x - 1)
-                day_after = "day" + str(x + 1)
+            for i in range(1, 15):
+                message1 = name + " ביום ה-" + str(i) + " בשתי משמרות רצופות"
+                message2 = name + " ביום ה-" + str(i) + " באותה משמרת פעמיים"
+                day = "day" + str(i)
+                day_before = "day" + str(i - 1)
+                day_after = "day" + str(i + 1)
                 if name in input_days[day + "M"]:
                     if is_more_than_once(input_days[day + "M"], name):
                         messages.info(self.request, message2)
                         valid = False
-                    if x != 1:
+                    if i != 1:
                         if name in input_days[day + "A"] or name in input_days[day_before + "N"]:
                             messages.info(self.request, message1)
                             valid = False
@@ -732,7 +732,7 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                     if is_more_than_once(input_days[day + "N"], name):
                         messages.info(self.request, message2)
                         valid = False
-                    if x != 14:
+                    if i != 14:
                         if name in input_days[day + "A"] or name in input_days[day_after + "M"]:
                             messages.info(self.request, message1)
                             valid = False
@@ -787,24 +787,24 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         col = 1
         names_days = {}
         no_pull_names = {}
-        for x in range(14):
+        for i in range(14):
             col += 1
-            names_days[f'day{x}_morning'] = []
-            no_pull_names[f'day{x}'] = []
-            names_days[f'day{x}_noon'] = []
-            names_days[f'day{x}_night'] = []
+            names_days[f'day{i}_morning'] = []
+            no_pull_names[f'day{i}'] = []
+            names_days[f'day{i}_noon'] = []
+            names_days[f'day{i}_night'] = []
             for j in range(5, end_morning + 1):
                 if str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFC6EFCE' \
                         or str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFFFEB9C':
-                    names_days[f'day{x}_morning'].append(str(sheet.cell(j, col).value))
+                    names_days[f'day{i}_morning'].append(str(sheet.cell(j, col).value))
                     if str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFFFEB9C':
-                        no_pull_names[f'day{x}'].append(str(sheet.cell(j, col).value))
+                        no_pull_names[f'day{i}'].append(str(sheet.cell(j, col).value))
             for j in range(end_morning + 1, end_noon + 1):
                 if str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFC6EFCE':
-                    names_days[f'day{x}_noon'].append(str(sheet.cell(j, col).value))
+                    names_days[f'day{i}_noon'].append(str(sheet.cell(j, col).value))
             for j in range(end_noon + 1, end_night + 1):
                 if str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFC6EFCE':
-                    names_days[f'day{x}_night'].append(str(sheet.cell(j, col).value))
+                    names_days[f'day{i}_night'].append(str(sheet.cell(j, col).value))
         # extract from database
         shifts = Shift.objects.all().filter(date=self.get_object().date)
         users = User.objects.all()
@@ -900,7 +900,7 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                 for v in before_names[key]:
                     if v == '' or v == '\r' or v == ' ':
                         count = before_names[key].count(v)
-                        for x in range(count):
+                        for i in range(count):
                             before_names[key].remove(v)
                     else:
                         before_names[key][before_names[key].index(v)] = v.replace("\r", "")
@@ -913,135 +913,135 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         managers = []
         for m in manager_group_users:
             managers.append(m.profile.nickname)
-        for x in range(13, -1, -1):
-            if x != 5 and x != 6 and x != 12 and x != 13:
+        for i in range(13, -1, -1):
+            if i != 5 and i != 6 and i != 12 and i != 13:
                 is_manager = False
                 for name in managers:
-                    if name in names_days[f'day{x}_morning']:
-                        form.data[f'Day{x + 1}_700_manager'] = name
-                        names_days[f'day{x}_morning'].remove(name)
+                    if name in names_days[f'day{i}_morning']:
+                        form.data[f'Day{i + 1}_700_manager'] = name
+                        names_days[f'day{i}_morning'].remove(name)
                         is_manager = True
                         break
                 if not is_manager:
-                    if Settings.objects.last().officer in names_days[f'day{x}_morning']:
-                        form.data[f'Day{x + 1}_700_manager'] = Settings.objects.last().officer
-                        names_days[f'day{x}_morning'].remove(Settings.objects.last().officer)
+                    if Settings.objects.last().officer in names_days[f'day{i}_morning']:
+                        form.data[f'Day{i + 1}_700_manager'] = Settings.objects.last().officer
+                        names_days[f'day{i}_morning'].remove(Settings.objects.last().officer)
                 temp_morning = []
-                if len(names_days[f'day{x}_morning']) > 0:
-                    for name in names_days[f'day{x}_morning']:
+                if len(names_days[f'day{i}_morning']) > 0:
+                    for name in names_days[f'day{i}_morning']:
                         temp_morning.append(name)
                     for name in temp_morning:
-                        if name in no_pull_names[f'day{x}'] or name in names_days[f'day{x}_night']:
-                            if x == 0:
+                        if name in no_pull_names[f'day{i}'] or name in names_days[f'day{i}_night']:
+                            if i == 0:
                                 temp_morning.remove(name)
-                            elif name in names_days[f'day{x - 1}_noon']:
+                            elif name in names_days[f'day{i - 1}_noon']:
                                 temp_morning.remove(name)
                     if len(temp_morning) > 0:
-                        inserted = self.insert_random(form, temp_morning, "720_pull", x, 0)
-                        names_days[f'day{x}_morning'].remove(inserted)
+                        inserted = self.insert_random(form, temp_morning, "720_pull", i, 0)
+                        names_days[f'day{i}_morning'].remove(inserted)
                     else:
                         temp_morning = []
-                        for name in names_days[f'day{x}_morning']:
+                        for name in names_days[f'day{i}_morning']:
                             temp_morning.append(name)
                         for name in temp_morning:
-                            if x != 0:
-                                if name in names_days[f'day{x - 1}_noon']:
+                            if i != 0:
+                                if name in names_days[f'day{i - 1}_noon']:
                                     temp_morning.remove(name)
                             else:
                                 if name in before_names["noon"] or name in before_names["morning"]:
                                     temp_morning.remove(name)
                         if len(temp_morning) > 0:
-                            inserted = self.insert_random(form, temp_morning, "720_pull", x, 0)
-                            names_days[f'day{x}_morning'].remove(inserted)
+                            inserted = self.insert_random(form, temp_morning, "720_pull", i, 0)
+                            names_days[f'day{i}_morning'].remove(inserted)
                         else:
-                            self.insert_random(form, names_days[f'day{x}_morning'], "720_pull", x, 0)
+                            self.insert_random(form, names_days[f'day{i}_morning'], "720_pull", i, 0)
                 chosen = False
-                if x == 0:
-                    chosen = self.search_and_put(form, before_names["noon"], names_days[f'day{x}_morning'], x,
+                if i == 0:
+                    chosen = self.search_and_put(form, before_names["noon"], names_days[f'day{i}_morning'], i,
                                                  "630", max_out_names[0], 0, sequence_count, max_seq0,
                                                  max_seq1, True, [])
                     if not chosen:
-                        chosen = self.search_and_put(form, before_names["morning"], names_days[f'day{x}_morning'], x,
+                        chosen = self.search_and_put(form, before_names["morning"], names_days[f'day{i}_morning'], i,
                                                      "630", max_out_names[0], 0, sequence_count, max_seq0,
                                                      max_seq1, True, [])
                     if not chosen:
-                        temp_morning = self.seperate_list(names_days[f'day{x}_morning'], max_out_names)
+                        temp_morning = self.seperate_list(names_days[f'day{i}_morning'], max_out_names)
                         if len(temp_morning) > 0:
-                            chosen = self.insert_random(form, temp_morning, "630", x, 0)
+                            chosen = self.insert_random(form, temp_morning, "630", i, 0)
                             if chosen is not None:
-                                names_days[f'day{x}_morning'].remove(chosen)
+                                names_days[f'day{i}_morning'].remove(chosen)
                         else:
-                            self.insert_random(form, names_days[f'day{x}_morning'], "630", x, 0)
-                    chosen = self.search_and_put(form, before_names["noon"], names_days[f'day{x}_morning'], x,
+                            self.insert_random(form, names_days[f'day{i}_morning'], "630", i, 0)
+                    chosen = self.search_and_put(form, before_names["noon"], names_days[f'day{i}_morning'], i,
                                                  "700_search", max_out_names[0], 0, sequence_count, max_seq0,
                                                  max_seq1, False, [])
                     if not chosen:
-                        chosen = self.search_and_put(form, before_names["morning"], names_days[f'day{x}_morning'], x,
+                        chosen = self.search_and_put(form, before_names["morning"], names_days[f'day{i}_morning'], i,
                                                      "700_search", max_out_names[0], 0, sequence_count, max_seq0,
                                                      max_seq1, False, [])
                     if not chosen:
-                        self.insert_random(form, names_days[f'day{x}_morning'], "700_search", x, 0)
+                        self.insert_random(form, names_days[f'day{i}_morning'], "700_search", i, 0)
                     count = 0
                     for name in before_names["motsash"]:
-                        if name in names_days[f'day{x}_noon'] and name not in max_out_names[0]:
+                        if name in names_days[f'day{i}_noon'] and name not in max_out_names[0]:
                             if f'{name}0' in sequence_count.keys():
                                 sequence_count[f'{name}0'] += 1
                                 if sequence_count[f'{name}0'] >= max_seq0:
                                     max_out_names[0].append(name)
                             if count == 0:
-                                form.data[f'Day{x + 1}_1400'] = name
+                                form.data[f'Day{i + 1}_1400'] = name
                             else:
-                                form.data[f'Day{x + 1}_1400'] += "\n" + name
-                            names_days[f'day{x}_noon'].remove(name)
+                                form.data[f'Day{i + 1}_1400'] += "\n" + name
+                            names_days[f'day{i}_noon'].remove(name)
                             count += 1
                             if count == 2:
                                 break
                     if count < 2:
-                        for name in names_days[f'day{x}_noon']:
+                        for name in names_days[f'day{i}_noon']:
                             if count == 0:
-                                form.data[f'Day{x + 1}_1400'] = name
+                                form.data[f'Day{i + 1}_1400'] = name
                             else:
-                                form.data[f'Day{x + 1}_1400'] += "\n" + name
-                            names_days[f'day{x}_noon'].remove(name)
+                                form.data[f'Day{i + 1}_1400'] += "\n" + name
+                            names_days[f'day{i}_noon'].remove(name)
                             count += 1
                             if count == 2:
                                 break
                     # noon
-                    self.insert_all_to_form(form, names_days[f'day{x}_noon'], x, "1500")
+                    self.insert_all_to_form(form, names_days[f'day{i}_noon'], i, "1500")
                     # night
-                    self.insert_all_to_form(form, names_days[f'day{x}_night'], x, "2300")
+                    self.insert_all_to_form(form, names_days[f'day{i}_night'], i, "2300")
                 # morning 630 and 700 search
                 else:
-                    if x > 1:
+                    if i > 1:
                         temp_morning = []
-                        for name in names_days[f'day{x}_morning']:
+                        for name in names_days[f'day{i}_morning']:
                             temp_morning.append(name)
-                        chosen = self.search_and_put(form, names_days[f'day{x - 1}_noon'], names_days[f'day{x}_morning']
-                                                     , x, "630", max_out_names[1], 1, sequence_count, max_seq0,
-                                                     max_seq1, True, names_days[f'day{x - 2}_night'])
+                        chosen = self.search_and_put(form, names_days[f'day{i - 1}_noon'], names_days[f'day{i}_morning']
+                                                     , i, "630", max_out_names[1], 1, sequence_count, max_seq0,
+                                                     max_seq1, True, names_days[f'day{i - 2}_night'])
                     else:
-                        chosen = self.search_and_put(form, names_days[f'day{x - 1}_noon'],
-                                                     names_days[f'day{x}_morning'], x,
+                        chosen = self.search_and_put(form, names_days[f'day{i - 1}_noon'],
+                                                     names_days[f'day{i}_morning'], i,
                                                      "630", max_out_names[1], 1, sequence_count, max_seq0,
                                                      max_seq1, True, [])
                     if not chosen:
-                        temp_morning = self.seperate_list(names_days[f'day{x}_morning'], max_out_names)
+                        temp_morning = self.seperate_list(names_days[f'day{i}_morning'], max_out_names)
                         if len(temp_morning) > 0:
-                            chosen = self.insert_random(form, temp_morning, "630", x, 0)
+                            chosen = self.insert_random(form, temp_morning, "630", i, 0)
                             if chosen is not None:
-                                names_days[f'day{x}_morning'].remove(chosen)
+                                names_days[f'day{i}_morning'].remove(chosen)
                         else:
-                            self.insert_random(form, names_days[f'day{x}_morning'], "630", x, 0)
-                    chosen = self.search_and_put(form, names_days[f'day{x - 1}_noon'], names_days[f'day{x}_morning'], x,
+                            self.insert_random(form, names_days[f'day{i}_morning'], "630", i, 0)
+                    chosen = self.search_and_put(form, names_days[f'day{i - 1}_noon'], names_days[f'day{i}_morning'], i,
                                                  "700_search", max_out_names[1], 1, sequence_count, max_seq0,
                                                  max_seq1, False, [])
-                    if not chosen and len(names_days[f'day{x}_morning']) > 0:
-                        chosen = self.insert_random(form, names_days[f'day{x}_morning'], "700_search", x, 0)
+                    if not chosen and len(names_days[f'day{i}_morning']) > 0:
+                        chosen = self.insert_random(form, names_days[f'day{i}_morning'], "700_search", i, 0)
                     # noon
                     count = 0
-                    if len(names_days[f'day{x}_noon']) > 2:
-                        for name in names_days[f'day{x}_noon']:
-                            if name in names_days[f'day{x - 1}_night'] and name not in max_out_names[0]:
+                    if len(names_days[f'day{i}_noon']) > 2:
+                        for name in names_days[f'day{i}_noon']:
+                            if name in names_days[f'day{i - 1}_night'] and name not in max_out_names[0]:
                                 if f'{name}0' in sequence_count.keys():
                                     sequence_count[f'{name}0'] += 1
                                     if sequence_count[f'{name}0'] >= max_seq0:
@@ -1049,56 +1049,56 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                                 if count == 2:
                                     break
                                 if count == 0:
-                                    form.data[f'Day{x + 1}_1400'] = name
+                                    form.data[f'Day{i + 1}_1400'] = name
                                 else:
-                                    form.data[f'Day{x + 1}_1400'] += "\n" + name
+                                    form.data[f'Day{i + 1}_1400'] += "\n" + name
                                 count += 1
-                                names_days[f'day{x}_noon'].remove(name)
+                                names_days[f'day{i}_noon'].remove(name)
                         if count < 2:
                             while count < 2:
-                                self.insert_random(form, names_days[f'day{x}_noon'], "1400", x, count)
+                                self.insert_random(form, names_days[f'day{i}_noon'], "1400", i, count)
                                 count += 1
                     else:
-                        chosen = self.search_and_put(form, names_days[f'day{x - 1}_night'],
-                                                     names_days[f'day{x}_noon'], x,
+                        chosen = self.search_and_put(form, names_days[f'day{i - 1}_night'],
+                                                     names_days[f'day{i}_noon'], i,
                                                      "1400", max_out_names[0], 0, sequence_count, max_seq0,
                                                      max_seq1, True, [])
                         if not chosen:
-                            self.insert_random(form, names_days[f'day{x}_noon'], "1400", x, 0)
+                            self.insert_random(form, names_days[f'day{i}_noon'], "1400", i, 0)
                             chosen = True
                     # noon
-                    self.insert_all_to_form(form, names_days[f'day{x}_noon'], x, "1500")
+                    self.insert_all_to_form(form, names_days[f'day{i}_noon'], i, "1500")
                 # morning
                 count = 0
                 if not chosen:
-                    self.insert_random(form, names_days[f'day{x}_morning'], "700_search", x, 0)
+                    self.insert_random(form, names_days[f'day{i}_morning'], "700_search", i, 0)
                 chosen = False
-                for morning in range(len(names_days[f'day{x}_morning'])):
-                    r = random.randint(0, len(names_days[f'day{x}_morning']) - 1)
+                for morning in range(len(names_days[f'day{i}_morning'])):
+                    r = random.randint(0, len(names_days[f'day{i}_morning']) - 1)
                     if count < 3:
-                        form.data[f'Day{x + 1}_720_{count + 1}'] = names_days[f'day{x}_morning'][r]
+                        form.data[f'Day{i + 1}_720_{count + 1}'] = names_days[f'day{i}_morning'][r]
                     else:
-                        form.data[f'Day{x + 1}_720_3'] += "\n" + names_days[f'day{x}_morning'][r]
-                    names_days[f'day{x}_morning'].pop(r)
+                        form.data[f'Day{i + 1}_720_3'] += "\n" + names_days[f'day{i}_morning'][r]
+                    names_days[f'day{i}_morning'].pop(r)
                     count += 1
                 # night
-                self.insert_all_to_form(form, names_days[f'day{x}_night'], x, "2300")
+                self.insert_all_to_form(form, names_days[f'day{i}_night'], i, "2300")
             else:
                 count = 0
                 shift = "_700_search"
                 # morning
-                for name in names_days[f'day{x}_morning']:
+                for name in names_days[f'day{i}_morning']:
                     if count == 2:
                         shift = "_700_manager"
                     if count == 0 or count == 2:
-                        form.data[f'Day{x + 1}{shift}'] = name
+                        form.data[f'Day{i + 1}{shift}'] = name
                     else:
-                        form.data[f'Day{x + 1}{shift}'] += "\n" + name
+                        form.data[f'Day{i + 1}{shift}'] += "\n" + name
                     count += 1
                 # noon
-                self.insert_all_to_form(form, names_days[f'day{x}_noon'], x, "1500")
+                self.insert_all_to_form(form, names_days[f'day{i}_noon'], i, "1500")
                 # night
-                self.insert_all_to_form(form, names_days[f'day{x}_night'], x, "2300")
+                self.insert_all_to_form(form, names_days[f'day{i}_night'], i, "2300")
         form.data._mutable = False
         if form.is_valid():
             self.object = form.save()
@@ -1126,27 +1126,27 @@ def organization(request):
     all_organizations = Organization.objects.all()
     organization_last = all_organizations.order_by('-date')[0]
     if organization_last.published:
-        for x in range(14):
-            days["day" + str(x)] = organization_last.date + datetime.timedelta(days=x)
+        for i in range(14):
+            days["day" + str(i)] = organization_last.date + datetime.timedelta(days=i)
         organization_last_input = get_input(organization_last)
         is_couple = len(Organization.objects.all()) > 1
         if is_couple:
             organization_last = all_organizations.order_by('-date')[1]
-            for x in range(14):
-                days_before["day" + str(x)] = organization_last.date \
-                                              + datetime.timedelta(days=x)
+            for i in range(14):
+                days_before["day" + str(i)] = organization_last.date \
+                                              + datetime.timedelta(days=i)
             organization_before_input = get_input(organization_last)
     elif len(all_organizations) > 1:
         organization_last = all_organizations.order_by('-date')[1]
-        for x in range(14):
-            days["day" + str(x)] = organization_last.date + datetime.timedelta(days=x)
+        for i in range(14):
+            days["day" + str(i)] = organization_last.date + datetime.timedelta(days=i)
         organization_last_input = get_input(organization_last)
         is_couple = len(Organization.objects.all()) > 2
         if is_couple:
             organization_last = all_organizations.order_by('-date')[2]
-            for x in range(14):
-                days_before["day" + str(x)] = organization_last.date \
-                                              + datetime.timedelta(days=x)
+            for i in range(14):
+                days_before["day" + str(i)] = organization_last.date \
+                                              + datetime.timedelta(days=i)
             organization_before_input = get_input(organization_last)
     else:
         is_empty = True
@@ -1162,8 +1162,8 @@ def organization(request):
             organization_last2 = {"z_630": [], "z_700_search": [], "z_700_manager": [], "z_720_1": [], "z_720_2": [],
                                   "z_720_3": [], "z_720_pull": [], "z_1400": [], "z_1500": [], "z_1500_1900": [],
                                   "z_2300": [], "z_notes": []}
-            for x in range(1, 15):
-                day = "day" + str(x)
+            for i in range(1, 15):
+                day = "day" + str(i)
                 for key in organization_last1:
                     organization_last1[key].append(organization_last_input[day + key.replace("z", "")])
                     organization_last2[key].append(organization_before_input[day + key.replace("z", "")])
@@ -1179,8 +1179,8 @@ def organization(request):
             organization_last1 = {"z_630": [], "z_700_search": [], "z_700_manager": [], "z_720_1": [], "z_720_2": [],
                                   "z_720_3": [], "z_720_pull": [], "z_1400": [], "z_1500": [], "z_1500_1900": [],
                                   "z_2300": [], "z_notes": []}
-            for x in range(1, 15):
-                day = "day" + str(x)
+            for i in range(1, 15):
+                day = "day" + str(i)
                 for key in organization_last1:
                     organization_last1[key].append(organization_last_input[day + key.replace("z", "")])
             context = {
@@ -1207,8 +1207,8 @@ def WriteToExcel(served, notes, dates):
         temp = 0
         if key.count("M"):
             split = served[key].split("\n")
-            for x in range(len(split)):
-                if split[x] != "(לא משיכה)":
+            for i in range(len(split)):
+                if split[i] != "(לא משיכה)":
                     temp += 1
             if temp > maxes["morning"]:
                 maxes["morning"] = temp
@@ -1256,14 +1256,14 @@ def WriteToExcel(served, notes, dates):
     })
     # Building first Structure
     col = 0
-    for x in range(15):
+    for i in range(15):
         worksheet.write(4 + maxes["morning"], col, None, border_bottom_format)
         worksheet.write(4 + maxes["after_noon"] + maxes["morning"], col, None, border_bottom_format)
         col += 1
     row = 0
     sum_maxes = maxes["morning"] + maxes["after_noon"] + maxes["night"] + 6
-    for x in range(sum_maxes):
-        if x == 4 + maxes["morning"] or x == 4 + maxes["morning"] + maxes["after_noon"]:
+    for i in range(sum_maxes):
+        if i == 4 + maxes["morning"] or i == 4 + maxes["morning"] + maxes["after_noon"]:
             worksheet.write(row, 8, None, border_left_bottom_format)
         else:
             worksheet.write(row, 8, None, border_left_format)
@@ -1307,26 +1307,26 @@ def WriteToExcel(served, notes, dates):
             day = int(key.replace("M", ""))
             row = 4
             split = served[key].split("\n")
-            for x in range(len(split)):
-                if split[x] != "(לא משיכה)":
-                    if x + 1 < len(split):
-                        if split[x + 1] == "(לא משיכה)":
-                            worksheet.write(row, day, split[x], cell_no_pull_format)
+            for i in range(len(split)):
+                if split[i] != "(לא משיכה)":
+                    if i + 1 < len(split):
+                        if split[i + 1] == "(לא משיכה)":
+                            worksheet.write(row, day, split[i], cell_no_pull_format)
                         else:
-                            worksheet.write(row, day, split[x])
+                            worksheet.write(row, day, split[i])
                     else:
-                        worksheet.write(row, day, split[x])
-                    if split[x] not in users:
-                        users.append(split[x])
+                        worksheet.write(row, day, split[i])
+                    if split[i] not in users:
+                        users.append(split[i])
                     row += 1
         elif key.count("A"):
             day = int(key.replace("A", ""))
             row = 4 + maxes["morning"] + 1
             split = served[key].split("\n")
-            for x in range(len(split)):
-                worksheet.write(row, day, split[x])
-                if split[x] not in users:
-                    users.append(split[x])
+            for i in range(len(split)):
+                worksheet.write(row, day, split[i])
+                if split[i] not in users:
+                    users.append(split[i])
                 row += 1
         else:
             day = int(key.replace("N", ""))
