@@ -680,7 +680,7 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         organization1 = get_input(self.get_object())
         input_days = {}
         valid = True
-        keys = ["_630", "_700_search", "_720_1", "_720_pull", "_720_2", "_720_3", "_1400", "_1500",
+        keys = ["_630", "_700_manager", "_700_search", "_720_1", "_720_pull", "_720_2", "_720_3", "_1400", "_1500",
                 "_1500_1900",
                 "_2300"]
         for i in range(1, 15):
@@ -688,10 +688,10 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
             input_days[day + "M"] = []
             input_days[day + "A"] = []
             input_days[day + "N"] = []
-            for x in range(10):
-                if x < 6:
+            for x in range(len(keys)):
+                if x < 7:
                     input_days[day + "M"] += organization1[day + keys[x]].split("\n")
-                elif x < 9:
+                elif x < 10:
                     input_days[day + "A"] += organization1[day + keys[x]].split("\n")
                 else:
                     input_days[day + "N"] += organization1[day + keys[x]].split("\n")
@@ -700,46 +700,67 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                 input_days[key][i] = input_days[key][i].replace(" ", "")
                 input_days[key][i] = input_days[key][i].replace("\n", "")
                 input_days[key][i] = input_days[key][i].replace("\r", "")
-        users = []
-        for u in User.objects.all():
-            users.append(u.profile.nickname)
-        for name in users:
-            for x in range(1, 15):
-                message1 = name + " ביום ה-" + str(x) + " בשתי משמרות רצופות"
-                message2 = name + " ביום ה-" + str(x) + " באותה משמרת פעמיים"
-                day = "day" + str(x)
-                day_before = "day" + str(x - 1)
-                day_after = "day" + str(x + 1)
+        for key in input_days:
+            for i in range(input_days[key].count('')):
+                input_days[key].remove('')
+        massages_sent = []
+        for key in input_days:
+            for name in input_days[key]:
+                num_day = key.replace("day", "")
+                num_day = num_day.replace("A", "")
+                num_day = num_day.replace("N", "")
+                num_day = num_day.replace("M", "")
+                message1 = name + " ביום ה-" + num_day + " בשתי משמרות רצופות"
+                message2 = name + " ביום ה-" + num_day + " באותה משמרת פעמיים"
+                day = "day" + num_day
+                day_before = "day" + str(int(num_day) - 1)
+                day_after = "day" + str(int(num_day) + 1)
                 if name in input_days[day + "M"]:
                     if is_more_than_once(input_days[day + "M"], name):
-                        messages.info(self.request, message2)
+                        if message2 not in massages_sent:
+                            messages.info(self.request, message2)
+                            massages_sent.append(message2)
                         valid = False
-                    if x != 1:
+                    if int(num_day) != 1:
                         if name in input_days[day + "A"] or name in input_days[day_before + "N"]:
-                            messages.info(self.request, message1)
+                            if message1 not in massages_sent:
+                                messages.info(self.request, message1)
+                                massages_sent.append(message1)
                             valid = False
                     else:
                         if name in input_days[day + "A"]:
-                            messages.info(self.request, message1)
+                            if message1 not in massages_sent:
+                                messages.info(self.request, message1)
+                                massages_sent.append(message1)
                             valid = False
                 if name in input_days[day + "A"]:
                     if is_more_than_once(input_days[day + "A"], name):
-                        messages.info(self.request, message2)
+                        if message2 not in massages_sent:
+                            messages.info(self.request, message2)
+                            massages_sent.append(message2)
                         valid = False
                     if name in input_days[day + "M"] or name in input_days[day + "N"]:
-                        messages.info(self.request, message1)
+                        if message1 not in massages_sent:
+                            messages.info(self.request, message1)
+                            massages_sent.append(message1)
                         valid = False
                 if name in input_days[day + "N"]:
                     if is_more_than_once(input_days[day + "N"], name):
-                        messages.info(self.request, message2)
+                        if message2 not in massages_sent:
+                            messages.info(self.request, message2)
+                            massages_sent.append(message2)
                         valid = False
-                    if x != 14:
+                    if int(num_day) != 14:
                         if name in input_days[day + "A"] or name in input_days[day_after + "M"]:
-                            messages.info(self.request, message1)
+                            if message1 not in massages_sent:
+                                messages.info(self.request, message1)
+                                massages_sent.append(message1)
                             valid = False
                     else:
                         if name in input_days[day + "A"]:
-                            messages.info(self.request, message1)
+                            if message1 not in massages_sent:
+                                messages.info(self.request, message1)
+                                massages_sent.append(message1)
                             valid = False
         if valid:
             messages.success(self.request, "סידור תקין")
@@ -824,13 +845,13 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         return [names_days, no_pull_names, sequence_count, max_out_names, max_seq0, max_seq1]
 
     def search_and_put(self, form, for_list, check_list, day, time, max_out_names, seq,
-                       sequence_count, max_seq0, max_seq1, is_seq):
+                       sequence_count, max_seq0, max_seq1, is_seq, extra_seq):
         if seq == 0:
             max_seq = max_seq0
         else:
             max_seq = max_seq1
         for name in for_list:
-            if name in check_list:
+            if name in check_list and name not in extra_seq:
                 if is_seq:
                     if name not in max_out_names:
                         if f'{name}{seq}' in sequence_count.keys():
@@ -927,15 +948,44 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                     if Settings.objects.last().officer in names_days[f'day{x}_morning']:
                         form.data[f'Day{x + 1}_700_manager'] = Settings.objects.last().officer
                         names_days[f'day{x}_morning'].remove(Settings.objects.last().officer)
+                temp_morning = []
+                if len(names_days[f'day{x}_morning']) > 0:
+                    for name in names_days[f'day{x}_morning']:
+                        temp_morning.append(name)
+                    for name in temp_morning:
+                        if name in no_pull_names[f'day{x}'] or name in names_days[f'day{x}_night']:
+                            if x == 0:
+                                temp_morning.remove(name)
+                            elif name in names_days[f'day{x - 1}_noon']:
+                                temp_morning.remove(name)
+                    if len(temp_morning) > 0:
+                        inserted = self.insert_random(form, temp_morning, "720_pull", x, 0)
+                        names_days[f'day{x}_morning'].remove(inserted)
+                    else:
+                        temp_morning = []
+                        for name in names_days[f'day{x}_morning']:
+                            temp_morning.append(name)
+                        for name in temp_morning:
+                            if x != 0:
+                                if name in names_days[f'day{x - 1}_noon']:
+                                    temp_morning.remove(name)
+                            else:
+                                if name in before_names["noon"] or name in before_names["morning"]:
+                                    temp_morning.remove(name)
+                        if len(temp_morning) > 0:
+                            inserted = self.insert_random(form, temp_morning, "720_pull", x, 0)
+                            names_days[f'day{x}_morning'].remove(inserted)
+                        else:
+                            self.insert_random(form, names_days[f'day{x}_morning'], "720_pull", x, 0)
                 chosen = False
                 if x == 0:
                     chosen = self.search_and_put(form, before_names["noon"], names_days[f'day{x}_morning'], x,
                                                  "630", max_out_names[0], 0, sequence_count, max_seq0,
-                                                 max_seq1, True)
+                                                 max_seq1, True, [])
                     if not chosen:
                         chosen = self.search_and_put(form, before_names["morning"], names_days[f'day{x}_morning'], x,
                                                      "630", max_out_names[0], 0, sequence_count, max_seq0,
-                                                     max_seq1, True)
+                                                     max_seq1, True, [])
                     if not chosen:
                         temp_morning = self.seperate_list(names_days[f'day{x}_morning'], max_out_names)
                         if len(temp_morning) > 0:
@@ -946,11 +996,11 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                             self.insert_random(form, names_days[f'day{x}_morning'], "630", x, 0)
                     chosen = self.search_and_put(form, before_names["noon"], names_days[f'day{x}_morning'], x,
                                                  "700_search", max_out_names[0], 0, sequence_count, max_seq0,
-                                                 max_seq1, False)
+                                                 max_seq1, False, [])
                     if not chosen:
                         chosen = self.search_and_put(form, before_names["morning"], names_days[f'day{x}_morning'], x,
                                                      "700_search", max_out_names[0], 0, sequence_count, max_seq0,
-                                                     max_seq1, False)
+                                                     max_seq1, False, [])
                     if not chosen:
                         self.insert_random(form, names_days[f'day{x}_morning'], "700_search", x, 0)
                     count = 0
@@ -984,9 +1034,18 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                     self.insert_all_to_form(form, names_days[f'day{x}_night'], x, "2300")
                 # morning 630 and 700 search
                 else:
-                    chosen = self.search_and_put(form, names_days[f'day{x - 1}_noon'], names_days[f'day{x}_morning'], x,
-                                                 "630", max_out_names[1], 1, sequence_count, max_seq0,
-                                                 max_seq1, True)
+                    if x > 1:
+                        temp_morning = []
+                        for name in names_days[f'day{x}_morning']:
+                            temp_morning.append(name)
+                        chosen = self.search_and_put(form, names_days[f'day{x - 1}_noon'], names_days[f'day{x}_morning']
+                                                     , x, "630", max_out_names[1], 1, sequence_count, max_seq0,
+                                                     max_seq1, True, names_days[f'day{x - 2}_night'])
+                    else:
+                        chosen = self.search_and_put(form, names_days[f'day{x - 1}_noon'],
+                                                     names_days[f'day{x}_morning'], x,
+                                                     "630", max_out_names[1], 1, sequence_count, max_seq0,
+                                                     max_seq1, True, [])
                     if not chosen:
                         temp_morning = self.seperate_list(names_days[f'day{x}_morning'], max_out_names)
                         if len(temp_morning) > 0:
@@ -997,7 +1056,7 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                             self.insert_random(form, names_days[f'day{x}_morning'], "630", x, 0)
                     chosen = self.search_and_put(form, names_days[f'day{x - 1}_noon'], names_days[f'day{x}_morning'], x,
                                                  "700_search", max_out_names[1], 1, sequence_count, max_seq0,
-                                                 max_seq1, False)
+                                                 max_seq1, False, [])
                     if not chosen and len(names_days[f'day{x}_morning']) > 0:
                         chosen = self.insert_random(form, names_days[f'day{x}_morning'], "700_search", x, 0)
                     # noon
@@ -1025,7 +1084,7 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                         chosen = self.search_and_put(form, names_days[f'day{x - 1}_night'],
                                                      names_days[f'day{x}_noon'], x,
                                                      "1400", max_out_names[0], 0, sequence_count, max_seq0,
-                                                     max_seq1, True)
+                                                     max_seq1, True, [])
                         if not chosen:
                             self.insert_random(form, names_days[f'day{x}_noon'], "1400", x, 0)
                             chosen = True
@@ -1033,18 +1092,6 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                     self.insert_all_to_form(form, names_days[f'day{x}_noon'], x, "1500")
                 # morning
                 count = 0
-                temp_morning = []
-                if len(names_days[f'day{x}_morning']) > 0:
-                    for name in names_days[f'day{x}_morning']:
-                        temp_morning.append(name)
-                    for name in temp_morning:
-                        if name in no_pull_names[f'day{x}']:
-                            temp_morning.remove(name)
-                    if len(temp_morning) > 0:
-                        inserted = self.insert_random(form, temp_morning, "720_pull", x, 0)
-                        names_days[f'day{x}_morning'].remove(inserted)
-                    else:
-                        self.insert_random(form, names_days[f'day{x}_morning'], "720_pull", x, 0)
                 if not chosen:
                     self.insert_random(form, names_days[f'day{x}_morning'], "700_search", x, 0)
                 chosen = False
@@ -1090,6 +1137,11 @@ def is_more_than_once(list, name):
     if num > 1:
         return True
     return False
+
+def check_if_in_list(names, name):
+    if name in names:
+        return True
+    return None
 
 
 @login_required
