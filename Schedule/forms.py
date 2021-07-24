@@ -1,5 +1,5 @@
 from django import forms
-from users.models import Profile2 as Profile
+from users.models import Profile as Profile
 from .models import Settings as Settings
 from .models import Shift1 as Shift
 from .models import Organization2 as Organization

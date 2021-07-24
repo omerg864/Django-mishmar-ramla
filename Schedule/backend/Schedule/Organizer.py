@@ -3,7 +3,7 @@ from random import Random
 
 from .Guard import Guard
 from django.contrib.auth.models import User
-from users.models import Profile2 as Profile
+from users.models import Profile as Profile
 from Schedule.models import Settings as Settings
 
 

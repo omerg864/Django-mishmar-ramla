@@ -21,10 +21,10 @@ def send_number_served(sender, instance, created, **kwargs):
             if user.is_superuser:
                 admin_user = user
         for s in shifts:
-            guards_sent.append(users.filter(username=s.username).first().profile2.nickname)
+            guards_sent.append(users.filter(username=s.username).first().profile.nickname)
         for u in users:
-            if u.profile2.nickname not in guards_sent:
-                guards_not_sent.append(users.filter(username=u.username).first().profile2.nickname)
+            if u.profile.nickname not in guards_sent:
+                guards_not_sent.append(users.filter(username=u.username).first().profile.nickname)
         lenUsers = len(User.objects.all())
         tz_is = pytz.timezone('Israel')
         datetime_is = datetime.now(tz_is)

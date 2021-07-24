@@ -19,7 +19,7 @@ from .models import Settings as Settings
 from .models import Shift1 as Shift
 from .models import Event
 from .models import Organization2 as Organization
-from users.models import Profile as p
+from users.models import Profile as Profile
 from users.models import Profile2 as p2
 from django.utils.translation import activate
 import openpyxl
@@ -74,12 +74,6 @@ def settings_view(request):
     if request.method == 'POST':
         settings_form = SettingsForm(request.POST, instance=settings)
         if settings_form.is_valid():
-            # transfer data to new table
-            profiles = p2.objects.all()
-            for i in profiles:
-                new_p = p(user=i.user, nickname=i.nickname, night=i.night, sat_noon=i.sat_noon,
-                          sat_morning=i.sat_morning, sat_night=i.sat_night, image=i.image, sat=False)
-                new_p.save()
             messages.success(request, f'שינויים נשמרו!')
             settings_form.save()
         else:
@@ -119,7 +113,7 @@ def shift_view(request):
     for x in range(14):
         if len(events.filter(date2=days["day" + str(x)])) > 0:
             for ev in events.filter(date2=days["day" + str(x)]):
-                if request.user.profile2.nickname == ev.nickname:
+                if request.user.profile.nickname == ev.nickname:
                     message = f'לא לשכוח בתאריך {ev.date2} יש {ev.description}. אם יש שינוי להודיע!'
                     messages.info(request, message)
                 elif ev.nickname == 'כולם':
@@ -251,7 +245,7 @@ class ShiftUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         ctx["empty"] = False
         ctx["manager"] = True
         user = User.objects.filter(username=self.object.username).first()
-        ctx["userview"] = user.profile2.nickname
+        ctx["userview"] = user.profile.nickname
         return ctx
 
     def test_func(self):
@@ -384,8 +378,8 @@ class ServedSumReinforcementsDetailView(LoginRequiredMixin, DetailView):
         for shift in shifts_served:
             username = shift.username
             user = User.objects.all().filter(username=username).first()
-            users[user.profile2.nickname] = shift.id
-            name = user.profile2.nickname
+            users[user.profile.nickname] = shift.id
+            name = user.profile.nickname
             index = 1
             shifts = [shift.R1, shift.R2, shift.R3, shift.R4, shift.R5, shift.R6, shift.R7, shift.R8, shift.R9,
                       shift.R10, shift.R11, shift.R12, shift.R13, shift.R14]
@@ -513,8 +507,8 @@ class ServedSumShiftDetailView(LoginRequiredMixin, DetailView):
         for shift in shifts_served:
             username = shift.username
             user = User.objects.all().filter(username=username).first()
-            users[user.profile2.nickname] = shift.id
-            name = user.profile2.nickname
+            users[user.profile.nickname] = shift.id
+            name = user.profile.nickname
             name = name.replace("\n", "")
             name = name.replace("\r", "")
             kind = "M"
@@ -708,7 +702,7 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                 input_days[key][i] = input_days[key][i].replace("\r", "")
         users = []
         for u in User.objects.all():
-            users.append(u.profile2.nickname)
+            users.append(u.profile.nickname)
         for name in users:
             for x in range(1, 15):
                 message1 = name + " ביום ה-" + str(x) + " בשתי משמרות רצופות"
@@ -820,7 +814,7 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         sequence_count = {}
         max_out_names = [[], []]
         for s in shifts:
-            name = users.filter(username=s.username).first().profile2.nickname
+            name = users.filter(username=s.username).first().profile.nickname
             sequence_count[f'{name}0'] = s.seq_night
             sequence_count[f'{name}1'] = s.seq_noon
             if sequence_count[f'{name}0'] >= max_seq0:
@@ -919,7 +913,7 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         manager_group_users = User.objects.filter(groups=manager_group)
         managers = []
         for m in manager_group_users:
-            managers.append(m.profile2.nickname)
+            managers.append(m.profile.nickname)
         for x in range(13, -1, -1):
             if x != 5 and x != 6 and x != 12 and x != 13:
                 is_manager = False
@@ -1154,7 +1148,7 @@ def organization(request):
                 "is_couple": is_couple,
                 "organization_before_input": organization_last2,
                 "days_before": days_before,
-                "nickname": request.user.profile2.nickname,
+                "nickname": request.user.profile.nickname,
             }
         else:
             organization_last1 = {"z_630": [], "z_700_search": [], "z_700_manager": [], "z_720_1": [], "z_720_2": [],
@@ -1168,7 +1162,7 @@ def organization(request):
                 "days": days,
                 "organization_input": organization_last1,
                 "is_couple": is_couple,
-                "nickname": request.user.profile2.nickname,
+                "nickname": request.user.profile.nickname,
             }
     return render(request, "Schedule/Organization.html", context)
 
@@ -1462,7 +1456,7 @@ def suggestion(request):
         index = 0
         for s in shifts:
             if s:
-                served[kind + str(index)].append(shift.username.profile2.nickname)
+                served[kind + str(index)].append(shift.username.profile.nickname)
             count = count + 1
             if count == 0:
                 kind = "M"
