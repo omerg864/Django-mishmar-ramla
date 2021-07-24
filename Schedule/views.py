@@ -20,6 +20,7 @@ from .models import Shift1 as Shift
 from .models import Event
 from .models import Organization2 as Organization
 from users.models import Profile as Profile
+from users.models import Profile2 as p2
 from django.utils.translation import activate
 import openpyxl
 import requests
