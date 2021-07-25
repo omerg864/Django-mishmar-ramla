@@ -15,7 +15,11 @@ def register(request, *args, **kwargs):
     activate('he')
     settings = Settings.objects.first()
     pin_code = int(settings.pin_code)
-    ip = get('https://api.ipify.org').text
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
     print('My public IP address is: {}'.format(ip))
     ips = IpBan.objects.all()
     ban = False
