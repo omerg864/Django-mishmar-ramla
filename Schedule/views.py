@@ -15,11 +15,12 @@ from django.views.generic import UpdateView, ListView, DetailView
 from .backend.Schedule.Organizer import Organizer
 from .forms import SettingsForm, ShiftForm, ShiftViewForm, OrganizationUpdateForm
 from .models import Post
-from .models import Settings as Settings
+from .models import Settings3 as Settings
 from .models import Shift1 as Shift
 from .models import Event
 from .models import Organization2 as Organization
-from users.models import Profile as Profile
+from users.models import Profile
+from users.models import UserSettings
 from django.utils.translation import activate
 import openpyxl
 import requests
@@ -28,7 +29,7 @@ from deep_translator import GoogleTranslator
 activate('he')
 
 if len(Settings.objects.all()) == 0:
-    new_settings = Settings(submitting=True, pin_code=1234, officer="")
+    new_settings = Settings(submitting=True, pin_code=1234, officer="", city="", max_seq0=2, max_seq1=2)
     new_settings.save()
 
 data = {}
@@ -73,6 +74,12 @@ else:
 def settings_view(request):
     settings = Settings.objects.all().last()
     if request.method == 'POST':
+        # transfer data
+        profiles = Profile.objects.all()
+        for p in profiles:
+            us = UserSettings(user=p.user, nickname=p.nickname, night=p.night, sat_night=p.sat_night, sat_noon=p.sat_noon,
+                              sat_morning=p.sat_morning, sat=p.sat,image=p.image, language="עברית")
+            us.save()
         settings_form = SettingsForm(request.POST, instance=settings)
         if settings_form.is_valid():
             messages.success(request, translator.translate(f'שינויים נשמרו!'))

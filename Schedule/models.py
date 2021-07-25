@@ -17,15 +17,6 @@ class Post(models.Model):
         return self.title
 
 
-class Settings(models.Model):
-    submitting = models.BooleanField(default=True, verbose_name="ניתן להגיש/לשנות הגשות")
-    pin_code = models.IntegerField(default=1234, verbose_name="קוד זיהוי")
-    officer = models.CharField(max_length=20, verbose_name="קצין מתקן")
-
-    def __str__(self):
-        return "הגדרות"
-
-
 class Settings3(models.Model):
     submitting = models.BooleanField(default=True, verbose_name="ניתן להגיש/לשנות הגשות")
     pin_code = models.IntegerField(default=1234, verbose_name="קוד זיהוי")

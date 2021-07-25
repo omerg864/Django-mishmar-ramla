@@ -4,7 +4,7 @@ from random import Random
 from .Guard import Guard
 from django.contrib.auth.models import User
 from users.models import Profile as Profile
-from Schedule.models import Settings as Settings
+from Schedule.models import Settings3 as Settings
 
 
 class Organizer:

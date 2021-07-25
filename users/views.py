@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm
-from Schedule.models import Settings as Settings
+from Schedule.models import Settings3 as Settings
 from django.utils.translation import activate
 from requests import get
 from Schedule.models import IpBan
