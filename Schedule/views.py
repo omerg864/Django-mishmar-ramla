@@ -31,11 +31,12 @@ if len(Settings.objects.all()) == 0:
     new_settings = Settings(submitting=True, pin_code=1234, officer="", city="", max_seq0=2, max_seq1=2)
     new_settings.save()
 
-translator = GoogleTranslator(source='auto', target='iw')
-
 
 @staff_member_required
 def settings_view(request):
+    user_settings = USettings.objects.all().filter(user=request.user).first()
+    langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
+    translator = GoogleTranslator(source='auto', target=langs_dict[user_settings.language])
     settings = Settings.objects.all().last()
     if request.method == 'POST':
         settings_form = SettingsForm(request.POST, instance=settings)
@@ -53,6 +54,12 @@ def settings_view(request):
 
 
 def home(request):
+    if request.user.is_authenticated:
+        user_settings = USettings.objects.all().filter(user=request.user).first()
+        langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
+        translator = GoogleTranslator(source='auto', target=langs_dict[user_settings.language])
+    else:
+        translator = GoogleTranslator(source='auto', target='iw')
     settings = Settings.objects.all().first()
     data = {}
     api_key = "4cba4792d5c0c0222cc84e409138af7a"
@@ -108,6 +115,9 @@ def error_404_view(request, exception):
 
 @login_required
 def shift_view(request):
+    user_settings = USettings.objects.all().filter(user=request.user).first()
+    langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
+    translator = GoogleTranslator(source='auto', target=langs_dict[user_settings.language])
     form = None
     days = {}
     notes_text = ""
@@ -238,6 +248,9 @@ class ShiftUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     fields = fields_temp
 
     def form_valid(self, form):
+        user_settings = USettings.objects.all().filter(user=self.request.user).first()
+        langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
+        translator = GoogleTranslator(source='auto', target=langs_dict[user_settings.language])
         self.object.notes = self.request.POST.get("notesArea")
         super(ShiftUpdateView, self).form_valid(form)
         messages.success(self.request, translator.translate(f'עדכון הושלם'))
@@ -639,6 +652,9 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         return False
 
     def post(self, request, *args, **kwargs):
+        user_settings = USettings.objects.all().filter(user=self.request.user).first()
+        langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
+        translator = GoogleTranslator(source='auto', target=langs_dict[user_settings.language])
         if request.method == 'POST':
             if 'check1' in request.POST:
                 form = OrganizationUpdateForm(request.POST, instance=self.get_object())
@@ -687,6 +703,9 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                 return HttpResponseRedirect(self.request.path_info)
 
     def organization_valid(self):
+        user_settings = USettings.objects.all().filter(user=self.request.user).first()
+        langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
+        translator = GoogleTranslator(source='auto', target=langs_dict[user_settings.language])
         organization1 = get_input(self.get_object())
         input_days = {}
         valid = True
@@ -917,6 +936,9 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
             return None
 
     def uplaod_organize(self, request):
+        user_settings = USettings.objects.all().filter(user=self.request.user).first()
+        langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
+        translator = GoogleTranslator(source='auto', target=langs_dict[user_settings.language])
         extracted_data = self.extract_data(request)
         names_days = extracted_data[0]
         no_pull_names = extracted_data[1]
@@ -1587,7 +1609,13 @@ def suggestion(request):
 
 # filters
 @register.filter
-def translate_text(text):
+def translate_text(text, user):
+    if user.is_authenticated:
+        user_settings = USettings.objects.all().filter(user=user).first()
+        langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
+        translator = GoogleTranslator(source='auto', target=langs_dict[user_settings.language])
+    else:
+        translator = GoogleTranslator(source='auto', target='iw')
     return translator.translate(text)
 
 

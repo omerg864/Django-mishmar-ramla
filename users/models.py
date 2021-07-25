@@ -13,7 +13,7 @@ class UserSettings(models.Model):
     sat_noon = models.IntegerField(default=0, verbose_name="שבת צהריים")
     image = models.ImageField(default="default.jpg", upload_to="profile_pics")
     sat = models.BooleanField(default=False, verbose_name="עושה רק מוצ\"ש")
-    language = models.CharField(default="עברית", max_length=30, verbose_name="שפה")
+    language = models.CharField(default="hebrew", max_length=30, verbose_name="שפה")
 
     def __str__(self):
         return f'{self.user.first_name} {self.user.last_name}'
