@@ -31,42 +31,7 @@ if len(Settings.objects.all()) == 0:
     new_settings = Settings(submitting=True, pin_code=1234, officer="", city="", max_seq0=2, max_seq1=2)
     new_settings.save()
 
-data = {}
-api_key = "4cba4792d5c0c0222cc84e409138af7a"
-base_url = "http://api.openweathermap.org/data/2.5/weather?"
-city_name = "Ramla"
 translator = GoogleTranslator(source='auto', target='iw')
-try:
-    complete_url = base_url + "appid=" + api_key + "&q=" + city_name
-    response = requests.get(complete_url)
-    data = response.json()
-except:
-    data = {"Not Found:": ""}
-
-if data["cod"] != "404":
-    try:
-        y = data["main"]
-        current_temperature = str(int(y["temp"] - 273.15)) + " °C"
-        current_pressure = str(y["pressure"]) + " hPa"
-        current_humidiy = str(y["humidity"]) + "%"
-        weather_description = data["weather"][0]["description"]
-        weather = {
-            translator.translate("Temperature"): current_temperature,
-            translator.translate("Atmospheric Pressure"): current_pressure,
-            translator.translate("Humidity"): current_humidiy,
-            translator.translate("Description"): translator.translate(weather_description)
-        }
-    except AttributeError:
-        print("Weather Error")
-        weather = {
-            translator.translate("Not Found"): translator.translate("לא ניתן לטעון מזג האוויר")
-        }
-
-else:
-    print(" City Not Found ")
-    weather = {
-        translator.translate("Not Found"): translator.translate("עיר לא נמצא")
-    }
 
 
 @staff_member_required
@@ -88,10 +53,51 @@ def settings_view(request):
 
 
 def home(request):
+    settings = Settings.objects.all().first()
+    data = {}
+    api_key = "4cba4792d5c0c0222cc84e409138af7a"
+    base_url = "http://api.openweathermap.org/data/2.5/weather?"
+    if settings.city == '':
+        city_name = "Ramla"
+    else:
+        translator2en = GoogleTranslator(source='auto', target='en')
+        city_name = translator2en.translate(settings.city)
+    try:
+        complete_url = base_url + "appid=" + api_key + "&q=" + city_name
+        response = requests.get(complete_url)
+        data = response.json()
+    except:
+        data = {"Not Found:": ""}
+
+    if data["cod"] != "404":
+        try:
+            y = data["main"]
+            current_temperature = str(int(y["temp"] - 273.15)) + " °C"
+            current_pressure = str(y["pressure"]) + " hPa"
+            current_humidiy = str(y["humidity"]) + "%"
+            weather_description = data["weather"][0]["description"]
+            weather = {
+                translator.translate("Temperature"): current_temperature,
+                translator.translate("Atmospheric Pressure"): current_pressure,
+                translator.translate("Humidity"): current_humidiy,
+                translator.translate("Description"): translator.translate(weather_description)
+            }
+        except AttributeError:
+            print("Weather Error")
+            weather = {
+                translator.translate("Not Found"): translator.translate("לא ניתן לטעון מזג האוויר")
+            }
+
+    else:
+        print(" City Not Found ")
+        weather = {
+            translator.translate("Not Found"): translator.translate("עיר לא נמצא")
+        }
     posts = Post.objects.all()
     context = {
         "weather": weather,
         "posts": posts,
+        "city": translator.translate(city_name),
     }
     return render(request, "Schedule/Home.html", context)
 
