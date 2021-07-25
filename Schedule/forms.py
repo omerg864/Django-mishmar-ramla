@@ -1,5 +1,5 @@
 from django import forms
-from users.models import Profile as Profile
+from users.models import UserSettings as UserSettings
 from .models import Settings3 as Settings
 from .models import Shift1 as Shift
 from .models import Organization2 as Organization
@@ -13,7 +13,7 @@ class QualityUpdateForm(forms.ModelForm):
     sat_noon = forms.IntegerField(min_value=0)
 
     class Meta:
-        model = Profile
+        model = UserSettings
         fields = ['user', 'night', 'sat_night', 'sat_morning', 'sat_noon']
 
 

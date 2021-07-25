@@ -3,7 +3,7 @@ from random import Random
 
 from .Guard import Guard
 from django.contrib.auth.models import User
-from users.models import Profile as Profile
+from users.models import UserSettings as UserSettings
 from Schedule.models import Settings3 as Settings
 
 
@@ -35,7 +35,7 @@ class Organizer:
     def build_guards(self):
         index = 0
         users = User.objects.all()
-        profiles = Profile.objects.all()
+        profiles = UserSettings.objects.all()
         settings = Settings.objects.all().last()
         self.officer = settings.officer
         for user in users:
