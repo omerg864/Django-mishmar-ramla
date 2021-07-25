@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.core.mail import send_mail
 from datetime import datetime
+from users.models import UserSettings as USettings
 import pytz
 import os
 
@@ -21,10 +22,13 @@ def send_number_served(sender, instance, created, **kwargs):
             if user.is_superuser:
                 admin_user = user
         for s in shifts:
-            guards_sent.append(users.filter(username=s.username).first().profile.nickname)
+            user = users.filter(username=s.username).first()
+            user_settings = USettings.objects.all().filter(user=user).first()
+            guards_sent.append(user_settings.nickname)
         for u in users:
-            if u.profile.nickname not in guards_sent:
-                guards_not_sent.append(users.filter(username=u.username).first().profile.nickname)
+            user_settings = USettings.objects.all().filter(user=u).first()
+            if user_settings.nickname not in guards_sent:
+                guards_not_sent.append(user_settings.nickname)
         lenUsers = len(User.objects.all())
         tz_is = pytz.timezone('Israel')
         datetime_is = datetime.now(tz_is)

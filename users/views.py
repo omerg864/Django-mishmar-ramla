@@ -4,6 +4,7 @@ from django.contrib import messages
 from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm
 from Schedule.models import Settings3 as Settings
 from django.utils.translation import activate
+from .models import UserSettings as USettings
 from requests import get
 from Schedule.models import IpBan
 
@@ -57,9 +58,10 @@ def register(request, *args, **kwargs):
 @login_required
 def profile(request):
     activate('he')
+    user_settings = USettings.objects.all().filter(user=request.user).first()
     if request.method == "POST":
         u_form = UserUpdateForm(request.POST, instance=request.user)
-        p_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
+        p_form = ProfileUpdateForm(request.POST, request.FILES, instance=user_settings)
         if u_form.is_valid() and p_form.is_valid():
             u_form.save()
             p_form.save()
@@ -67,13 +69,13 @@ def profile(request):
             return redirect("profile")
     else:
         u_form = UserUpdateForm(instance=request.user)
-        p_form = ProfileUpdateForm(instance=request.user.profile)
+        p_form = ProfileUpdateForm(instance=user_settings)
     context = {
         "u_form": u_form,
         "p_form": p_form,
-        "night": request.user.profile.night,
-        "sat_night": request.user.profile.sat_night,
-        "sat_morning": request.user.profile.sat_morning,
-        "sat_noon": request.user.profile.sat_noon,
+        "night": user_settings.night,
+        "sat_night": user_settings.sat_night,
+        "sat_morning": user_settings.sat_morning,
+        "sat_noon": user_settings.sat_noon,
     }
     return render(request, "users/profile.html", context)
