@@ -75,10 +75,10 @@ def settings_view(request):
     if request.method == 'POST':
         settings_form = SettingsForm(request.POST, instance=settings)
         if settings_form.is_valid():
-            messages.success(request, f'שינויים נשמרו!')
+            messages.success(request, translator.translate(f'שינויים נשמרו!'))
             settings_form.save()
         else:
-            messages.error(request, f'שינויים לא נשמרו!')
+            messages.error(request, translator.translate(f'שינויים לא נשמרו!'))
     else:
         settings_form = SettingsForm(instance=settings)
     context = {
@@ -116,10 +116,10 @@ def shift_view(request):
             for ev in events.filter(date2=days["day" + str(x)]):
                 if request.user.profile.nickname == ev.nickname:
                     message = f'לא לשכוח בתאריך {ev.date2} יש {ev.description}. אם יש שינוי להודיע!'
-                    messages.info(request, message)
+                    messages.info(request, translator.translate(message))
                 elif ev.nickname == 'כולם':
                     message = f'לא לשכוח בתאריך {ev.date2} יש {ev.description}'
-                    messages.info(request, message)
+                    messages.info(request, translator.translate(message))
     if request.method == 'POST':
         if not already_submitted(request.user):
             form = ShiftForm(request.POST)
@@ -135,13 +135,13 @@ def shift_view(request):
         form.instance.notes = notes_area
         if form.is_valid():
             if not already_submitted(request.user):
-                messages.success(request, f'משמרות הוגשו בהצלחה!')
+                messages.success(request, translator.translate(f'משמרות הוגשו בהצלחה!'))
             else:
-                messages.success(request, f'משמרות עודכנו בהצלחה!')
+                messages.success(request, translator.translate(f'משמרות עודכנו בהצלחה!'))
             form.save()
             return redirect("Schedule-Home")
         else:
-            messages.error(request, f'שינויים לא נשמרו!')
+            messages.error(request, translator.translate(f'שינויים לא נשמרו!'))
     else:
         if not submitting:
             shifts = Shift.objects.order_by('-date')
@@ -233,7 +233,7 @@ class ShiftUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def form_valid(self, form):
         self.object.notes = self.request.POST.get("notesArea")
         super(ShiftUpdateView, self).form_valid(form)
-        messages.success(self.request, f'עדכון הושלם')
+        messages.success(self.request, translator.translate(f'עדכון הושלם'))
         return redirect("Schedule-Served-sum")
 
     def get_context_data(self, **kwargs):
@@ -635,18 +635,18 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                 form = OrganizationUpdateForm(request.POST, instance=self.get_object())
                 if form.is_valid():
                     self.object = form.save()
-                    messages.success(self.request, f'עדכון הושלם')
+                    messages.success(self.request, translator.translate(f'עדכון הושלם'))
                     self.organization_valid()
                     return HttpResponseRedirect(self.request.path_info)
                 else:
-                    messages.info(self.request, f'תקלה טכנית לא ניתן לבדוק')
+                    messages.info(self.request, translator.translate(f'תקלה טכנית לא ניתן לבדוק'))
             elif 'update' in request.POST:
                 form = OrganizationUpdateForm(request.POST, instance=self.get_object())
                 if form.is_valid():
                     self.object = form.save()
-                    messages.success(self.request, f'עדכון הושלם')
+                    messages.success(self.request, translator.translate(f'עדכון הושלם'))
                 else:
-                    messages.info(self.request, f'עדכון לא הושלם תקלה טכנית')
+                    messages.info(self.request, translator.translate(f'עדכון לא הושלם תקלה טכנית'))
                 return HttpResponseRedirect(self.request.path_info)
             elif 'upload' in request.POST:
                 self.uplaod_organize(request)
@@ -672,9 +672,9 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                 form.data._mutable = False
                 if form.is_valid():
                     self.object = form.save()
-                    messages.success(self.request, f'איפוס הושלם')
+                    messages.success(self.request, translator.translate(f'איפוס הושלם'))
                 else:
-                    messages.info(self.request, f'איפוס לא הושלם תקלה טכנית')
+                    messages.info(self.request, translator.translate(f'איפוס לא הושלם תקלה טכנית'))
                 return HttpResponseRedirect(self.request.path_info)
 
     def organization_valid(self):
@@ -712,7 +712,9 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                 num_day = num_day.replace("N", "")
                 num_day = num_day.replace("M", "")
                 message1 = name + " ביום ה-" + num_day + " בשתי משמרות רצופות"
+                message1 = translator.translate(message1)
                 message2 = name + " ביום ה-" + num_day + " באותה משמרת פעמיים"
+                message2 = translator.translate(message2)
                 day = "day" + num_day
                 day_before = "day" + str(int(num_day) - 1)
                 day_after = "day" + str(int(num_day) + 1)
@@ -1125,9 +1127,9 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         form.data._mutable = False
         if form.is_valid():
             self.object = form.save()
-            messages.success(self.request, f'העלאה הושלמה')
+            messages.success(self.request, translator.translate(f'העלאה הושלמה'))
         else:
-            messages.info(self.request, f'עדכון לא הושלם תקלה טכנית')
+            messages.info(self.request, translator.translate(f'עדכון לא הושלם תקלה טכנית'))
 
 
 def is_more_than_once(list, name):
@@ -1567,6 +1569,9 @@ def suggestion(request):
 
 
 # filters
+@register.filter
+def translate_text(text):
+    return translator.translate(text)
 
 
 @register.filter

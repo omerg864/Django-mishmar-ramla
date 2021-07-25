@@ -26,6 +26,18 @@ class Settings(models.Model):
         return "הגדרות"
 
 
+class Settings3(models.Model):
+    submitting = models.BooleanField(default=True, verbose_name="ניתן להגיש/לשנות הגשות")
+    pin_code = models.IntegerField(default=1234, verbose_name="קוד זיהוי")
+    officer = models.CharField(max_length=20, verbose_name="קצין מתקן")
+    city = models.CharField(max_length=100, verbose_name="עיר")
+    max_seq0 = models.IntegerField(default=2, verbose_name="מספר רצפים מקסימלי לילה לצהריים")
+    max_seq1 = models.IntegerField(default=2, verbose_name="מספר רצפים מקסימלי צהריים לבוקר")
+
+    def __str__(self):
+        return "הגדרות"
+
+
 class Organization2(models.Model):
     date = models.DateField(default=timezone.now)
     published = models.BooleanField(default=False, verbose_name="פרסום")
