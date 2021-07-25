@@ -23,6 +23,7 @@ from users.models import Profile as Profile
 from django.utils.translation import activate
 import openpyxl
 import requests
+from deep_translator import GoogleTranslator
 
 activate('he')
 
@@ -34,11 +35,12 @@ data = {}
 api_key = "4cba4792d5c0c0222cc84e409138af7a"
 base_url = "http://api.openweathermap.org/data/2.5/weather?"
 city_name = "Ramla"
+translator = GoogleTranslator(source='auto', target='iw')
 try:
     complete_url = base_url + "appid=" + api_key + "&q=" + city_name
     response = requests.get(complete_url)
     data = response.json()
-except ConnectionError:
+except:
     data = {"Not Found:": ""}
 
 if data["cod"] != "404":
@@ -49,21 +51,21 @@ if data["cod"] != "404":
         current_humidiy = str(y["humidity"]) + "%"
         weather_description = data["weather"][0]["description"]
         weather = {
-            "Temperature": current_temperature,
-            "Atmospheric Pressure": current_pressure,
-            "Humidity": current_humidiy,
-            "Description": weather_description
+            translator.translate("Temperature"): current_temperature,
+            translator.translate("Atmospheric Pressure"): current_pressure,
+            translator.translate("Humidity"): current_humidiy,
+            translator.translate("Description"): translator.translate(weather_description)
         }
     except AttributeError:
         print("Weather Error")
         weather = {
-            "Not Found": "לא ניתן לטעון מזג האוויר"
+            translator.translate("Not Found"): translator.translate("לא ניתן לטעון מזג האוויר")
         }
 
 else:
     print(" City Not Found ")
     weather = {
-        "Not Found": "עיר לא נמצא"
+        translator.translate("Not Found"): translator.translate("עיר לא נמצא")
     }
 
 
