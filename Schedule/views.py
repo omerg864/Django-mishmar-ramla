@@ -24,6 +24,8 @@ from django.utils.translation import activate
 import openpyxl
 import requests
 from deep_translator import GoogleTranslator
+#from deep_translator import MyMemoryTranslator
+import time
 
 activate('he')
 
@@ -31,20 +33,17 @@ if len(Settings.objects.all()) == 0:
     new_settings = Settings(submitting=True, pin_code=1234, officer="", city="", max_seq0=2, max_seq1=2)
     new_settings.save()
 
-
 @staff_member_required
 def settings_view(request):
-    user_settings = USettings.objects.all().filter(user=request.user).first()
-    langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
-    translator = GoogleTranslator(source='auto', target=langs_dict[user_settings.language])
+    time.sleep(1)
     settings = Settings.objects.all().last()
     if request.method == 'POST':
         settings_form = SettingsForm(request.POST, instance=settings)
         if settings_form.is_valid():
-            messages.success(request, translator.translate(f'שינויים נשמרו!'))
+            messages.success(request, 'שינויים נשמרו!')
             settings_form.save()
         else:
-            messages.error(request, translator.translate(f'שינויים לא נשמרו!'))
+            messages.error(request, 'שינויים לא נשמרו!')
     else:
         settings_form = SettingsForm(instance=settings)
     context = {
@@ -54,12 +53,6 @@ def settings_view(request):
 
 
 def home(request):
-    if request.user.is_authenticated:
-        user_settings = USettings.objects.all().filter(user=request.user).first()
-        langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
-        translator = GoogleTranslator(source='auto', target=langs_dict[user_settings.language])
-    else:
-        translator = GoogleTranslator(source='auto', target='iw')
     settings = Settings.objects.all().first()
     data = {}
     api_key = "4cba4792d5c0c0222cc84e409138af7a"
@@ -84,27 +77,27 @@ def home(request):
             current_humidiy = str(y["humidity"]) + "%"
             weather_description = data["weather"][0]["description"]
             weather = {
-                translator.translate("Temperature"): current_temperature,
-                translator.translate("Atmospheric Pressure"): current_pressure,
-                translator.translate("Humidity"): current_humidiy,
-                translator.translate("Description"): translator.translate(weather_description)
+                "Temperature": current_temperature,
+                "Atmospheric Pressure": current_pressure,
+                "Humidity": current_humidiy,
+                "Description": weather_description
             }
         except AttributeError:
             print("Weather Error")
             weather = {
-                translator.translate("Not Found"): translator.translate("לא ניתן לטעון מזג האוויר")
+                "Not Found": "לא ניתן לטעון מזג האוויר"
             }
 
     else:
         print(" City Not Found ")
         weather = {
-            translator.translate("Not Found"): translator.translate("עיר לא נמצא")
+            "Not Found": "עיר לא נמצא"
         }
     posts = Post.objects.all()
     context = {
         "weather": weather,
         "posts": posts,
-        "city": translator.translate(city_name),
+        "city": city_name,
     }
     return render(request, "Schedule/Home.html", context)
 
@@ -115,9 +108,6 @@ def error_404_view(request, exception):
 
 @login_required
 def shift_view(request):
-    user_settings = USettings.objects.all().filter(user=request.user).first()
-    langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
-    translator = GoogleTranslator(source='auto', target=langs_dict[user_settings.language])
     form = None
     days = {}
     notes_text = ""
@@ -133,10 +123,10 @@ def shift_view(request):
             for ev in events.filter(date2=days["day" + str(x)]):
                 if user_settings.nickname == ev.nickname:
                     message = f'לא לשכוח בתאריך {ev.date2} יש {ev.description}. אם יש שינוי להודיע!'
-                    messages.info(request, translator.translate(message))
+                    messages.info(request, message)
                 elif ev.nickname == 'כולם':
                     message = f'לא לשכוח בתאריך {ev.date2} יש {ev.description}'
-                    messages.info(request, translator.translate(message))
+                    messages.info(request, message)
     if request.method == 'POST':
         if not already_submitted(request.user):
             form = ShiftForm(request.POST)
@@ -152,13 +142,13 @@ def shift_view(request):
         form.instance.notes = notes_area
         if form.is_valid():
             if not already_submitted(request.user):
-                messages.success(request, translator.translate(f'משמרות הוגשו בהצלחה!'))
+                messages.success(request, f'משמרות הוגשו בהצלחה!')
             else:
-                messages.success(request, translator.translate(f'משמרות עודכנו בהצלחה!'))
+                messages.success(request, f'משמרות עודכנו בהצלחה!')
             form.save()
             return redirect("Schedule-Home")
         else:
-            messages.error(request, translator.translate(f'שינויים לא נשמרו!'))
+            messages.error(request, f'שינויים לא נשמרו!')
     else:
         if not submitting:
             shifts = Shift.objects.order_by('-date')
@@ -248,12 +238,9 @@ class ShiftUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     fields = fields_temp
 
     def form_valid(self, form):
-        user_settings = USettings.objects.all().filter(user=self.request.user).first()
-        langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
-        translator = GoogleTranslator(source='auto', target=langs_dict[user_settings.language])
         self.object.notes = self.request.POST.get("notesArea")
         super(ShiftUpdateView, self).form_valid(form)
-        messages.success(self.request, translator.translate(f'עדכון הושלם'))
+        messages.success(self.request, f'עדכון הושלם')
         return redirect("Schedule-Served-sum")
 
     def get_context_data(self, **kwargs):
@@ -652,26 +639,23 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         return False
 
     def post(self, request, *args, **kwargs):
-        user_settings = USettings.objects.all().filter(user=self.request.user).first()
-        langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
-        translator = GoogleTranslator(source='auto', target=langs_dict[user_settings.language])
         if request.method == 'POST':
             if 'check1' in request.POST:
                 form = OrganizationUpdateForm(request.POST, instance=self.get_object())
                 if form.is_valid():
                     self.object = form.save()
-                    messages.success(self.request, translator.translate(f'עדכון הושלם'))
+                    messages.success(self.request, f'עדכון הושלם')
                     self.organization_valid()
                     return HttpResponseRedirect(self.request.path_info)
                 else:
-                    messages.info(self.request, translator.translate(f'תקלה טכנית לא ניתן לבדוק'))
+                    messages.info(self.request, f'תקלה טכנית לא ניתן לבדוק')
             elif 'update' in request.POST:
                 form = OrganizationUpdateForm(request.POST, instance=self.get_object())
                 if form.is_valid():
                     self.object = form.save()
-                    messages.success(self.request, translator.translate(f'עדכון הושלם'))
+                    messages.success(self.request, f'עדכון הושלם')
                 else:
-                    messages.info(self.request, translator.translate(f'עדכון לא הושלם תקלה טכנית'))
+                    messages.info(self.request, f'עדכון לא הושלם תקלה טכנית')
                 return HttpResponseRedirect(self.request.path_info)
             elif 'upload' in request.POST:
                 self.uplaod_organize(request)
@@ -697,15 +681,12 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                 form.data._mutable = False
                 if form.is_valid():
                     self.object = form.save()
-                    messages.success(self.request, translator.translate(f'איפוס הושלם'))
+                    messages.success(self.request, f'איפוס הושלם')
                 else:
-                    messages.info(self.request, translator.translate(f'איפוס לא הושלם תקלה טכנית'))
+                    messages.info(self.request, f'איפוס לא הושלם תקלה טכנית')
                 return HttpResponseRedirect(self.request.path_info)
 
     def organization_valid(self):
-        user_settings = USettings.objects.all().filter(user=self.request.user).first()
-        langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
-        translator = GoogleTranslator(source='auto', target=langs_dict[user_settings.language])
         organization1 = get_input(self.get_object())
         input_days = {}
         valid = True
@@ -740,9 +721,7 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                 num_day = num_day.replace("N", "")
                 num_day = num_day.replace("M", "")
                 message1 = name + " ביום ה-" + num_day + " בשתי משמרות רצופות"
-                message1 = translator.translate(message1)
                 message2 = name + " ביום ה-" + num_day + " באותה משמרת פעמיים"
-                message2 = translator.translate(message2)
                 day = "day" + num_day
                 day_before = "day" + str(int(num_day) - 1)
                 day_after = "day" + str(int(num_day) + 1)
@@ -936,9 +915,6 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
             return None
 
     def uplaod_organize(self, request):
-        user_settings = USettings.objects.all().filter(user=self.request.user).first()
-        langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
-        translator = GoogleTranslator(source='auto', target=langs_dict[user_settings.language])
         extracted_data = self.extract_data(request)
         names_days = extracted_data[0]
         no_pull_names = extracted_data[1]
@@ -1162,9 +1138,9 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         form.data._mutable = False
         if form.is_valid():
             self.object = form.save()
-            messages.success(self.request, translator.translate(f'העלאה הושלמה'))
+            messages.success(self.request, f'העלאה הושלמה')
         else:
-            messages.info(self.request, translator.translate(f'עדכון לא הושלם תקלה טכנית'))
+            messages.info(self.request, f'עדכון לא הושלם תקלה טכנית')
 
 
 def is_more_than_once(list, name):
@@ -1608,15 +1584,15 @@ def suggestion(request):
 
 
 # filters
-@register.filter
-def translate_text(text, user):
-    if user.is_authenticated:
-        user_settings = USettings.objects.all().filter(user=user).first()
-        langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
-        translator = GoogleTranslator(source='auto', target=langs_dict[user_settings.language])
-    else:
-        translator = GoogleTranslator(source='auto', target='iw')
-    return translator.translate(text)
+#@register.filter
+#def translate_text(text, user):
+#    if user.is_authenticated:
+#        user_settings = USettings.objects.all().filter(user=user).first()
+#        langs_dict = MyMemoryTranslator.get_supported_languages(as_dict=True)
+#        translator = MyMemoryTranslator(source='auto', target=user_settings.language)
+#    else:
+#        translator = MyMemoryTranslator(source='auto', target='hebrew')
+#    return translator.translate(text)
 
 
 @register.filter
