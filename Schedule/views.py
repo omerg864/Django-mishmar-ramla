@@ -836,8 +836,9 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         # extract from database
         shifts = Shift.objects.all().filter(date=self.get_object().date)
         users = User.objects.all()
-        max_seq0 = 2
-        max_seq1 = 2
+        settings = Settings.objects.all().first()
+        max_seq0 = settings.max_seq0
+        max_seq1 = settings.max_seq1
         sequence_count = {}
         max_out_names = [[], []]
         for s in shifts:
@@ -1146,6 +1147,7 @@ def is_more_than_once(list, name):
     if num > 1:
         return True
     return False
+
 
 def check_if_in_list(names, name):
     if name in names:
