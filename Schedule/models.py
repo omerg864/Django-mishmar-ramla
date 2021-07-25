@@ -312,3 +312,8 @@ class Event(models.Model):
     morning = models.BooleanField(default=False, verbose_name="בוקר")
     after_noon = models.BooleanField(default=False, verbose_name="צהריים")
     night = models.BooleanField(default=False, verbose_name="לילה")
+
+
+class IpBan(models.Model):
+    ipaddress = models.GenericIPAddressField(verbose_name="כתובת IP")
+    num_tries = models.IntegerField(default=0, verbose_name="מספר ניסיונות")

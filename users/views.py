@@ -4,6 +4,8 @@ from django.contrib import messages
 from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm
 from Schedule.models import Settings as Settings
 from django.utils.translation import activate
+from requests import get
+from Schedule.models import IpBan
 
 
 activate('he')
@@ -13,8 +15,26 @@ def register(request, *args, **kwargs):
     activate('he')
     settings = Settings.objects.first()
     pin_code = int(settings.pin_code)
+    ip = get('https://api.ipify.org').text
+    print('My public IP address is: {}'.format(ip))
+    ips = IpBan.objects.all()
+    ban = False
+    if len(ips.filter(ipaddress=ip)) > 0:
+        new_ip = ips.filter(ipaddress=ip).first()
+        if new_ip.num_tries > 15:
+            ban = True
     if request.method == "POST":
         form = UserRegisterForm(request.POST)
+        if ban:
+            return render(request, "users/register.html", {"form": form, "ban": ban})
+        ips = IpBan.objects.all()
+        if len(ips.filter(ipaddress=ip)) == 0:
+            new_ip = IpBan(ipaddress=ip, num_tries=1)
+            new_ip.save()
+        else:
+            new_ip = ips.filter(ipaddress=ip).first()
+            new_ip.num_tries += 1
+            new_ip.save()
         pc = int(request.POST.get("pin_code"))
         if pc != pin_code:
             messages.warning(request, "קוד זיהוי לא נכון")
@@ -27,7 +47,7 @@ def register(request, *args, **kwargs):
             messages.warning(request, form.errors)
     else:
         form = UserRegisterForm()
-    return render(request, "users/register.html", {"form": form})
+    return render(request, "users/register.html", {"form": form, "ban": ban})
 
 
 @login_required

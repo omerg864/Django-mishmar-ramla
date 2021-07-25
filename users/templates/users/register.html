@@ -2,6 +2,11 @@
 {% load crispy_forms_tags %}
 <html dir=rtl xmlns="http://www.w3.org/1999/html">
 {% block content %}
+    {% if ban %}
+         <div class="content-section">
+         <legend >נחסמת מהרשמה. אם זו טעות נא לפנות למנהל האתר</legend>
+         </div>
+    {% else %}
         <div class="content-section">
         <form method="POST">
             {% csrf_token %}
@@ -116,4 +121,5 @@
             </small>
         </div>
     </div>
+    {% endif %}
 {% endblock content %}
