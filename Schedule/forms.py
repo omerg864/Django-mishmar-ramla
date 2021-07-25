@@ -43,6 +43,9 @@ class SettingsForm(forms.ModelForm):
     submitting = forms.BooleanField(required=False)
     pin_code = forms.IntegerField(required=True)
     officer = forms.CharField(max_length=20)
+    city = forms.CharField(max_length=30)
+    max_seq0 = forms.IntegerField(required=True)
+    max_seq1 = forms.IntegerField(required=True)
 
     class Meta:
         model = Settings
