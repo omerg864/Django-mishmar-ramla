@@ -33,6 +33,9 @@ if len(Settings.objects.all()) == 0:
     new_settings = Settings(submitting=True, pin_code=1234, officer="", city="", max_seq0=2, max_seq1=2)
     new_settings.save()
 
+base_strings = {1: "הגשת משמרות", 2: "סידור", 3: "סידורים", 4: "הגדרות", 5: "ניהול נתונים", 6: "פרופיל", 7: "התנתק",
+                8: "התחבר", 9: "הירשם"}
+
 
 @staff_member_required
 def settings_view(request):
@@ -48,23 +51,22 @@ def settings_view(request):
         settings_form = SettingsForm(request.POST, instance=settings)
         settings_form.instance.submitting = checked
         if settings_form.is_valid():
-            messages.success(request, success)
+            messages.success(request, translate_text(success, request.user, "hebrew"))
             settings_form.save()
         else:
-            messages.error(request, fail)
+            messages.error(request, translate_text(fail, request.user, "hebrew"))
     else:
         settings_form = SettingsForm(instance=settings)
     context = {
         "settings_form": settings_form,
-        "checked": checked
+        "checked": checked,
+        "base": base_strings
     }
     return render(request, "Schedule/settings.html", context)
 
 
 def home(request):
     settings = Settings.objects.all().first()
-    if request.user.is_authenticated:
-        user_settings = USettings.objects.all().filter(user=request.user).first()
     data = {}
     api_key = "4cba4792d5c0c0222cc84e409138af7a"
     base_url = "http://api.openweathermap.org/data/2.5/weather?"
@@ -88,20 +90,22 @@ def home(request):
             current_humidiy = str(y["humidity"]) + "%"
             weather_description = data["weather"][0]["description"]
             weather = {
-                "טמפרטורה": current_temperature,
-                "לחץ אטמוספרי": current_pressure,
-                "לחות": current_humidiy,
-                "תיאור": weather_description
+                translate_text("טמפרטורה", request.user, "hebrew"): current_temperature,
+                translate_text("לחץ אטמוספרי", request.user, "hebrew"): current_pressure,
+                translate_text("לחות", request.user, "hebrew"): current_humidiy,
+                translate_text("תיאור", request.user, "hebrew"):
+                    translate_text(weather_description, request.user, "english")
             }
         except AttributeError:
             print("Weather Error")
             weather = {
-                "לא נמצא": "לא ניתן לטעון מזג האוויר"
+                translate_text("לא נמצא", request.user, "hebrew"):
+                    translate_text("לא ניתן לטעון מזג האוויר", request.user, "hebrew")
             }
     else:
         print(" City Not Found ")
         weather = {
-            "לא נמצא": "עיר לא נמצא"
+            translate_text("לא נמצא", request.user, "hebrew"): translate_text("עיר לא נמצא", request.user, "hebrew")
         }
     posts = Post.objects.all()
     context = {
@@ -133,9 +137,11 @@ def shift_view(request):
             for ev in events.filter(date2=days["day" + str(x)]):
                 if user_settings.nickname == ev.nickname:
                     message = f'לא לשכוח בתאריך {ev.date2} יש {ev.description}. אם יש שינוי להודיע!'
+                    message = translate_text(message, request.user, "hebrew")
                     messages.info(request, message)
                 elif ev.nickname == 'כולם':
                     message = f'לא לשכוח בתאריך {ev.date2} יש {ev.description}'
+                    message = translate_text(message, request.user, "hebrew")
                     messages.info(request, message)
     if request.method == 'POST':
         if not already_submitted(request.user):
@@ -152,13 +158,13 @@ def shift_view(request):
         form.instance.notes = notes_area
         if form.is_valid():
             if not already_submitted(request.user):
-                messages.success(request, f'משמרות הוגשו בהצלחה!')
+                messages.success(request, translate_text(f'משמרות הוגשו בהצלחה!', request.user, "hebrew"))
             else:
-                messages.success(request, f'משמרות עודכנו בהצלחה!')
+                messages.success(request, translate_text(f'משמרות עודכנו בהצלחה!', request.user, "hebrew"))
             form.save()
             return redirect("Schedule-Home")
         else:
-            messages.error(request, f'שינויים לא נשמרו!')
+            messages.error(request, translate_text(f'שינויים לא נשמרו!', request.user, "hebrew"))
     else:
         if not submitting:
             shifts = Shift.objects.order_by('-date')
@@ -250,7 +256,7 @@ class ShiftUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def form_valid(self, form):
         self.object.notes = self.request.POST.get("notesArea")
         super(ShiftUpdateView, self).form_valid(form)
-        messages.success(self.request, f'עדכון הושלם')
+        messages.success(self.request, translate_text(f'עדכון הושלם', self.request.user, "hebrew"))
         return redirect("Schedule-Served-sum")
 
     def get_context_data(self, **kwargs):
@@ -608,7 +614,7 @@ class ServedSumShiftDetailView(LoginRequiredMixin, DetailView):
     def post(self, request, *args, **kwargs):
         if request.method == "POST":
             ctx = self.get_data()
-            return WriteToExcel(ctx["served"], ctx["notes"], ctx["days"])
+            return WriteToExcel(ctx["served"], ctx["notes"], ctx["days"], self.request.user)
 
 
 class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -662,11 +668,11 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                 form.instance.published = published
                 if form.is_valid():
                     self.object = form.save()
-                    messages.success(self.request, f'עדכון הושלם')
+                    messages.success(self.request, translate_text(f'עדכון הושלם', self.request.user, "hebrew"))
                     self.organization_valid()
                     return HttpResponseRedirect(self.request.path_info)
                 else:
-                    messages.info(self.request, f'תקלה טכנית לא ניתן לבדוק')
+                    messages.info(self.request, translate_text(f'תקלה טכנית לא ניתן לבדוק', self.request.user, "hebrew"))
             elif 'update' == action:
                 form = OrganizationUpdateForm(request.POST, instance=self.get_object())
                 pub = request.POST.get("pub")
@@ -678,9 +684,9 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                 form.instance.published = published
                 if form.is_valid():
                     self.object = form.save()
-                    messages.success(self.request, f'עדכון הושלם')
+                    messages.success(self.request, translate_text(f'עדכון הושלם', self.request.user, "hebrew"))
                 else:
-                    messages.info(self.request, f'עדכון לא הושלם תקלה טכנית')
+                    messages.info(self.request, translate_text(f'עדכון לא הושלם תקלה טכנית', self.request.user, "hebrew"))
                 return HttpResponseRedirect(self.request.path_info)
             elif 'upload' == action:
                 self.uplaod_organize(request)
@@ -708,9 +714,9 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                 form.data._mutable = False
                 if form.is_valid():
                     self.object = form.save()
-                    messages.success(self.request, f'איפוס הושלם')
+                    messages.success(self.request, translate_text(f'איפוס הושלם', self.request.user, "hebrew"))
                 else:
-                    messages.info(self.request, f'איפוס לא הושלם תקלה טכנית')
+                    messages.info(self.request, translate_text(f'איפוס לא הושלם תקלה טכנית', self.request.user, "hebrew"))
                 return HttpResponseRedirect(self.request.path_info)
 
     def organization_valid(self):
@@ -755,52 +761,52 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                 if name in input_days[day + "M"]:
                     if is_more_than_once(input_days[day + "M"], name):
                         if message2 not in massages_sent:
-                            messages.info(self.request, message2)
+                            messages.info(self.request, translate_text(message2, self.request.user, "hebrew"))
                             massages_sent.append(message2)
                         valid = False
                     if int(num_day) != 1:
                         if name in input_days[day + "A"] or name in input_days[day_before + "N"]:
                             if message1 not in massages_sent:
-                                messages.info(self.request, message1)
+                                messages.info(self.request, translate_text(message1, self.request.user, "hebrew"))
                                 massages_sent.append(message1)
                             valid = False
                     else:
                         if name in input_days[day + "A"]:
                             if message1 not in massages_sent:
-                                messages.info(self.request, message1)
+                                messages.info(self.request, translate_text(message1, self.request.user, "hebrew"))
                                 massages_sent.append(message1)
                             valid = False
                 if name in input_days[day + "A"]:
                     if is_more_than_once(input_days[day + "A"], name):
                         if message2 not in massages_sent:
-                            messages.info(self.request, message2)
+                            messages.info(self.request, translate_text(message2, self.request.user, "hebrew"))
                             massages_sent.append(message2)
                         valid = False
                     if name in input_days[day + "M"] or name in input_days[day + "N"]:
                         if message1 not in massages_sent:
-                            messages.info(self.request, message1)
+                            messages.info(self.request, translate_text(message1, self.request.user, "hebrew"))
                             massages_sent.append(message1)
                         valid = False
                 if name in input_days[day + "N"]:
                     if is_more_than_once(input_days[day + "N"], name):
                         if message2 not in massages_sent:
-                            messages.info(self.request, message2)
+                            messages.info(self.request, translate_text(message2, self.request.user, "hebrew"))
                             massages_sent.append(message2)
                         valid = False
                     if int(num_day) != 14:
                         if name in input_days[day + "A"] or name in input_days[day_after + "M"]:
                             if message1 not in massages_sent:
-                                messages.info(self.request, message1)
+                                messages.info(self.request, translate_text(message1, self.request.user, "hebrew"))
                                 massages_sent.append(message1)
                             valid = False
                     else:
                         if name in input_days[day + "A"]:
                             if message1 not in massages_sent:
-                                messages.info(self.request, message1)
+                                messages.info(self.request, translate_text(message1, self.request.user, "hebrew"))
                                 massages_sent.append(message1)
                             valid = False
         if valid:
-            messages.success(self.request, "סידור תקין")
+            messages.success(self.request, translate_text("סידור תקין", self.request.user, "hebrew"))
 
     def extract_data(self, request):
         # extract from excel
@@ -1165,9 +1171,9 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         form.data._mutable = False
         if form.is_valid():
             self.object = form.save()
-            messages.success(self.request, f'העלאה הושלמה')
+            messages.success(self.request, translate_text(f'העלאה הושלמה', self.request.user, "hebrew"))
         else:
-            messages.info(self.request, f'עדכון לא הושלם תקלה טכנית')
+            messages.info(self.request, translate_text(f'עדכון לא הושלם תקלה טכנית', self.request.user, "hebrew"))
 
 
 def is_more_than_once(list, name):
@@ -1262,7 +1268,7 @@ def organization(request):
     return render(request, "Schedule/Organization.html", context)
 
 
-def WriteToExcel(served, notes, dates):
+def WriteToExcel(served, notes, dates, user):
     # Create a workbook and add a worksheet.
     buffer = io.BytesIO()
     workbook = xlsxwriter.Workbook(buffer)
@@ -1270,6 +1276,9 @@ def WriteToExcel(served, notes, dates):
     worksheet.right_to_left()
 
     days = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"]
+    user_settings = USettings.objects.all().filter(user=user).first()
+    if user_settings.language == 'english':
+        days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
     maxes = {"morning": 0, "after_noon": 0, "night": 0}
 
@@ -1339,34 +1348,34 @@ def WriteToExcel(served, notes, dates):
             worksheet.write(row, 8, None, border_left_format)
         row += 1
     # Building second Structure
-    worksheet.merge_range('A1:H2', 'הגשות', title_format)
-    worksheet.merge_range('I1:P2', 'הגשות', title_format)
+    worksheet.merge_range('A1:H2', translate_text('הגשות', user, "hebrew"), title_format)
+    worksheet.merge_range('I1:P2', translate_text('הגשות', user, "hebrew"), title_format)
     worksheet.merge_range('Q1:X2', dates["day0"].strftime("%d.%m") + "-" + dates["day13"].strftime("%d.%m"),
                           title_format)
-    worksheet.write(2, 0, "תאריך", cell_format)
+    worksheet.write(2, 0, translate_text("תאריך", user, "hebrew"), cell_format)
     col = 1
     for d in dates:
         worksheet.write(2, col, dates[d].strftime("%d.%m"), cell_format)
         col += 1
-    worksheet.write(3, 0, "יום", cell_format)
+    worksheet.write(3, 0, translate_text("יום", user, "hebrew"), cell_format)
     col = 1
     for d in days:
         worksheet.write(3, col, d, cell_format)
         worksheet.write(3, col + 7, d, cell_format)
         col += 1
-    worksheet.merge_range(f'A5:A{5 + maxes["morning"]}', 'בוקר', cell_format)
+    worksheet.merge_range(f'A5:A{5 + maxes["morning"]}', translate_text('בוקר', user, "hebrew"), cell_format)
     worksheet.merge_range(
-        f'A{5 + maxes["morning"] + 1}:A{5 + maxes["morning"] + maxes["after_noon"]}', 'צהריים', cell_format)
+        f'A{5 + maxes["morning"] + 1}:A{5 + maxes["morning"] + maxes["after_noon"]}', translate_text('צהריים', user, "hebrew"), cell_format)
     worksheet.merge_range(
         f'A{5 + maxes["morning"] + maxes["after_noon"] + 1}:A{5 + maxes["morning"] + maxes["after_noon"] + maxes["night"]}',
-        'לילה', cell_format)
+        translate_text('לילה', user, "hebrew"), cell_format)
     worksheet.merge_range('Q4:R4', 'שם', cell_format)
-    worksheet.write("S4", "בוקר 1", cell_format)
-    worksheet.write("T4", "בוקר 2", cell_format)
-    worksheet.write("U4", "צהריים 1", cell_format)
-    worksheet.write("V4", "צהריים 2", cell_format)
-    worksheet.write("W4", "לילה", cell_format)
-    worksheet.write("X4", "סופ\"ש", cell_format)
+    worksheet.write("S4", translate_text('בוקר', user, "hebrew") + " 1", cell_format)
+    worksheet.write("T4", translate_text('בוקר', user, "hebrew") + " 2", cell_format)
+    worksheet.write("U4", translate_text('צהריים', user, "hebrew") + " 1", cell_format)
+    worksheet.write("V4", translate_text('צהריים', user, "hebrew") + " 2", cell_format)
+    worksheet.write("W4", translate_text('לילה', user, "hebrew"), cell_format)
+    worksheet.write("X4", translate_text("סופ\"ש", user, "hebrew"), cell_format)
 
     # Adding Data
     users = []
@@ -1419,7 +1428,7 @@ def WriteToExcel(served, notes, dates):
         for c in range(6):
             worksheet.write(4 + x, col, "", cell_format)
             col += 1
-    worksheet.merge_range(f'Q{4 + num_rows + 1}:R{4 + num_rows + 1}', 'סה\"כ', cell_format)
+    worksheet.merge_range(f'Q{4 + num_rows + 1}:R{4 + num_rows + 1}', translate_text('סה\"כ', user, "hebrew"), cell_format)
     worksheet.write(f'S{4 + num_rows + 1}', f'=SUM(S5:S{4 + num_rows})', cell_format)
     worksheet.write(f'T{4 + num_rows + 1}', f'=SUM(T5:T{4 + num_rows})', cell_format)
     worksheet.write(f'U{4 + num_rows + 1}', f'=SUM(U5:U{4 + num_rows})', cell_format)
@@ -1429,11 +1438,11 @@ def WriteToExcel(served, notes, dates):
 
     row = 4 + num_rows + 4
 
-    worksheet.merge_range(f'Q{row}:X{row + 3}', 'משמרות לאיכות', title_format)
-    worksheet.merge_range(f'Q{row + 4}:X{row + 5}', 'שבוע ראשון', title_format)
+    worksheet.merge_range(f'Q{row}:X{row + 3}', translate_text('משמרות לאיכות', user, "hebrew"), title_format)
+    worksheet.merge_range(f'Q{row + 4}:X{row + 5}', translate_text('שבוע ראשון', user, "hebrew"), title_format)
     worksheet.merge_range(f'Q{row + 6}:X{row + 6}', '', cell_format)
     worksheet.merge_range(f'Q{row + 7}:X{row + 7}', '', cell_format)
-    worksheet.merge_range(f'Q{row + 8}:X{row + 9}', 'שבוע שני', title_format)
+    worksheet.merge_range(f'Q{row + 8}:X{row + 9}', translate_text('שבוע שני', user, "hebrew"), title_format)
     worksheet.merge_range(f'Q{row + 10}:X{row + 10}', '', cell_format)
     worksheet.merge_range(f'Q{row + 11}:X{row + 11}', '', cell_format)
 
@@ -1441,13 +1450,13 @@ def WriteToExcel(served, notes, dates):
     count = 0
     for n in notes:
         if n == "general":
-            worksheet.merge_range(f'Q{row + count}:X{row + count + 1}', 'הערות', title_format)
+            worksheet.merge_range(f'Q{row + count}:X{row + count + 1}', translate_text('הערות', user, "hebrew"), title_format)
             count += 2
         elif n == "week1":
-            worksheet.merge_range(f'Q{row + count}:X{row + count}', 'שבוע ראשון', title_format)
+            worksheet.merge_range(f'Q{row + count}:X{row + count}', translate_text('שבוע ראשון', user, "hebrew"), title_format)
             count += 1
         else:
-            worksheet.merge_range(f'Q{row + count}:X{row + count}', 'שבוע שני', title_format)
+            worksheet.merge_range(f'Q{row + count}:X{row + count}', translate_text('שבוע שני', user, "hebrew"), title_format)
             count += 1
         split = notes[n].split("\n")
         if len(split) > 0:
@@ -1455,20 +1464,20 @@ def WriteToExcel(served, notes, dates):
                 worksheet.merge_range(f'Q{row + count}:X{row + count}', s, cell_format)
                 count += 1
 
-    worksheet.merge_range(f'Z4:AE5', 'אירועים', title_format)
+    worksheet.merge_range(f'Z4:AE5', translate_text('אירועים', user, "hebrew"), title_format)
     events = Event.objects.all()
-    events_notes = ""
+    events_notes = []
+    temp = ""
     for x in range(14):
         if len(events.filter(date2=dates["day" + str(x)])) > 0:
             for ev in events.filter(date2=dates["day" + str(x)]):
                 if ev.nickname != "כולם":
-                    events_notes = events_notes + f'בתאריך {ev.date2} יש {ev.description} ל{ev.nickname}' + "\n"
+                    events_notes.append(translate_text(f'בתאריך {ev.date2} יש {ev.description} ל{ev.nickname}', user, "hebrew"))
                 else:
-                    events_notes = events_notes + f'בתאריך {ev.date2} יש {ev.description}' + "\n"
-    split = events_notes.split("\n")
+                    events_notes.append(translate_text(f'בתאריך {ev.date2} יש {ev.description}', user, "hebrew"))
     row = 6
     count = 0
-    for s in split:
+    for s in events_notes:
         worksheet.merge_range(f'Z{row + count}:AE{row + count}', s, cell_format)
         count += 1
 
@@ -1611,16 +1620,34 @@ def suggestion(request):
 
 
 # filters
-@register.filter
-def translate_text(text, user, from_language):
+@register.filter(name="translate_text")
+def translate_text(text, user, from_language="hebrew"):
     if user.is_authenticated:
         user_settings = USettings.objects.all().filter(user=user).first()
         if from_language != user_settings.language:
             langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
             translator = GoogleTranslator(source='auto', target=langs_dict[user_settings.language])
-            return translator.translate(text)
+            return translator.translate(text).capitalize()
     return text
 
+
+@register.filter
+def translate_text_batch(texts, user, from_language):
+    translated = []
+    if user.is_authenticated:
+        user_settings = USettings.objects.all().filter(user=user).first()
+        if from_language != user_settings.language:
+            langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
+            translator = GoogleTranslator(source='auto', target=langs_dict[user_settings.language])
+            for text in texts:
+                translated.append(translator.translate(text).capitalize())
+            return translated
+    return texts
+
+
+@register.filter
+def get_base_string(user, num):
+    return translate_text(base_strings[int(num)], user, "hebrew")
 
 
 @register.filter

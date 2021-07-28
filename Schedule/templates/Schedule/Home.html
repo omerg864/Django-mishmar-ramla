@@ -6,7 +6,7 @@
     <div dir="rtl">
           <div dir="rtl" class="content-section">
             <h3 dir="rtl">מזג האוויר</h3>
-            <p dir="rtl">מזג האוויר עכשיו ב{{ city }}</p>
+            <a dir="rtl">מזג האוויר עכשיו ב{{ city }}</a>
               <ul class="list-group" dir="rtl" style="alignment: right">
               {% for item in weather %}
                 <li class="list-group-item list-group-item-light" dir="rtl">{{ item }}: {{ weather|get_item:item }}</li>
