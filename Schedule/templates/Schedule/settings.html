@@ -19,9 +19,19 @@
                         <div>
                             <a>ניתן להגיש/לשנות הגשות</a>
                         </div>
-                        <div style="padding: 10px">
-                            {{ settings_form.submitting }}
-                        </div>
+                        <div class="toggle-button-cover">
+          <div class="button-cover">
+        <div class="button r" id="button-3">
+            {% if not checked %}
+          <input type="checkbox" class="checkbox" value="True" name="serv" checked>
+            {% else %}
+            <input type="checkbox" class="checkbox" value="True" name="serv">
+            {% endif %}
+          <div class="knobs"></div>
+          <div class="layer"></div>
+        </div>
+          </div>
+</div>
                     </div>
                     <div style="margin-bottom: 1em">
                         <div>

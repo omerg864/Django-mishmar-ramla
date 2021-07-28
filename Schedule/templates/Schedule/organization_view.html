@@ -1,7 +1,20 @@
 </div>
-            <div>
-                <a>פרסום:</a>{{ form.published }}
-            </div>
+<div>
+    <a>פרסום:</a>
+</div>
+<div class="toggle-button-cover">
+          <div class="button-cover">
+        <div class="button r" id="button-3">
+            {% if not checked %}
+          <input type="checkbox" class="checkbox" value="True" name="pub" checked>
+            {% else %}
+            <input type="checkbox" class="checkbox" value="True" name="pub">
+            {% endif %}
+          <div class="knobs"></div>
+          <div class="layer"></div>
+        </div>
+          </div>
+</div>
         </div>
     <div class="content-section row">
         <div>

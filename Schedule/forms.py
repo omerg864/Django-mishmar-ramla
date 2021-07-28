@@ -34,13 +34,11 @@ class OrganizationUpdateForm(forms.ModelForm):
             fields_temp.append("Day" + str(i) + "_1500_1900")
             fields_temp.append("Day" + str(i) + "_2300")
             fields_temp.append("Day" + str(i) + "_notes")
-        fields_temp.append("published")
         model = Organization
         fields = fields_temp
 
 
 class SettingsForm(forms.ModelForm):
-    submitting = forms.BooleanField(required=False)
     pin_code = forms.IntegerField(required=True)
     officer = forms.CharField(max_length=20)
     city = forms.CharField(max_length=30)
@@ -49,7 +47,7 @@ class SettingsForm(forms.ModelForm):
 
     class Meta:
         model = Settings
-        fields = "__all__"
+        fields = ["pin_code", "officer", "city", "max_seq0", "max_seq0"]
 
 
 class ShiftForm(forms.ModelForm):

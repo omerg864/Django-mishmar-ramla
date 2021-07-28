@@ -18,7 +18,8 @@
                 <a>פעולות: </a>
             </div>
             <div style="margin-top: 3.5em">
-            <select name="actions">
+                <div class="dropdown dropdown-dark">
+                <select name="actions" class="dropdown-select">
               <option value="update" >עדכון</option>
                 <option value="check1" >בדיקת תקינות</option>
                 <option value="ready" >תצוגת סידור מוכן</option>
@@ -26,6 +27,8 @@
                 <option value="upload" >העלאה</option>
                 <option value="clear" >איפוס</option>
             </select>
+                </select>
+              </div>
             </div>
             <div>
                             <div class="form-group">
@@ -45,6 +48,6 @@
 {% endblock %}
             </div>
     </div>
-        </form>
     {% endif %}
 {% endblock content %}
+    </form>

@@ -37,9 +37,16 @@ if len(Settings.objects.all()) == 0:
 @staff_member_required
 def settings_view(request):
     settings = Settings.objects.all().last()
+    checked = settings.submitting
     if request.method == 'POST':
+        checked = request.POST.get("serv")
+        if checked:
+            checked = False
+        else:
+            checked = True
         success, fail = ['שינויים נשמרו!', 'שינויים לא נשמרו!']
         settings_form = SettingsForm(request.POST, instance=settings)
+        settings_form.instance.submitting = checked
         if settings_form.is_valid():
             messages.success(request, success)
             settings_form.save()
@@ -48,14 +55,16 @@ def settings_view(request):
     else:
         settings_form = SettingsForm(instance=settings)
     context = {
-        "settings_form": settings_form
+        "settings_form": settings_form,
+        "checked": checked
     }
     return render(request, "Schedule/settings.html", context)
 
 
 def home(request):
     settings = Settings.objects.all().first()
-    user_settings = USettings.objects.all().filter(user=request.user).first()
+    if request.user.is_authenticated:
+        user_settings = USettings.objects.all().filter(user=request.user).first()
     data = {}
     api_key = "4cba4792d5c0c0222cc84e409138af7a"
     base_url = "http://api.openweathermap.org/data/2.5/weather?"
@@ -619,7 +628,6 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         fields_temp.append("Day" + str(i) + "_1500_1900")
         fields_temp.append("Day" + str(i) + "_2300")
         fields_temp.append("Day" + str(i) + "_notes")
-    fields_temp.append("published")
     fields = fields_temp
 
     def form_valid(self, form):
@@ -631,6 +639,7 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         ctx = super(OrganizationUpdateView, self).get_context_data(**kwargs)
         for x in range(14):
             ctx["day" + str(x)] = self.object.date + datetime.timedelta(days=x)
+        ctx["checked"] = self.get_object().published
         ctx["organization_id"] = self.object.id
         return ctx
 
@@ -642,9 +651,15 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
     def post(self, request, *args, **kwargs):
         if request.method == 'POST':
             action = request.POST.get("actions")
-            print(action)
             if 'check1' == action:
                 form = OrganizationUpdateForm(request.POST, instance=self.get_object())
+                pub = request.POST.get("pub")
+                if pub:
+                    published = False
+                else:
+                    published = True
+                print(published)
+                form.instance.published = published
                 if form.is_valid():
                     self.object = form.save()
                     messages.success(self.request, f'עדכון הושלם')
@@ -654,6 +669,13 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                     messages.info(self.request, f'תקלה טכנית לא ניתן לבדוק')
             elif 'update' == action:
                 form = OrganizationUpdateForm(request.POST, instance=self.get_object())
+                pub = request.POST.get("pub")
+                if pub:
+                    published = False
+                else:
+                    published = True
+                print(published)
+                form.instance.published = published
                 if form.is_valid():
                     self.object = form.save()
                     messages.success(self.request, f'עדכון הושלם')
