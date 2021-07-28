@@ -62,10 +62,14 @@ def profile(request):
     if request.method == "POST":
         u_form = UserUpdateForm(request.POST, instance=request.user)
         p_form = ProfileUpdateForm(request.POST, request.FILES, instance=user_settings)
+        p_form.instance.language = request.POST.get("languages")
         if u_form.is_valid() and p_form.is_valid():
             u_form.save()
             p_form.save()
             messages.success(request, f'פרטים עודכנו')
+            return redirect("profile")
+        else:
+            messages.warning(request, f'פרטים לא עודכנו')
             return redirect("profile")
     else:
         u_form = UserUpdateForm(instance=request.user)
@@ -77,5 +81,6 @@ def profile(request):
         "sat_night": user_settings.sat_night,
         "sat_morning": user_settings.sat_morning,
         "sat_noon": user_settings.sat_noon,
+        "language": user_settings.language
     }
     return render(request, "users/profile.html", context)

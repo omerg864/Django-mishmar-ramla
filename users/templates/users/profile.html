@@ -61,7 +61,15 @@
                             <a >שפת אתר</a>
                         </div>
                         <div>
-                            {{ p_form.language }}
+                            <select name="languages">
+                                {% if language == 'english' %}
+                              <option value="english" selected>English</option>
+                                <option value="hebrew">Hebrew</option>
+                                {% else %}
+                              <option value="hebrew" selected>Hebrew</option>
+                                <option value="english">English</option>
+                                {% endif %}
+                            </select>
                         </div>
                     </div>
                 </div>

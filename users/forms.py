@@ -27,4 +27,4 @@ class UserUpdateForm(forms.ModelForm):
 class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = UserSettings
-        fields = ["language", "image"]
+        fields = ["image"]

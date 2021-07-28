@@ -24,26 +24,27 @@ from django.utils.translation import activate
 import openpyxl
 import requests
 from deep_translator import GoogleTranslator
-#from deep_translator import MyMemoryTranslator
-import time
+import os
 
 activate('he')
+default_language = os.environ.get("DEFAULT_LANGUAGE")
 
 if len(Settings.objects.all()) == 0:
     new_settings = Settings(submitting=True, pin_code=1234, officer="", city="", max_seq0=2, max_seq1=2)
     new_settings.save()
 
+
 @staff_member_required
 def settings_view(request):
-    time.sleep(1)
     settings = Settings.objects.all().last()
     if request.method == 'POST':
+        success, fail = ['שינויים נשמרו!', 'שינויים לא נשמרו!']
         settings_form = SettingsForm(request.POST, instance=settings)
         if settings_form.is_valid():
-            messages.success(request, 'שינויים נשמרו!')
+            messages.success(request, success)
             settings_form.save()
         else:
-            messages.error(request, 'שינויים לא נשמרו!')
+            messages.error(request, fail)
     else:
         settings_form = SettingsForm(instance=settings)
     context = {
@@ -54,6 +55,7 @@ def settings_view(request):
 
 def home(request):
     settings = Settings.objects.all().first()
+    user_settings = USettings.objects.all().filter(user=request.user).first()
     data = {}
     api_key = "4cba4792d5c0c0222cc84e409138af7a"
     base_url = "http://api.openweathermap.org/data/2.5/weather?"
@@ -77,21 +79,20 @@ def home(request):
             current_humidiy = str(y["humidity"]) + "%"
             weather_description = data["weather"][0]["description"]
             weather = {
-                "Temperature": current_temperature,
-                "Atmospheric Pressure": current_pressure,
-                "Humidity": current_humidiy,
-                "Description": weather_description
+                "טמפרטורה": current_temperature,
+                "לחץ אטמוספרי": current_pressure,
+                "לחות": current_humidiy,
+                "תיאור": weather_description
             }
         except AttributeError:
             print("Weather Error")
             weather = {
-                "Not Found": "לא ניתן לטעון מזג האוויר"
+                "לא נמצא": "לא ניתן לטעון מזג האוויר"
             }
-
     else:
         print(" City Not Found ")
         weather = {
-            "Not Found": "עיר לא נמצא"
+            "לא נמצא": "עיר לא נמצא"
         }
     posts = Post.objects.all()
     context = {
@@ -640,7 +641,9 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
 
     def post(self, request, *args, **kwargs):
         if request.method == 'POST':
-            if 'check1' in request.POST:
+            action = request.POST.get("actions")
+            print(action)
+            if 'check1' == action:
                 form = OrganizationUpdateForm(request.POST, instance=self.get_object())
                 if form.is_valid():
                     self.object = form.save()
@@ -649,7 +652,7 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                     return HttpResponseRedirect(self.request.path_info)
                 else:
                     messages.info(self.request, f'תקלה טכנית לא ניתן לבדוק')
-            elif 'update' in request.POST:
+            elif 'update' == action:
                 form = OrganizationUpdateForm(request.POST, instance=self.get_object())
                 if form.is_valid():
                     self.object = form.save()
@@ -657,12 +660,14 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                 else:
                     messages.info(self.request, f'עדכון לא הושלם תקלה טכנית')
                 return HttpResponseRedirect(self.request.path_info)
-            elif 'upload' in request.POST:
+            elif 'upload' == action:
                 self.uplaod_organize(request)
                 return HttpResponseRedirect(self.request.path_info)
-            elif 'table' in request.POST:
+            elif 'table' == action:
                 return redirect("organization-table-shift", self.get_object().id)
-            elif 'clear' in request.POST:
+            elif 'ready' == action:
+                return redirect("organization-detail", self.get_object().id)
+            elif 'clear' == action:
                 form = OrganizationUpdateForm(request.POST, instance=self.get_object())
                 form.data._mutable = True
                 fields_temp = []
@@ -1584,15 +1589,16 @@ def suggestion(request):
 
 
 # filters
-#@register.filter
-#def translate_text(text, user):
-#    if user.is_authenticated:
-#        user_settings = USettings.objects.all().filter(user=user).first()
-#        langs_dict = MyMemoryTranslator.get_supported_languages(as_dict=True)
-#        translator = MyMemoryTranslator(source='auto', target=user_settings.language)
-#    else:
-#        translator = MyMemoryTranslator(source='auto', target='hebrew')
-#    return translator.translate(text)
+@register.filter
+def translate_text(text, user, from_language):
+    if user.is_authenticated:
+        user_settings = USettings.objects.all().filter(user=user).first()
+        if from_language != user_settings.language:
+            langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
+            translator = GoogleTranslator(source='auto', target=langs_dict[user_settings.language])
+            return translator.translate(text)
+    return text
+
 
 
 @register.filter
