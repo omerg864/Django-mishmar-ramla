@@ -47,7 +47,7 @@ class SettingsForm(forms.ModelForm):
 
     class Meta:
         model = Settings
-        fields = ["pin_code", "officer", "city", "max_seq0", "max_seq0"]
+        fields = ["pin_code", "officer", "city", "max_seq0", "max_seq1"]
 
 
 class ShiftForm(forms.ModelForm):
