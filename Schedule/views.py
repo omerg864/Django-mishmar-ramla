@@ -1546,14 +1546,14 @@ class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, Detail
     def get_context_data(self, **kwargs):
         ctx = super(OrganizationSuggestionView, self).get_context_data(**kwargs)
         settings = Settings.objects.all().first()
-        last_organization = Organization.objects.all().filter(date=self.object.date - datetime.timedelta(days=14)).first()
+        last_organization = Organization.objects.all().filter(date=self.get_object().date - datetime.timedelta(days=14)).first()
         users = User.objects.all()
         users_settings = USettings.objects.all()
         days = {}
         for x in range(14):
-            days["day" + str(x)] = self.object.date + datetime.timedelta(days=x)
+            days["day" + str(x)] = self.get_object().date + datetime.timedelta(days=x)
         ctx["days"] = days
-        served = self.get_served()
+        served, notes = self.get_served()
         organizer = compare_organizations(served, guards_num, self.get_object(), settings.officer,
                                           last_organization.Day14_2300.split("\n"), users, users_settings)
         ctx["organized"] = organizer.organized
@@ -1580,7 +1580,21 @@ class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, Detail
                 guards_num[day] = int(self.request.POST.get(day, 2))
             else:
                 guards_num[day] = int(self.request.POST.get(day, 1))
-        return HttpResponseRedirect(self.request.path_info)
+        settings = Settings.objects.all().first()
+        last_organization = Organization.objects.all().filter(
+            date=self.get_object().date - datetime.timedelta(days=14)).first()
+        users = User.objects.all()
+        users_settings = USettings.objects.all()
+        days = {}
+        for x in range(14):
+            days["day" + str(x)] = self.get_object().date + datetime.timedelta(days=x)
+        served, notes = self.get_served()
+        organizer = compare_organizations(served, guards_num, self.get_object(), settings.officer,
+                                          last_organization.Day14_2300.split("\n"), users, users_settings)
+        if 'organize' in request.POST:
+            return HttpResponseRedirect(self.request.path_info)
+        else:
+            return organizer.WriteToExcel(notes, days, self.request.user)
 
     def get_served(self):
         served = {}
@@ -1589,7 +1603,11 @@ class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, Detail
             served["A" + str(i)] = []
             served["N" + str(i)] = []
         shifts_served = Shift.objects.all().filter(date=self.get_object().date)
+        notes = {"general": "", "week1": "", "week2": ""}
         for shift in shifts_served:
+            user = User.objects.all().filter(username=shift.username).first()
+            user_settings = USettings.objects.all().filter(user=user).first()
+            name = user_settings.nickname
             shifts = [shift.M1, shift.A1, shift.N1, shift.M2, shift.A2, shift.N2, shift.M3,
                       shift.A3, shift.N3, shift.M4, shift.A4, shift.N4, shift.M5, shift.A5, shift.N5,
                       shift.M6, shift.A6, shift.N6, shift.M7, shift.A7, shift.N7, shift.M8,
@@ -1600,8 +1618,6 @@ class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, Detail
             count = 0
             index = 0
             for s in shifts:
-                user = User.objects.all().filter(username=shift.username).first()
-                user_settings = USettings.objects.all().filter(user=user).first()
                 if s:
                     served[kind + str(index)].append(user_settings.nickname)
                 count = count + 1
@@ -1615,7 +1631,25 @@ class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, Detail
                     kind = "M"
                     index = index + 1
                     count = 0
-        return served
+            notes1 = [shift.notes1, shift.notes2, shift.notes3,
+                      shift.notes4, shift.notes5, shift.notes6, shift.notes7]
+            index = 1
+            for n in notes1:
+                if n != "":
+                    notes["week1"] = notes["week1"] + name + ": " \
+                                     + number_to_day2(index) + " - " + n + "\n"
+                index += 1
+            notes2 = [shift.notes8, shift.notes9, shift.notes10,
+                      shift.notes11, shift.notes12, shift.notes13, shift.notes14]
+            index = 1
+            for n in notes2:
+                if n != "":
+                    notes["week2"] = notes["week2"] + name + ": " \
+                                     + number_to_day2(index) + " - " + n + "\n"
+                index += 1
+            if shift.notes != "":
+                notes["general"] = notes["general"] + name + ": " + shift.notes + "\n"
+        return served, notes
 
     def test_func(self):
         if self.request.user.is_staff:

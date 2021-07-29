@@ -1,10 +1,16 @@
 import datetime
 from random import Random
 
+from deep_translator import GoogleTranslator
+from django.http import FileResponse
+
 from .Guard import Guard
 from django.contrib.auth.models import User
 from users.models import UserSettings as UserSettings
 from Schedule.models import Settings3 as Settings
+import xlsxwriter
+import io
+from Schedule.models import Event
 
 
 class Organizer:
@@ -21,6 +27,7 @@ class Organizer:
         self.users = users
         self.users_settings = users_settings
         self.num_guards = len(users)
+        self.not_recieved = {}
         self.note_pad = ["אין מספיק אנשים ביום ", "איו אחמ\"ש ביום ", "מישהו נמצא ביותר מידי ליליות"]
 
     def initialize_dictionaries(self):
@@ -28,6 +35,9 @@ class Organizer:
             self.organized["M" + str(i)] = []
             self.organized["A" + str(i)] = []
             self.organized["N" + str(i)] = []
+            self.not_recieved["M" + str(i)] = []
+            self.not_recieved["A" + str(i)] = []
+            self.not_recieved["N" + str(i)] = []
 
     def reset_organizer(self):
         self.organized = {}
@@ -35,6 +45,256 @@ class Organizer:
         self.officer = ""
         self.notes = ""
         self.sat_night = []
+    
+    def not_recieved_shift(self):
+        for key in self.days:
+            for name in self.days[key]:
+                if name not in self.organized[key]:
+                    self.not_recieved[key].append(name)
+
+    def WriteToExcel(self, notes, dates, user):
+        # Create a workbook and add a worksheet.
+        buffer = io.BytesIO()
+        workbook = xlsxwriter.Workbook(buffer)
+        worksheet = workbook.add_worksheet()
+        worksheet.right_to_left()
+        user_settings = self.users_settings.filter(user=user).first()
+        days = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"]
+        if user_settings.language == 'english':
+            days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+
+        maxes = {"morning": 0, "after_noon": 0, "night": 0}
+
+        for key in self.days:
+            temp = 0
+            if key.count("M"):
+                split = self.days[key]
+                for x in range(len(split)):
+                    if split[x] != "(לא משיכה)":
+                        temp += 1
+                if temp > maxes["morning"]:
+                    maxes["morning"] = temp
+            elif key.count("A"):
+                split = self.days[key]
+                if len(split) > maxes["after_noon"]:
+                    maxes["after_noon"] = len(split)
+            else:
+                split = self.days[key]
+                if len(split) > maxes["night"]:
+                    maxes["night"] = len(split)
+
+        maxes["morning"] += 1
+        maxes["after_noon"] += 2
+        maxes["night"] += 2
+
+        # Write a total using a formula.
+        title_format = workbook.add_format({
+            'border': 1,
+            'align': 'center',
+            'valign': 'vcenter',
+            'font_size': 24,
+            'fg_color': 'white'})
+        cell_format = workbook.add_format({
+            'border': 1,
+            'align': 'center',
+            'valign': 'vcenter',
+        })
+        cell_format_selected = workbook.add_format({
+            'align': 'center',
+            'valign': 'vcenter',
+            'font_color': "#006100",
+            'bg_color': "#C6EFCE"
+        })
+        cell_no_pull_format = workbook.add_format({
+            'font_color': "#ff0000"
+        })
+        border_bottom_format = workbook.add_format({
+            'bottom': 5,
+            'bottom_color': '#000000'
+        })
+        border_left_format = workbook.add_format({
+            'left': 5,
+            'left_color': '#000000'
+        })
+        border_left_bottom_format = workbook.add_format({
+            'left': 5,
+            'left_color': '#000000',
+            'bottom': 5,
+            'bottom_color': '#000000',
+        })
+        # Building first Structure
+        col = 0
+        for x in range(15):
+            worksheet.write(4 + maxes["morning"], col, None, border_bottom_format)
+            worksheet.write(4 + maxes["after_noon"] + maxes["morning"], col, None, border_bottom_format)
+            col += 1
+        row = 0
+        sum_maxes = maxes["morning"] + maxes["after_noon"] + maxes["night"] + 6
+        for x in range(sum_maxes):
+            if x == 4 + maxes["morning"] or x == 4 + maxes["morning"] + maxes["after_noon"]:
+                worksheet.write(row, 8, None, border_left_bottom_format)
+            else:
+                worksheet.write(row, 8, None, border_left_format)
+            row += 1
+        # Building second Structure
+        worksheet.merge_range('A1:H2', self.translate_text('הגשות', user, "hebrew"), title_format)
+        worksheet.merge_range('I1:P2', self.translate_text('הגשות', user, "hebrew"), title_format)
+        worksheet.merge_range('Q1:X2', dates["day0"].strftime("%d.%m") + "-" + dates["day13"].strftime("%d.%m"),
+                              title_format)
+        worksheet.write(2, 0, self.translate_text("תאריך", user, "hebrew"), cell_format)
+        col = 1
+        for d in dates:
+            worksheet.write(2, col, dates[d].strftime("%d.%m"), cell_format)
+            col += 1
+        worksheet.write(3, 0, self.translate_text("יום", user, "hebrew"), cell_format)
+        col = 1
+        for d in days:
+            worksheet.write(3, col, d, cell_format)
+            worksheet.write(3, col + 7, d, cell_format)
+            col += 1
+        worksheet.merge_range(f'A5:A{5 + maxes["morning"]}', self.translate_text('בוקר', user, "hebrew"), cell_format)
+        worksheet.merge_range(
+            f'A{5 + maxes["morning"] + 1}:A{5 + maxes["morning"] + maxes["after_noon"]}',
+            self.translate_text('צהריים', user, "hebrew"), cell_format)
+        worksheet.merge_range(
+            f'A{5 + maxes["morning"] + maxes["after_noon"] + 1}:A{5 + maxes["morning"] + maxes["after_noon"] + maxes["night"]}',
+            self.translate_text('לילה', user, "hebrew"), cell_format)
+        worksheet.merge_range('Q4:R4', 'שם', cell_format)
+        worksheet.write("S4", self.translate_text('בוקר', user, "hebrew") + " 1", cell_format)
+        worksheet.write("T4", self.translate_text('בוקר', user, "hebrew") + " 2", cell_format)
+        worksheet.write("U4", self.translate_text('צהריים', user, "hebrew") + " 1", cell_format)
+        worksheet.write("V4", self.translate_text('צהריים', user, "hebrew") + " 2", cell_format)
+        worksheet.write("W4", self.translate_text('לילה', user, "hebrew"), cell_format)
+        worksheet.write("X4", self.translate_text("סופ\"ש", user, "hebrew"), cell_format)
+
+        # Adding Data
+        users = []
+        row = 4
+        col = 1
+        for key in self.not_recieved:
+            if key.count("M"):
+                day = int(key.replace("M", "")) + 1
+                row = 4
+                for x in range(len(self.not_recieved[key])):
+                    if self.not_recieved[key][x] != "(לא משיכה)":
+                        if x + 1 < len(self.not_recieved[key]):
+                            if self.not_recieved[key][x + 1] == "(לא משיכה)":
+                                worksheet.write(row, day, self.not_recieved[key][x], cell_no_pull_format)
+                            else:
+                                worksheet.write(row, day, self.not_recieved[key][x])
+                        else:
+                            worksheet.write(row, day, self.not_recieved[key][x])
+                        if self.not_recieved[key][x] not in users:
+                            users.append(self.not_recieved[key][x])
+                        row += 1
+                for x in range(len(self.organized[key])):
+                    worksheet.write(row, day, self.organized[key][x], cell_format_selected)
+                    if self.organized[key][x] not in users:
+                        users.append(self.organized[key][x])
+                    row += 1
+            elif key.count("A"):
+                day = int(key.replace("A", "")) + 1
+                row = 4 + maxes["morning"] + 1
+                for x in range(len(self.not_recieved[key])):
+                    worksheet.write(row, day, self.not_recieved[key][x])
+                    if self.not_recieved[key][x] not in users:
+                        users.append(self.not_recieved[key][x])
+                    row += 1
+                for x in range(len(self.organized[key])):
+                    worksheet.write(row, day, self.organized[key][x], cell_format_selected)
+                    if self.organized[key][x] not in users:
+                        users.append(self.organized[key][x])
+                    row += 1
+            else:
+                day = int(key.replace("N", "")) + 1
+                row = 4 + maxes["morning"] + maxes["after_noon"] + 1
+                for x in range(len(self.not_recieved[key])):
+                    worksheet.write(row, day, self.not_recieved[key][x])
+                    if self.not_recieved[key][x] not in users:
+                        users.append(self.not_recieved[key][x])
+                    row += 1
+                for x in range(len(self.organized[key])):
+                    worksheet.write(row, day, self.organized[key][x], cell_format_selected)
+                    if self.organized[key][x] not in users:
+                        users.append(self.organized[key][x])
+                    row += 1
+
+        num_rows = len(users) + 1
+        col = 18
+        for x in range(num_rows):
+            col = 18
+            if x == 0:
+                worksheet.merge_range(f'Q{4 + x + 1}:R{4 + x + 1}', '', cell_format)
+            else:
+                worksheet.merge_range(f'Q{4 + x + 1}:R{4 + x + 1}', users[x - 1], cell_format)
+            for c in range(6):
+                worksheet.write(4 + x, col, "", cell_format)
+                col += 1
+        worksheet.merge_range(f'Q{4 + num_rows + 1}:R{4 + num_rows + 1}', self.translate_text('סה\"כ', user, "hebrew"),
+                              cell_format)
+        worksheet.write(f'S{4 + num_rows + 1}', f'=SUM(S5:S{4 + num_rows})', cell_format)
+        worksheet.write(f'T{4 + num_rows + 1}', f'=SUM(T5:T{4 + num_rows})', cell_format)
+        worksheet.write(f'U{4 + num_rows + 1}', f'=SUM(U5:U{4 + num_rows})', cell_format)
+        worksheet.write(f'V{4 + num_rows + 1}', f'=SUM(V5:V{4 + num_rows})', cell_format)
+        worksheet.write(f'W{4 + num_rows + 1}', f'=SUM(W5:W{4 + num_rows})', cell_format)
+        worksheet.write(f'X{4 + num_rows + 1}', f'=SUM(X5:X{4 + num_rows})', cell_format)
+
+        row = 4 + num_rows + 4
+
+        worksheet.merge_range(f'Q{row}:X{row + 3}', self.translate_text('משמרות לאיכות', user, "hebrew"), title_format)
+        worksheet.merge_range(f'Q{row + 4}:X{row + 5}', self.translate_text('שבוע ראשון', user, "hebrew"), title_format)
+        worksheet.merge_range(f'Q{row + 6}:X{row + 6}', '', cell_format)
+        worksheet.merge_range(f'Q{row + 7}:X{row + 7}', '', cell_format)
+        worksheet.merge_range(f'Q{row + 8}:X{row + 9}', self.translate_text('שבוע שני', user, "hebrew"), title_format)
+        worksheet.merge_range(f'Q{row + 10}:X{row + 10}', '', cell_format)
+        worksheet.merge_range(f'Q{row + 11}:X{row + 11}', '', cell_format)
+
+        row = row + 13
+        count = 0
+        for n in notes:
+            if n == "general":
+                worksheet.merge_range(f'Q{row + count}:X{row + count + 1}', self.translate_text('הערות', user, "hebrew"),
+                                      title_format)
+                count += 2
+            elif n == "week1":
+                worksheet.merge_range(f'Q{row + count}:X{row + count}', self.translate_text('שבוע ראשון', user, "hebrew"),
+                                      title_format)
+                count += 1
+            else:
+                worksheet.merge_range(f'Q{row + count}:X{row + count}', self.translate_text('שבוע שני', user, "hebrew"),
+                                      title_format)
+                count += 1
+            split = notes[n].split("\n")
+            if len(split) > 0:
+                for s in split:
+                    worksheet.merge_range(f'Q{row + count}:X{row + count}', s, cell_format)
+                    count += 1
+
+        worksheet.merge_range(f'Z4:AE5', self.translate_text('אירועים', user, "hebrew"), title_format)
+        events = Event.objects.all()
+        events_notes = []
+        temp = ""
+        for x in range(14):
+            if len(events.filter(date2=dates["day" + str(x)])) > 0:
+                for ev in events.filter(date2=dates["day" + str(x)]):
+                    if ev.nickname != "כולם":
+                        events_notes.append(
+                            self.translate_text(f'בתאריך {ev.date2} יש {ev.description} ל{ev.nickname}', user, "hebrew"))
+                    else:
+                        events_notes.append(self.translate_text(f'בתאריך {ev.date2} יש {ev.description}', user, "hebrew"))
+        row = 6
+        count = 0
+        for s in events_notes:
+            worksheet.merge_range(f'Z{row + count}:AE{row + count}', s, cell_format)
+            count += 1
+
+        workbook.close()
+        # FileResponse sets the Content-Disposition header so that browsers
+        # present the option to save the file.
+        buffer.seek(0)
+        file_name = "serve" + dates["day0"].strftime("%d.%m")
+        return FileResponse(buffer, as_attachment=True, filename=f'{file_name}.xlsx')
+        
 
     def build_guards(self):
         index = 0
@@ -477,3 +737,12 @@ class Organizer:
         self.check_min_got()
         self.check_empty_shift()
         self.get_score()
+
+    def translate_text(self, text, user, from_language="hebrew"):
+        if user.is_authenticated:
+            user_settings = self.users_settings.filter(user=user).first()
+            if from_language != user_settings.language:
+                langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
+                translator = GoogleTranslator(source='auto', target=langs_dict[user_settings.language])
+                return translator.translate(text).capitalize()
+        return text
