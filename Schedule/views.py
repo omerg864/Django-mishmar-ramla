@@ -1526,11 +1526,11 @@ guards_num["N5"] = 2
 guards_num["M6"] = 2
 
 
-def compare_organizations(served, guards_num):
-    organizer = Organizer(served, guards_num)
+def compare_organizations(served, guards_num, organization, officer, sat_night, users, users_settings):
+    organizer = Organizer(served, guards_num, organization, officer, sat_night, users, users_settings)
     organizer.organize()
     for i in range(1):
-        new_organizer = Organizer(served, guards_num)
+        new_organizer = Organizer(served, guards_num, organization, officer, sat_night, users, users_settings)
         new_organizer.organize()
         if organizer.notes > new_organizer.notes:
             organizer = new_organizer
@@ -1539,84 +1539,88 @@ def compare_organizations(served, guards_num):
     return organizer
 
 
-@staff_member_required
-def suggestion(request):
-    served = {}
-    for i in range(14):
-        served["M" + str(i)] = []
-        served["A" + str(i)] = []
-        served["N" + str(i)] = []
-    shift_date = Organization.objects.order_by('-date')[0].date
-    shifts_served = Shift.objects.all().filter(date=shift_date)
-    for shift in shifts_served:
-        shifts = [shift.M1, shift.A1, shift.N1, shift.M2, shift.A2, shift.N2, shift.M3,
-                  shift.A3, shift.N3, shift.M4, shift.A4, shift.N4, shift.M5, shift.A5, shift.N5,
-                  shift.M6, shift.A6, shift.N6, shift.M7, shift.A7, shift.N7, shift.M8,
-                  shift.A8, shift.N8, shift.M9, shift.A9, shift.N9, shift.M10, shift.A10,
-                  shift.N10, shift.M11, shift.A11, shift.N11, shift.M12, shift.A12, shift.N12,
-                  shift.M13, shift.A13, shift.N13, shift.M14, shift.A14, shift.N14]
-        kind = "M"
-        count = 0
-        index = 0
-        for s in shifts:
-            user = User.objects.all().filter(username=shift.username).first()
-            user_settings = USettings.objects.all().filter(user=user).first()
-            if s:
-                served[kind + str(index)].append(user_settings.nickname)
-            count = count + 1
-            if count == 0:
-                kind = "M"
-            elif count == 1:
-                kind = "A"
-            elif count == 2:
-                kind = "N"
-            else:
-                kind = "M"
-                index = index + 1
-                count = 0
-    days = {}
-    for x in range(14):
-        days[f'day{x}'] = Organization.objects.order_by('-date')[0].date + datetime.timedelta(days=x)
-    # organizer = Organizer(served, guards_num)
-    # organizer.organize()
-    organizer = compare_organizations(served, guards_num)
-    if request.method == 'POST':
+class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    model = Organization
+    template_name = "Schedule/Suggestion.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super(OrganizationSuggestionView, self).get_context_data(**kwargs)
+        settings = Settings.objects.all().first()
+        last_organization = Organization.objects.all().filter(date=self.object.date - datetime.timedelta(days=14)).first()
+        users = User.objects.all()
+        users_settings = USettings.objects.all()
+        days = {}
+        for x in range(14):
+            days["day" + str(x)] = self.object.date + datetime.timedelta(days=x)
+        ctx["days"] = days
+        served = self.get_served()
+        organizer = compare_organizations(served, guards_num, self.get_object(), settings.officer,
+                                          last_organization.Day14_2300.split("\n"), users, users_settings)
+        ctx["organized"] = organizer.organized
+        ctx["notes"] = organizer.notes
+        ctx["guardsnumbers"] = guards_num
+        return ctx
+
+    def post(self, request, *args, **kwargs):
         for x in range(14):
             day = f'M{x}'
             if x == 6 or x == 13:
-                guards_num[day] = int(request.POST.get(day, 2))
+                guards_num[day] = int(self.request.POST.get(day, 2))
             elif x == 5 or x == 12:
-                guards_num[day] = int(request.POST.get(day, 0))
+                guards_num[day] = int(self.request.POST.get(day, 0))
             else:
-                guards_num[day] = int(request.POST.get(day, 5))
+                guards_num[day] = int(self.request.POST.get(day, 5))
             day = f'A{x}'
             if x == 5 or x == 6 or x == 12 or x == 13:
-                guards_num[day] = int(request.POST.get(day, 0))
+                guards_num[day] = int(self.request.POST.get(day, 0))
             else:
-                guards_num[day] = int(request.POST.get(day, 3))
+                guards_num[day] = int(self.request.POST.get(day, 3))
             day = f'N{x}'
             if x == 5 or x == 6 or x == 12 or x == 13:
-                guards_num[day] = int(request.POST.get(day, 2))
+                guards_num[day] = int(self.request.POST.get(day, 2))
             else:
-                guards_num[day] = int(request.POST.get(day, 1))
-        # organizer = Organizer(served, guards_num)
-        # organizer.organize()
-        organizer = compare_organizations(served, guards_num)
-        context = {
-            "days": days,
-            "organized": organizer.organized,
-            "notes": organizer.notes,
-            "guardsnumbers": guards_num
-        }
-        return render(request, "Schedule/Suggestion.html", context)
-    else:
-        context = {
-            "days": days,
-            "organized": organizer.organized,
-            "notes": organizer.notes,
-            "guardsnumbers": guards_num
-        }
-    return render(request, "Schedule/Suggestion.html", context)
+                guards_num[day] = int(self.request.POST.get(day, 1))
+        return HttpResponseRedirect(self.request.path_info)
+
+    def get_served(self):
+        served = {}
+        for i in range(14):
+            served["M" + str(i)] = []
+            served["A" + str(i)] = []
+            served["N" + str(i)] = []
+        shifts_served = Shift.objects.all().filter(date=self.get_object().date)
+        for shift in shifts_served:
+            shifts = [shift.M1, shift.A1, shift.N1, shift.M2, shift.A2, shift.N2, shift.M3,
+                      shift.A3, shift.N3, shift.M4, shift.A4, shift.N4, shift.M5, shift.A5, shift.N5,
+                      shift.M6, shift.A6, shift.N6, shift.M7, shift.A7, shift.N7, shift.M8,
+                      shift.A8, shift.N8, shift.M9, shift.A9, shift.N9, shift.M10, shift.A10,
+                      shift.N10, shift.M11, shift.A11, shift.N11, shift.M12, shift.A12, shift.N12,
+                      shift.M13, shift.A13, shift.N13, shift.M14, shift.A14, shift.N14]
+            kind = "M"
+            count = 0
+            index = 0
+            for s in shifts:
+                user = User.objects.all().filter(username=shift.username).first()
+                user_settings = USettings.objects.all().filter(user=user).first()
+                if s:
+                    served[kind + str(index)].append(user_settings.nickname)
+                count = count + 1
+                if count == 0:
+                    kind = "M"
+                elif count == 1:
+                    kind = "A"
+                elif count == 2:
+                    kind = "N"
+                else:
+                    kind = "M"
+                    index = index + 1
+                    count = 0
+        return served
+
+    def test_func(self):
+        if self.request.user.is_staff:
+            return True
+        return False
 
 
 # filters

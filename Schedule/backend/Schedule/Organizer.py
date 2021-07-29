@@ -9,15 +9,19 @@ from Schedule.models import Settings3 as Settings
 
 class Organizer:
 
-    def __init__(self, days, guards_in_shift):
+    def __init__(self, days, guards_in_shift, organization, officer, sat_night, users, users_settings):
         self.organized = {}
         self.days = days
         self.guards = []
-        self.officer = ""
+        self.officer = officer
         self.notes = ""
-        self.sat_night = []
+        self.sat_night = sat_night
         self.guards_in_shift = guards_in_shift
         self.score = 0
+        self.users = users
+        self.users_settings = users_settings
+        self.num_guards = len(users)
+        self.note_pad = ["אין מספיק אנשים ביום ", "איו אחמ\"ש ביום ", "מישהו נמצא ביותר מידי ליליות"]
 
     def initialize_dictionaries(self):
         for i in range(14):
@@ -81,11 +85,6 @@ class Organizer:
                         elif guard.weeks[self.day_to_week(day)].resMorning != \
                                 guard.weeks[self.day_to_week(day)].morning:
                             available.append(guard)
-        print(day)
-        for v in available:
-            print(v.name)
-        for v in self.days["M" + str(day)]:
-            print(v)
         return available
 
     # Chooses guard minimum shifts first if everyone is equal then random without quality
