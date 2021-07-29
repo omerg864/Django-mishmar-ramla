@@ -54,6 +54,7 @@ class Organizer:
 
     def WriteToExcel(self, notes, dates, user):
         # Create a workbook and add a worksheet.
+        self.not_recieved_shift()
         buffer = io.BytesIO()
         workbook = xlsxwriter.Workbook(buffer)
         worksheet = workbook.add_worksheet()
@@ -292,7 +293,7 @@ class Organizer:
         # FileResponse sets the Content-Disposition header so that browsers
         # present the option to save the file.
         buffer.seek(0)
-        file_name = "serve" + dates["day0"].strftime("%d.%m")
+        file_name = "suggestion" + dates["day0"].strftime("%d.%m")
         return FileResponse(buffer, as_attachment=True, filename=f'{file_name}.xlsx')
         
 
