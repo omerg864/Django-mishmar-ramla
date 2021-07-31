@@ -301,8 +301,6 @@ class Organizer:
         index = 0
         users = User.objects.all()
         profiles = UserSettings.objects.all()
-        settings = Settings.objects.all().last()
-        self.officer = settings.officer
         for user in users:
             user_profile = profiles.filter(user=user).first()
             self.guards[index].name = user_profile.nickname
@@ -699,7 +697,6 @@ class Organizer:
         return 0
 
     def organize(self):
-        users = User.objects.all()
         self.initialize_dictionaries()
         num_guards = len(User.objects.all())
         for i in range(num_guards):

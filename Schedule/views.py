@@ -1556,7 +1556,10 @@ class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, Detail
         served, notes = self.get_served()
         organizer = compare_organizations(served, guards_num, self.get_object(), settings.officer,
                                           last_organization.Day14_2300.split("\n"), users, users_settings)
-        ctx["organized"] = organizer.organized
+        organized_str = {}
+        for key in organizer.organized:
+            organized_str[key] = '\n'.join(organizer.organized[key])
+        ctx["organized"] = organized_str
         ctx["notes"] = organizer.notes
         ctx["guardsnumbers"] = guards_num
         return ctx
@@ -1593,7 +1596,7 @@ class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, Detail
                                           last_organization.Day14_2300.split("\n"), users, users_settings)
         if 'organize' in request.POST:
             return HttpResponseRedirect(self.request.path_info)
-        else:
+        elif 'excel' in request.POST:
             return organizer.WriteToExcel(notes, days, self.request.user)
 
     def get_served(self):
