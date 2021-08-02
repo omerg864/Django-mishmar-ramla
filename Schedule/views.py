@@ -920,14 +920,9 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         return False
 
     def insert_all_to_form(self, form, for_list, day, time):
-        count = 0
+        form.data[f'Day{day + 1}_{time}'] = '\n'.join(for_list)
         for name in for_list:
-            if count == 0:
-                form.data[f'Day{day + 1}_{time}'] = name
-            else:
-                form.data[f'Day{day + 1}_{time}'] += "\n" + name
             for_list.remove(name)
-            count += 1
 
     def seperate_list(self, shift, max_out_names):
         new_list = []

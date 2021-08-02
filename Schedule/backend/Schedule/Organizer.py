@@ -5,9 +5,6 @@ from deep_translator import GoogleTranslator
 from django.http import FileResponse
 
 from .Guard import Guard
-from django.contrib.auth.models import User
-from users.models import UserSettings as UserSettings
-from Schedule.models import Settings3 as Settings
 import xlsxwriter
 import io
 from Schedule.models import Event
@@ -299,10 +296,8 @@ class Organizer:
 
     def build_guards(self):
         index = 0
-        users = User.objects.all()
-        profiles = UserSettings.objects.all()
-        for user in users:
-            user_profile = profiles.filter(user=user).first()
+        for user in self.users:
+            user_profile = self.users_settings.filter(user=user).first()
             self.guards[index].name = user_profile.nickname
             self.guards[index].qualityNight = user_profile.night
             self.guards[index].qualitySatNight = user_profile.sat_night
@@ -698,8 +693,7 @@ class Organizer:
 
     def organize(self):
         self.initialize_dictionaries()
-        num_guards = len(User.objects.all())
-        for i in range(num_guards):
+        for i in range(self.num_guards):
             self.guards.append(Guard())
         self.build_guards()
         startDate = datetime.date(2020, 8, 20)
