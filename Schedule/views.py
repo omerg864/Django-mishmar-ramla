@@ -292,7 +292,7 @@ class OrganizationDetailView(LoginRequiredMixin, DetailView):
 class OrganizationCreateView(LoginRequiredMixin, CreateView, UserPassesTestMixin):
     model = Organization
     template_name = "Schedule/organization-new.html"
-    fields = ('date',)
+    fields = ('date', 'num_weeks')
 
     def get_context_data(self, **kwargs):
         ctx = super(OrganizationCreateView, self).get_context_data(**kwargs)
