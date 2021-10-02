@@ -3,7 +3,7 @@ from django.urls import path
 from . import views
 from .views import OrganizationUpdateView, ShiftUpdateView, OrganizationDetailView, ShifttableView
 from .views import ServedSumListView, ServedSumShiftDetailView, ServedSumReinforcementsDetailView
-from .views import OrganizationSuggestionView
+from .views import OrganizationSuggestionView, OrganizationCreateView
 
 urlpatterns = [
     path("", views.home, name="Schedule-Home"),
@@ -18,4 +18,5 @@ urlpatterns = [
     path('serve/sum/reinforcement/<int:pk>/', ServedSumReinforcementsDetailView.as_view(), name='served-sum-reinforcement'),
     path('organization/table/shift/<int:pk>/', ShifttableView.as_view(), name='organization-table-shift'),
     path("organization/<int:pk>/suggestion", OrganizationSuggestionView.as_view(), name="organization-suggestion"),
+    path("organization/new", OrganizationCreateView.as_view(), name="organization-new"),
 ]

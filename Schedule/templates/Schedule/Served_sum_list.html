@@ -2,6 +2,18 @@
 {% block content %}
     <div class="row">
     <h1>סידורים:</h1>
+        <form method="POST">
+        {% csrf_token %}
+            <div class="row">
+    <a href="{% url 'organization-new' %}" class="float">
+        <i class="fa fa-plus my-float"></i>+
+    </a>
+    <div class="label-container">
+        <div class="label-text">סידור חדש</div>
+        <i class="fa fa-play label-arrow"></i>
+    </div>
+                </div>
+        </form>
     </div>
     {% for organization in organizations %}
         <div>

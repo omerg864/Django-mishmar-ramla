@@ -11,7 +11,7 @@ from django.http import FileResponse
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect
 from django.template.defaulttags import register
-from django.views.generic import UpdateView, ListView, DetailView
+from django.views.generic import UpdateView, ListView, DetailView, CreateView
 from .backend.Schedule.Organizer import Organizer
 from .forms import SettingsForm, ShiftForm, ShiftViewForm, OrganizationUpdateForm
 from .models import Post
@@ -287,6 +287,26 @@ class OrganizationDetailView(LoginRequiredMixin, DetailView):
         for x in range(14):
             ctx["day" + str(x)] = self.object.date + datetime.timedelta(days=x)
         return ctx
+
+
+class OrganizationCreateView(LoginRequiredMixin, CreateView, UserPassesTestMixin):
+    model = Organization
+    template_name = "Schedule/organization-new.html"
+    fields = ('date',)
+
+    def get_context_data(self, **kwargs):
+        ctx = super(OrganizationCreateView, self).get_context_data(**kwargs)
+        ctx["date1"] = datetime.date.today()
+        return ctx
+
+    def test_func(self):
+        if self.request.user.is_staff:
+            return True
+        return False
+
+    def form_valid(self, form):
+        form.instance.date = self.request.POST.get("date")
+        return super().form_valid(form)
 
 
 class ShifttableView(LoginRequiredMixin, DetailView):
@@ -672,6 +692,10 @@ class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                     return HttpResponseRedirect(self.request.path_info)
                 else:
                     messages.info(self.request, translate_text(f'תקלה טכנית לא ניתן לבדוק', self.request.user, "hebrew"))
+            elif 'delete' == action:
+                Organization.objects.filter(id=self.get_object().id).delete()
+                messages.success(self.request, translate_text(f'מחיקה הושלמה', self.request.user, "hebrew"))
+                return redirect("Schedule-Served-sum")
             elif 'update' == action:
                 form = OrganizationUpdateForm(request.POST, instance=self.get_object())
                 pub = request.POST.get("pub")
