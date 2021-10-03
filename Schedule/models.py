@@ -117,6 +117,9 @@ class Week(models.Model):
     Day7_2300 = models.TextField(max_length=50, blank=True)
     Day7_notes = models.TextField(max_length=50, blank=True)
 
+    def __str__(self):
+        return f'{self.date} שבוע {self.num_week + 1}'
+
 
 class Organization(models.Model):
     date = models.DateField(default=timezone.now)

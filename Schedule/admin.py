@@ -4,6 +4,7 @@ from .models import Post
 from .models import Event
 from .models import Organization as Organization
 from .models import IpBan
+from .models import Week
 
 admin.site.register(Shift)
 
@@ -18,6 +19,7 @@ class EventAdmin(admin.ModelAdmin):
 
 admin.site.register(Organization, OrganizationAdmin)
 admin.site.register(Post)
+admin.site.register(Week)
 admin.site.register(Event, EventAdmin)
 admin.site.register(IpBan)
 # Register your models here.
