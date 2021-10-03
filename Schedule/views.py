@@ -20,6 +20,7 @@ from .models import Shift1 as Shift
 from .models import Event
 from .models import Organization as Organization
 from .models import Week
+from .models import ShiftWeek
 from users.models import UserSettings as USettings
 from django.utils.translation import activate
 import openpyxl
@@ -44,6 +45,23 @@ def settings_view(request):
     settings = Settings.objects.all().last()
     checked = settings.submitting
     if request.method == 'POST':
+        shifts = Shift.objects.all()
+        for s in shifts:
+            n1 = ShiftWeek(username=s.username, num_week=0, date=s.date, M2=s.M2, A2=s.A2, N2=s.N2, P2=s.P2, R2=s.R2, notes2=s.notes2
+                           , M1=s.M1, A1=s.A1, N1=s.N1, P1=s.P1, R1=s.R1, notes1=s.notes1, M3=s.M3, A3=s.A3, N3=s.N3, P3=s.P3, R3=s.R3,
+                           notes3=s.notes3, M4=s.M4, A4=s.A4, N4=s.N4, P4=s.P4, R4=s.R4, notes4=s.notes4, M5=s.M5, A5=s.A5,
+                           N5=s.N5, P5=s.P5, R5=s.R5, notes5=s.notes5, M6=s.M6, A6=s.A6, N6=s.N6, P6=s.P6, R6=s.R6,
+                           notes6=s.notes6, M7=s.M7, A7=s.A7, N7=s.N7, P7=s.P7, R7=s.R7, notes7=s.notes7)
+            n1.save()
+            n2 = ShiftWeek(username=s.username, num_week=1, date=s.date, M2=s.M9, A2=s.A9, N2=s.N9, P2=s.P9, R2=s.R9,
+                           notes2=s.notes9
+                           , M1=s.M8, A1=s.A8, N1=s.N8, P1=s.P8, R1=s.R8, notes1=s.notes8, M3=s.M10, A3=s.A10, N3=s.N10,
+                           P3=s.P10, R3=s.R10,
+                           notes3=s.notes10, M4=s.M11, A4=s.A11, N4=s.N11, P4=s.P11, R4=s.R11, notes4=s.notes11, M5=s.M12,
+                           A5=s.A12,
+                           N5=s.N12, P5=s.P12, R5=s.R12, notes5=s.notes12, M6=s.M13, A6=s.A13, N6=s.N13, P6=s.P13, R6=s.R13,
+                           notes6=s.notes13, M7=s.M14, A7=s.A14, N7=s.N14, P7=s.P14, R7=s.R14, notes7=s.notes14)
+            n2.save()
         checked = request.POST.get("serv")
         if checked:
             checked = False

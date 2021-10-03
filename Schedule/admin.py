@@ -5,8 +5,10 @@ from .models import Event
 from .models import Organization as Organization
 from .models import IpBan
 from .models import Week
+from .models import ShiftWeek
 
 admin.site.register(Shift)
+admin.site.register(ShiftWeek)
 
 
 class OrganizationAdmin(admin.ModelAdmin):
