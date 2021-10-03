@@ -398,6 +398,58 @@ class Shift1(models.Model):
         return reverse("shift-update", kwargs={"pk": self.pk})
 
 
+class ShiftWeek(models.Model):
+    username = models.ForeignKey(User, on_delete=models.CASCADE)
+    num_week = models.IntegerField(default=0, blank=False)
+    date = models.DateField(default=timezone.now)
+    M1 = models.BooleanField(default=False, verbose_name="ראשון בוקר")
+    A1 = models.BooleanField(default=False, verbose_name="ראשון צהריים")
+    N1 = models.BooleanField(default=False, verbose_name="ראשון לילה")
+    P1 = models.BooleanField(default=True, verbose_name="משיכה")
+    R1 = models.BooleanField(default=False, verbose_name="תגבור")
+    notes1 = models.CharField(max_length=100, blank=True, verbose_name="הערות")
+    M2 = models.BooleanField(default=False, verbose_name="שני בוקר")
+    A2 = models.BooleanField(default=False, verbose_name="שני צהריים")
+    N2 = models.BooleanField(default=False, verbose_name="שני לילה")
+    P2 = models.BooleanField(default=True, verbose_name="משיכה")
+    R2 = models.BooleanField(default=False, verbose_name="תגבור")
+    notes2 = models.CharField(max_length=100, blank=True, verbose_name="הערות")
+    M3 = models.BooleanField(default=False, verbose_name="שלישי בוקר")
+    A3 = models.BooleanField(default=False, verbose_name="שלישי צהריים")
+    N3 = models.BooleanField(default=False, verbose_name="שלישי לילה")
+    P3 = models.BooleanField(default=True, verbose_name="משיכה")
+    R3 = models.BooleanField(default=False, verbose_name="תגבור")
+    notes3 = models.CharField(max_length=100, blank=True, verbose_name="הערות")
+    M4 = models.BooleanField(default=False, verbose_name="רביעי בוקר")
+    A4 = models.BooleanField(default=False, verbose_name="רביעי צהריים")
+    N4 = models.BooleanField(default=False, verbose_name="רביעי לילה")
+    P4 = models.BooleanField(default=True, verbose_name="משיכה")
+    R4 = models.BooleanField(default=False, verbose_name="תגבור")
+    notes4 = models.CharField(max_length=100, blank=True, verbose_name="הערות")
+    M5 = models.BooleanField(default=False, verbose_name="חמישי בוקר")
+    A5 = models.BooleanField(default=False, verbose_name="חמישי צהריים")
+    N5 = models.BooleanField(default=False, verbose_name="חמישי לילה")
+    P5 = models.BooleanField(default=True, verbose_name="משיכה")
+    R5 = models.BooleanField(default=False, verbose_name="תגבור")
+    notes5 = models.CharField(max_length=100, blank=True, verbose_name="הערות")
+    M6 = models.BooleanField(default=False, verbose_name="שישי בוקר")
+    A6 = models.BooleanField(default=False, verbose_name="שישי צהריים")
+    N6 = models.BooleanField(default=False, verbose_name="שישי לילה")
+    P6 = models.BooleanField(default=True, verbose_name="משיכה")
+    R6 = models.BooleanField(default=False, verbose_name="תגבור")
+    notes6 = models.CharField(max_length=100, blank=True, verbose_name="הערות")
+    M7 = models.BooleanField(default=False, verbose_name="שבצ בוקר")
+    A7 = models.BooleanField(default=False, verbose_name="שבת צהריים")
+    N7 = models.BooleanField(default=False, verbose_name="שבת לילה")
+    P7 = models.BooleanField(default=True, verbose_name="משיכה")
+    R7 = models.BooleanField(default=False, verbose_name="תגבור")
+    notes7 = models.CharField(max_length=100, blank=True, verbose_name="הערות")
+
+    def __str__(self):
+        return f'{self.username.first_name} {self.username.last_name} ({self.username}) - {self.date}'
+
+
+
 class Event(models.Model):
     nickname = models.CharField(default="", max_length=20, verbose_name="כינוי", blank=False)
     date2 = models.DateField(default=timezone.now, verbose_name="תאריך")

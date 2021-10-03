@@ -1,7 +1,7 @@
 {% extends "Schedule/base.html" %}
 {% block content %}
      <div>
-        <h3 style="align-items: center">סידור בין תאריך {{ day0|date:"d.m" }} לתאריך {{ day13|date:"d.m" }}</h3>
+        <h3 style="align-items: center">סידור בין תאריך {{ days|first|date:"d.m" }} לתאריך {{ days|last|date:"d.m" }}</h3>
             </div>
     <div class="content-section row">
         <div>

@@ -44,86 +44,6 @@ def settings_view(request):
     settings = Settings.objects.all().last()
     checked = settings.submitting
     if request.method == 'POST':
-        organizations = Organization.objects.all()
-        for org in organizations:
-            no = Week(date=org.date, num_week=0, Day1_630=org.Day1_630,
-                                  Day1_700_search=org.Day1_700_search, Day1_700_manager=org.Day1_700_manager,
-                                  Day1_720_1=org.Day1_720_1, Day1_720_pull=org.Day1_720_pull, Day1_720_2=org.Day1_720_2,
-                                  Day1_720_3=org.Day1_720_3, Day1_1400=org.Day1_1400, Day1_1500=org.Day1_1500,
-                                  Day1_1500_1900=org.Day1_1500_1900, Day1_2300=org.Day1_2300, Day1_notes=org.Day1_notes,
-                                  Day2_630=org.Day2_630,
-                                  Day2_700_search=org.Day2_700_search, Day2_700_manager=org.Day2_700_manager,
-                                  Day2_720_1=org.Day2_720_1, Day2_720_pull=org.Day2_720_pull, Day2_720_2=org.Day2_720_2,
-                                  Day2_720_3=org.Day2_720_3, Day2_1400=org.Day2_1400, Day2_1500=org.Day2_1500,
-                                  Day2_1500_1900=org.Day2_1500_1900, Day2_2300=org.Day2_2300, Day2_notes=org.Day2_notes,
-                                  Day3_630=org.Day3_630,
-                                  Day3_700_search=org.Day3_700_search, Day3_700_manager=org.Day3_700_manager,
-                                  Day3_720_1=org.Day3_720_1, Day3_720_pull=org.Day3_720_pull, Day3_720_2=org.Day3_720_2,
-                                  Day3_720_3=org.Day3_720_3, Day3_1400=org.Day3_1400, Day3_1500=org.Day3_1500,
-                                  Day3_1500_1900=org.Day3_1500_1900, Day3_2300=org.Day3_2300, Day3_notes=org.Day3_notes,
-                                  Day4_630=org.Day4_630,
-                                  Day4_700_search=org.Day4_700_search, Day4_700_manager=org.Day4_700_manager,
-                                  Day4_720_1=org.Day4_720_1, Day4_720_pull=org.Day4_720_pull, Day4_720_2=org.Day4_720_2,
-                                  Day4_720_3=org.Day4_720_3, Day4_1400=org.Day4_1400, Day4_1500=org.Day4_1500,
-                                  Day4_1500_1900=org.Day4_1500_1900, Day4_2300=org.Day4_2300, Day4_notes=org.Day4_notes,
-                                  Day5_630=org.Day5_630,
-                                  Day5_700_search=org.Day5_700_search, Day5_700_manager=org.Day5_700_manager,
-                                  Day5_720_1=org.Day5_720_1, Day5_720_pull=org.Day5_720_pull, Day5_720_2=org.Day5_720_2,
-                                  Day5_720_3=org.Day5_720_3, Day5_1400=org.Day5_1400, Day5_1500=org.Day5_1500,
-                                  Day5_1500_1900=org.Day5_1500_1900, Day5_2300=org.Day5_2300, Day5_notes=org.Day5_notes,
-                                  Day6_630=org.Day6_630,
-                                  Day6_700_search=org.Day6_700_search, Day6_700_manager=org.Day6_700_manager,
-                                  Day6_720_1=org.Day6_720_1, Day6_720_pull=org.Day6_720_pull, Day6_720_2=org.Day6_720_2,
-                                  Day6_720_3=org.Day6_720_3, Day6_1400=org.Day6_1400, Day6_1500=org.Day6_1500,
-                                  Day6_1500_1900=org.Day6_1500_1900, Day6_2300=org.Day6_2300, Day6_notes=org.Day6_notes,
-                                  Day7_630=org.Day7_630,
-                                  Day7_700_search=org.Day7_700_search, Day7_700_manager=org.Day7_700_manager,
-                                  Day7_720_1=org.Day7_720_1, Day7_720_pull=org.Day7_720_pull, Day7_720_2=org.Day7_720_2,
-                                  Day7_720_3=org.Day7_720_3, Day7_1400=org.Day7_1400, Day7_1500=org.Day7_1500,
-                                  Day7_1500_1900=org.Day7_1500_1900, Day7_2300=org.Day7_2300, Day7_notes=org.Day7_notes,)
-            no.save()
-            nw2 = Week(date=org.date, num_week=1, Day1_630=org.Day8_630,
-                                  Day1_700_search=org.Day8_700_search, Day1_700_manager=org.Day8_700_manager,
-                                  Day1_720_1=org.Day8_720_1, Day1_720_pull=org.Day8_720_pull, Day1_720_2=org.Day8_720_2,
-                                  Day1_720_3=org.Day8_720_3, Day1_1400=org.Day8_1400, Day1_1500=org.Day8_1500,
-                                  Day1_1500_1900=org.Day8_1500_1900, Day1_2300=org.Day8_2300, Day1_notes=org.Day8_notes,
-                                  Day2_630=org.Day9_630,
-                                  Day2_700_search=org.Day9_700_search, Day2_700_manager=org.Day9_700_manager,
-                                  Day2_720_1=org.Day9_720_1, Day2_720_pull=org.Day9_720_pull, Day2_720_2=org.Day9_720_2,
-                                  Day2_720_3=org.Day9_720_3, Day2_1400=org.Day2_1400, Day2_1500=org.Day9_1500,
-                                  Day2_1500_1900=org.Day9_1500_1900, Day2_2300=org.Day9_2300, Day2_notes=org.Day9_notes,
-                                  Day3_630=org.Day10_630,
-                                  Day3_700_search=org.Day10_700_search, Day3_700_manager=org.Day10_700_manager,
-                                  Day3_720_1=org.Day10_720_1, Day3_720_pull=org.Day10_720_pull,
-                                  Day3_720_2=org.Day10_720_2,
-                                  Day3_720_3=org.Day10_720_3, Day3_1400=org.Day10_1400, Day3_1500=org.Day10_1500,
-                                  Day3_1500_1900=org.Day10_1500_1900, Day3_2300=org.Day10_2300,
-                                  Day3_notes=org.Day10_notes, Day4_630=org.Day11_630,
-                                  Day4_700_search=org.Day11_700_search, Day4_700_manager=org.Day11_700_manager,
-                                  Day4_720_1=org.Day11_720_1, Day4_720_pull=org.Day11_720_pull,
-                                  Day4_720_2=org.Day11_720_2,
-                                  Day4_720_3=org.Day11_720_3, Day4_1400=org.Day11_1400, Day4_1500=org.Day11_1500,
-                                  Day4_1500_1900=org.Day11_1500_1900, Day4_2300=org.Day11_2300,
-                                  Day4_notes=org.Day11_notes, Day5_630=org.Day12_630,
-                                  Day5_700_search=org.Day12_700_search, Day5_700_manager=org.Day12_700_manager,
-                                  Day5_720_1=org.Day12_720_1, Day5_720_pull=org.Day12_720_pull,
-                                  Day5_720_2=org.Day12_720_2,
-                                  Day5_720_3=org.Day12_720_3, Day5_1400=org.Day12_1400, Day5_1500=org.Day12_1500,
-                                  Day5_1500_1900=org.Day12_1500_1900, Day5_2300=org.Day12_2300,
-                                  Day5_notes=org.Day12_notes, Day6_630=org.Day13_630,
-                                  Day6_700_search=org.Day13_700_search, Day6_700_manager=org.Day13_700_manager,
-                                  Day6_720_1=org.Day13_720_1, Day6_720_pull=org.Day13_720_pull,
-                                  Day6_720_2=org.Day13_720_2,
-                                  Day6_720_3=org.Day13_720_3, Day6_1400=org.Day13_1400, Day6_1500=org.Day13_1500,
-                                  Day6_1500_1900=org.Day13_1500_1900, Day6_2300=org.Day13_2300,
-                                  Day6_notes=org.Day13_notes, Day7_630=org.Day14_630,
-                                  Day7_700_search=org.Day14_700_search, Day7_700_manager=org.Day14_700_manager,
-                                  Day7_720_1=org.Day14_720_1, Day7_720_pull=org.Day14_720_pull,
-                                  Day7_720_2=org.Day14_720_2,
-                                  Day7_720_3=org.Day14_720_3, Day7_1400=org.Day14_1400, Day7_1500=org.Day14_1500,
-                                  Day7_1500_1900=org.Day14_1500_1900, Day7_2300=org.Day14_2300,
-                                  Day7_notes=org.Day14_notes)
-            nw2.save()
         checked = request.POST.get("serv")
         if checked:
             checked = False
@@ -296,14 +216,21 @@ def already_submitted(user):
 
 
 def get_input(organization_last):
+    weeks_obj = Week.objects.all().filter(date=organization_last.date)
+    weeks = []
+    for w in weeks_obj:
+        weeks.append(0)
+    for week_obj in weeks_obj:
+        weeks[week_obj.num_week] = week_obj
     organization_last_input = {}
     fields = ["_630", "_700_search", "_700_manager", "_720_1", "_720_pull", "_720_2", "_720_3", "_1400", "_1500",
               "_1500_1900", "_2300", "_notes"]
-    for i in range(1, 15):
-        day1 = f'Day{i}'
-        day2 = f'day{i}'
-        for f in fields:
-            organization_last_input[day2 + f] = getattr(organization_last, day1 + f)
+    for j in range(organization_last.num_weeks):
+        for i in range(1, 8):
+            day1 = f'Day{i}'
+            day2 = f'day{i + (j * 7)}'
+            for f in fields:
+                organization_last_input[day2 + f] = getattr(weeks[j], day1 + f)
     return organization_last_input
 
 
@@ -366,8 +293,17 @@ class OrganizationDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         ctx = super(OrganizationDetailView, self).get_context_data(**kwargs)
-        for x in range(14):
-            ctx["day" + str(x)] = self.object.date + datetime.timedelta(days=x)
+        weeks_obj = Week.objects.all().filter(date=self.get_object().date)
+        weeks = []
+        for w in weeks_obj:
+            weeks.append(0)
+        for week_obj in weeks_obj:
+            weeks[week_obj.num_week] = week_obj
+        ctx["weeks"] = weeks
+        days = []
+        for x in range(self.get_object().num_weeks * 7):
+            days.append(self.get_object().date + datetime.timedelta(days=x))
+        ctx["days"] = days
         return ctx
 
 
@@ -458,8 +394,10 @@ class ShifttableView(LoginRequiredMixin, DetailView):
                         sum_content["end"] += 1
         ctx["table"] = table_content
         ctx["sum"] = sum_content
-        for x in range(14):
-            ctx["day" + str(x)] = self.get_object().date + datetime.timedelta(days=x)
+        days = []
+        for x in range(self.get_object().num_weeks * 7):
+            days.append(self.get_object().date + datetime.timedelta(days=x))
+        ctx["days"] = days
         return ctx
 
 
@@ -499,7 +437,10 @@ class ServedSumReinforcementsDetailView(LoginRequiredMixin, DetailView):
                     input_days[key][i] = input_days[key][i].replace("\r", "")
         shift_date = self.get_object().date
         shifts_served = Shift.objects.all().filter(date=shift_date)
-        notes = {"general": "", "week1": "", "week2": ""}
+        weeks_notes = []
+        for i in range(self.get_object().num_weeks):
+            weeks_notes.append("")
+        notes_general = ""
         users = {}
         for shift in shifts_served:
             username = shift.username
@@ -1868,3 +1809,11 @@ def is_in_td(text, nickname):
 @register.filter
 def is_string(item):
     return isinstance(item, str)
+
+
+@register.filter
+def clip_days(days, num_week):
+    new_days = []
+    for i in range(num_week * 7, num_week * 7 + 7):
+        new_days.append(days[i])
+    return new_days

@@ -9,7 +9,7 @@
     {% endif %}
     </div>
     <div>
-        <h3>מתאריך {{ days.day0|date:"d/m" }} עד לתאריך {{ days.day13|date:"d/m" }}</h3>
+        <h3>מתאריך {{ days|first|date:"d/m" }} עד לתאריך {{ days|last|date:"d/m" }}</h3>
     </div>
     <div class="row" style="align: bottom">
     <div>
