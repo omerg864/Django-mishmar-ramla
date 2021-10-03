@@ -22,6 +22,7 @@ from .models import Organization as Organization
 from users.models import UserSettings as USettings
 from django.utils.translation import activate
 import openpyxl
+from django.utils import timezone
 import requests
 from deep_translator import GoogleTranslator
 import os
@@ -296,7 +297,7 @@ class OrganizationCreateView(LoginRequiredMixin, CreateView, UserPassesTestMixin
 
     def get_context_data(self, **kwargs):
         ctx = super(OrganizationCreateView, self).get_context_data(**kwargs)
-        ctx["date1"] = datetime.date.today()
+        ctx["date1"] = timezone.now().date()
         return ctx
 
     def test_func(self):
