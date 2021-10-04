@@ -379,6 +379,7 @@ def shift_update_view(request, pk=None):
     main_shift = Shift.objects.all().filter(id=pk).first()
     organization = Organization.objects.all().filter(date=main_shift.date).first()
     shifts_weeks_served = ShiftWeek.objects.all().filter(date=organization.date)
+    user = User.objects.filter(username=main_shift.username).first()
     forms = []
     for i in range(organization.num_weeks):
         forms.append("")
@@ -403,7 +404,7 @@ def shift_update_view(request, pk=None):
     if request.method == 'POST':
         last_date = organization.date
         shifts = Shift.objects.filter(date=last_date)
-        shift = shifts.filter(username=request.user).first()
+        shift = shifts.filter(username=user).first()
         notes_text = str(shift.notes)
         # form = ShiftForm(request.POST, instance=shift)
         weeks = shifts_weeks_served.filter(username=request.user).order_by('num_week')
@@ -476,13 +477,12 @@ def shift_update_view(request, pk=None):
     else:
         last_date = organization.date
         shifts = Shift.objects.filter(date=last_date)
-        shift = shifts.filter(username=request.user).first()
+        shift = shifts.filter(username=user).first()
         notes_text = str(shift.notes)
         # form = ShiftForm(instance=shift)
         weeks = shifts_weeks_served.filter(username=request.user).order_by('num_week')
         for i in range(len(weeks)):
             forms[i] = ShiftWeekForm(instance=weeks[i])
-    user = User.objects.filter(username=main_shift.username).first()
     context = {
             "form": shift,
             "days": days,
