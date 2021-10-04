@@ -385,7 +385,7 @@ def shift_update_view(request, pk=None):
         forms.append("")
     form = None
     notes_text = ""
-    user_settings = USettings.objects.all().filter(user=request.user).first()
+    user_settings = USettings.objects.all().filter(user=user).first()
     days = []
     for x in range(organization.num_weeks * 7):
         days.append(organization.date + datetime.timedelta(days=x))
@@ -395,11 +395,11 @@ def shift_update_view(request, pk=None):
             for ev in events.filter(date2=days[x]):
                 if user_settings.nickname == ev.nickname:
                     message = f'לא לשכוח בתאריך {ev.date2} יש {ev.description}. אם יש שינוי להודיע!'
-                    message = translate_text(message, request.user, "hebrew")
+                    message = translate_text(message, user, "hebrew")
                     messages.info(request, message)
                 elif ev.nickname == 'כולם':
                     message = f'לא לשכוח בתאריך {ev.date2} יש {ev.description}'
-                    message = translate_text(message, request.user, "hebrew")
+                    message = translate_text(message, user, "hebrew")
                     messages.info(request, message)
     if request.method == 'POST':
         last_date = organization.date
@@ -407,11 +407,11 @@ def shift_update_view(request, pk=None):
         shift = shifts.filter(username=user).first()
         notes_text = str(shift.notes)
         # form = ShiftForm(request.POST, instance=shift)
-        weeks = shifts_weeks_served.filter(username=request.user).order_by('num_week')
+        weeks = shifts_weeks_served.filter(username=user).order_by('num_week')
         for week in weeks:
             new_form = ShiftWeekForm(request.POST, instance=week)
             forms[week.num_week] = new_form
-        shift.username = request.user
+        shift.username = user
         shift.date = organization.date
         notes_area = request.POST.get("notesArea")
         shift.notes = notes_area
@@ -424,7 +424,7 @@ def shift_update_view(request, pk=None):
                 error = True
         if not error:
             for j in range(len(forms)):
-                forms[j].instance.username = request.user
+                forms[j].instance.username = user
                 forms[j].instance.date = organization.date
                 forms[j].instance.num_week = j
                 forms[j].instance.M1 = request.POST.get(f"M1_{j}", False)
@@ -470,17 +470,17 @@ def shift_update_view(request, pk=None):
                 forms[j].instance.notes6 = request.POST.get(f"notes6_{j}", False)
                 forms[j].instance.notes7 = request.POST.get(f"notes7_{j}", False)
                 forms[j].save()
-            messages.success(request, translate_text(f'משמרות עודכנו בהצלחה!', request.user, "hebrew"))
+            messages.success(request, translate_text(f'משמרות עודכנו בהצלחה!', user, "hebrew"))
             return redirect("Schedule-Served-sum")
         else:
-            messages.error(request, translate_text(f'שינויים לא נשמרו!', request.user, "hebrew"))
+            messages.error(request, translate_text(f'שינויים לא נשמרו!', user, "hebrew"))
     else:
         last_date = organization.date
         shifts = Shift.objects.filter(date=last_date)
         shift = shifts.filter(username=user).first()
         notes_text = str(shift.notes)
         # form = ShiftForm(instance=shift)
-        weeks = shifts_weeks_served.filter(username=request.user).order_by('num_week')
+        weeks = shifts_weeks_served.filter(username=user).order_by('num_week')
         for i in range(len(weeks)):
             forms[i] = ShiftWeekForm(instance=weeks[i])
     context = {
