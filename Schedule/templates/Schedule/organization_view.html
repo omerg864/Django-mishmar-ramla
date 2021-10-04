@@ -18,17 +18,14 @@
         </div>
     <div class="content-section row">
         <div>
+    {% for form1 in forms %}
 <table class="responsive-table-input-matrix" style="align-items: center">
 		<thead>
         <tr>
 			<th>תאריך</th>
-			<th>{{ day0|date:"d.m" }}</th>
-			<th>{{ day1|date:"d.m" }}</th>
-			<th>{{ day2|date:"d.m" }}</th>
-			<th>{{ day3|date:"d.m" }}</th>
-			<th>{{ day4|date:"d.m" }}</th>
-			<th>{{ day5|date:"d.m" }}</th>
-			<th>{{ day6|date:"d.m" }}</th>
+			{% for day in days|clip_days:forloop.counter0 %}
+                <th>{{ day|date:"d.m" }}</th>
+                {% endfor %}
 		</tr>
 		<tr>
 			<th></th>
@@ -45,272 +42,125 @@
 
 		<tr style="align-content: end">
 			<td>6:30-14:30</td>
-			<td>{{form.Day1_630}}</td>
-			<td>{{form.Day2_630}}</td>
-            <td>{{form.Day3_630}}</td>
-            <td>{{form.Day4_630}}</td>
-            <td>{{form.Day5_630}}</td>
-            <td>{{form.Day6_630}}</td>
-            <td>{{form.Day7_630}}</td>
+            <td><textarea name="day1_630_{{ forloop.counter0 }}" >{{ form1.Day1_630.value|default_if_none:"" }}</textarea></td>
+			<td><textarea name="day2_630_{{ forloop.counter0 }}" >{{ form1.Day2_630.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day3_630_{{ forloop.counter0 }}" >{{ form1.Day3_630.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day4_630_{{ forloop.counter0 }}" >{{ form1.Day4_630.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day5_630_{{ forloop.counter0 }}" >{{ form1.Day5_630.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day6_630_{{ forloop.counter0 }}" >{{ form1.Day6_630.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day7_630_{{ forloop.counter0 }}" >{{ form1.Day7_630.value|default_if_none:"" }}</textarea></td>
 		</tr>
 		<tr>
 			<td>7:00-15:00<br/>סריקה</td>
-			<td>{{form.Day1_700_search}}</td>
-			<td>{{form.Day2_700_search}}</td>
-            <td>{{form.Day3_700_search}}</td>
-            <td>{{form.Day4_700_search}}</td>
-            <td>{{form.Day5_700_search}}</td>
-            <td>{{form.Day6_700_search}}</td>
-            <td>{{form.Day7_700_search}}</td>
+            <td><textarea name="day1_700_search_{{ forloop.counter0 }}" >{{ form1.Day1_700_search.value|default_if_none:"" }}</textarea></td>
+			<td><textarea name="day2_700_search_{{ forloop.counter0 }}" >{{ form1.Day2_700_search.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day3_700_search_{{ forloop.counter0 }}" >{{ form1.Day3_700_search.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day4_700_search_{{ forloop.counter0 }}" >{{ form1.Day4_700_search.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day5_700_search_{{ forloop.counter0 }}" >{{ form1.Day5_700_search.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day6_700_search_{{ forloop.counter0 }}" >{{ form1.Day6_700_search.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day7_700_search_{{ forloop.counter0 }}" >{{ form1.Day7_700_search.value|default_if_none:"" }}</textarea></td>
 		</tr>
 		<tr>
 		<td>7:00-15:00<br/>אחמ"ש</td>
-			<td>{{form.Day1_700_manager}}</td>
-			<td>{{form.Day2_700_manager}}</td>
-            <td>{{form.Day3_700_manager}}</td>
-            <td>{{form.Day4_700_manager}}</td>
-            <td>{{form.Day5_700_manager}}</td>
-            <td>{{form.Day6_700_manager}}</td>
-            <td>{{form.Day7_700_manager}}</td>
+            <td><textarea name="day1_700_manager_{{ forloop.counter0 }}" >{{ form1.Day1_700_manager.value|default_if_none:"" }}</textarea></td>
+			<td><textarea name="day2_700_manager_{{ forloop.counter0 }}" >{{ form1.Day2_700_manager.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day3_700_manager_{{ forloop.counter0 }}" >{{ form1.Day3_700_manager.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day4_700_manager_{{ forloop.counter0 }}" >{{ form1.Day4_700_manager.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day5_700_manager_{{ forloop.counter0 }}" >{{ form1.Day5_700_manager.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day6_700_manager_{{ forloop.counter0 }}" >{{ form1.Day6_700_manager.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day7_700_manager_{{ forloop.counter0 }}" >{{ form1.Day7_700_manager.value|default_if_none:"" }}</textarea></td>
 		</tr>
         <tr>
 			<td>7:20-15:20</td>
-			<td>{{form.Day1_720_1}}</td>
-			<td>{{form.Day2_720_1}}</td>
-            <td>{{form.Day3_720_1}}</td>
-            <td>{{form.Day4_720_1}}</td>
-            <td>{{form.Day5_720_1}}</td>
-            <td>{{form.Day6_720_1}}</td>
-            <td>{{form.Day7_720_1}}</td>
+            <td><textarea name="day1_720_1_{{ forloop.counter0 }}" >{{ form1.Day1_720_1.value|default_if_none:"" }}</textarea></td>
+			<td><textarea name="day2_720_1_{{ forloop.counter0 }}" >{{ form1.Day2_720_1.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day3_720_1_{{ forloop.counter0 }}" >{{ form1.Day3_720_1.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day4_720_1_{{ forloop.counter0 }}" >{{ form1.Day4_720_1.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day5_720_1_{{ forloop.counter0 }}" >{{ form1.Day5_720_1.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day6_720_1_{{ forloop.counter0 }}" >{{ form1.Day6_720_1.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day7_720_1_{{ forloop.counter0 }}" >{{ form1.Day7_720_1.value|default_if_none:"" }}</textarea></td>
 		</tr>
 		<tr>
 			<td>7:20-17:20<br/>משיכה</td>
-			<td>{{form.Day1_720_pull}}</td>
-			<td>{{form.Day2_720_pull}}</td>
-            <td>{{form.Day3_720_pull}}</td>
-            <td>{{form.Day4_720_pull}}</td>
-            <td>{{form.Day5_720_pull}}</td>
-            <td>{{form.Day6_720_pull}}</td>
-            <td>{{form.Day7_720_pull}}</td>
+            <td><textarea name="day1_720_pull_{{ forloop.counter0 }}" >{{ form1.Day1_720_pull.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day2_720_pull_{{ forloop.counter0 }}" >{{ form1.Day2_720_pull.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day3_720_pull_{{ forloop.counter0 }}" >{{ form1.Day3_720_pull.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day4_720_pull_{{ forloop.counter0 }}" >{{ form1.Day4_720_pull.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day5_720_pull_{{ forloop.counter0 }}" >{{ form1.Day5_720_pull.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day6_720_pull_{{ forloop.counter0 }}" >{{ form1.Day6_720_pull.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day7_720_pull_{{ forloop.counter0 }}" >{{ form1.Day7_720_pull.value|default_if_none:"" }}</textarea></td>
 		</tr>
         <tr>
 			<td>7:20-15:20</td>
-			<td>{{form.Day1_720_2}}</td>
-			<td>{{form.Day2_720_2}}</td>
-            <td>{{form.Day3_720_2}}</td>
-            <td>{{form.Day4_720_2}}</td>
-            <td>{{form.Day5_720_2}}</td>
-            <td>{{form.Day6_720_2}}</td>
-            <td>{{form.Day7_720_2}}</td>
+            <td><textarea name="day1_720_2_{{ forloop.counter0 }}" >{{ form1.Day1_720_2.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day2_720_2_{{ forloop.counter0 }}" >{{ form1.Day2_720_2.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day3_720_2_{{ forloop.counter0 }}" >{{ form1.Day3_720_2.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day4_720_2_{{ forloop.counter0 }}" >{{ form1.Day4_720_2.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day5_720_2_{{ forloop.counter0 }}" >{{ form1.Day5_720_2.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day6_720_2_{{ forloop.counter0 }}" >{{ form1.Day6_720_2.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day7_720_2_{{ forloop.counter0 }}" >{{ form1.Day7_720_2.value|default_if_none:"" }}</textarea></td>
 		</tr>
         <tr>
 			<td>7:20-15:20</td>
-			<td>{{form.Day1_720_3}}</td>
-			<td>{{form.Day2_720_3}}</td>
-            <td>{{form.Day3_720_3}}</td>
-            <td>{{form.Day4_720_3}}</td>
-            <td>{{form.Day5_720_3}}</td>
-            <td>{{form.Day6_720_3}}</td>
-            <td>{{form.Day7_720_3}}</td>
+            <td><textarea name="day1_720_3_{{ forloop.counter0 }}" >{{ form1.Day1_720_3.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day2_720_3_{{ forloop.counter0 }}" >{{ form1.Day2_720_3.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day3_720_3_{{ forloop.counter0 }}" >{{ form1.Day3_720_3.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day4_720_3_{{ forloop.counter0 }}" >{{ form1.Day4_720_3.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day5_720_3_{{ forloop.counter0 }}" >{{ form1.Day5_720_3.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day6_720_3_{{ forloop.counter0 }}" >{{ form1.Day6_720_3.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day7_720_3_{{ forloop.counter0 }}" >{{ form1.Day7_720_3.value|default_if_none:"" }}</textarea></td>
 		</tr>
         <tr>
 			<td>14:00-22:00</td>
-			<td>{{form.Day1_1400}}</td>
-			<td>{{form.Day2_1400}}</td>
-            <td>{{form.Day3_1400}}</td>
-            <td>{{form.Day4_1400}}</td>
-            <td>{{form.Day5_1400}}</td>
-            <td>{{form.Day6_1400}}</td>
-            <td>{{form.Day7_1400}}</td>
+            <td><textarea name="day1_1400_{{ forloop.counter0 }}" >{{ form1.Day1_1400.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day2_1400_{{ forloop.counter0 }}" >{{ form1.Day2_1400.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day3_1400_{{ forloop.counter0 }}" >{{ form1.Day3_1400.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day4_1400_{{ forloop.counter0 }}" >{{ form1.Day4_1400.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day5_1400_{{ forloop.counter0 }}" >{{ form1.Day5_1400.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day6_1400_{{ forloop.counter0 }}" >{{ form1.Day6_1400.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day7_1400_{{ forloop.counter0 }}" >{{ form1.Day7_1400.value|default_if_none:"" }}</textarea></td>
 		</tr>
         <tr>
 			<td>15:00-19:00</td>
-			<td>{{form.Day1_1500_1900}}</td>
-			<td>{{form.Day2_1500_1900}}</td>
-            <td>{{form.Day3_1500_1900}}</td>
-            <td>{{form.Day4_1500_1900}}</td>
-            <td>{{form.Day5_1500_1900}}</td>
-            <td>{{form.Day6_1500_1900}}</td>
-            <td>{{form.Day7_1500_1900}}</td>
+            <td><textarea name="day1_1500_1900_{{ forloop.counter0 }}" >{{ form1.Day1_1500_1900.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day2_1500_1900_{{ forloop.counter0 }}" >{{ form1.Day2_1500_1900.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day3_1500_1900_{{ forloop.counter0 }}" >{{ form1.Day3_1500_1900.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day4_1500_1900_{{ forloop.counter0 }}" >{{ form1.Day4_1500_1900.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day5_1500_1900_{{ forloop.counter0 }}" >{{ form1.Day5_1500_1900.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day6_1500_1900_{{ forloop.counter0 }}" >{{ form1.Day6_1500_1900.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day7_1500_1900_{{ forloop.counter0 }}" >{{ form1.Day7_1500_1900.value|default_if_none:"" }}</textarea></td>
 		</tr>
         <tr>
 			<td>15:00-23:00</td>
-			<td>{{form.Day1_1500}}</td>
-			<td>{{form.Day2_1500}}</td>
-            <td>{{form.Day3_1500}}</td>
-            <td>{{form.Day4_1500}}</td>
-            <td>{{form.Day5_1500}}</td>
-            <td>{{form.Day6_1500}}</td>
-            <td>{{form.Day7_1500}}</td>
+            <td><textarea name="day1_1500_{{ forloop.counter0 }}" >{{ form1.Day1_1500.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day2_1500_{{ forloop.counter0 }}" >{{ form1.Day2_1500.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day3_1500_{{ forloop.counter0 }}" >{{ form1.Day3_1500.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day4_1500_{{ forloop.counter0 }}" >{{ form1.Day4_1500.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day5_1500_{{ forloop.counter0 }}" >{{ form1.Day5_1500.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day6_1500_{{ forloop.counter0 }}" >{{ form1.Day6_1500.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day7_1500_{{ forloop.counter0 }}" >{{ form1.Day7_1500.value|default_if_none:"" }}</textarea></td>
 		</tr>
         <tr>
 			<td>לילה</td>
-			<td>{{form.Day1_2300}}</td>
-			<td>{{form.Day2_2300}}</td>
-            <td>{{form.Day3_2300}}</td>
-            <td>{{form.Day4_2300}}</td>
-            <td>{{form.Day5_2300}}</td>
-            <td>{{form.Day6_2300}}</td>
-            <td>{{form.Day7_2300}}</td>
+            <td><textarea name="day1_2300_{{ forloop.counter0 }}" >{{ form1.Day1_2300.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day2_2300_{{ forloop.counter0 }}" >{{ form1.Day2_2300.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day3_2300_{{ forloop.counter0 }}" >{{ form1.Day3_2300.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day4_2300_{{ forloop.counter0 }}" >{{ form1.Day4_2300.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day5_2300_{{ forloop.counter0 }}" >{{ form1.Day5_2300.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day6_2300_{{ forloop.counter0 }}" >{{ form1.Day6_2300.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day7_2300_{{ forloop.counter0 }}" >{{ form1.Day7_2300.value|default_if_none:"" }}</textarea></td>
 		</tr>
         <tr>
 			<td>הערות</td>
-			<td>{{form.Day1_notes}}</td>
-			<td>{{form.Day2_notes}}</td>
-            <td>{{form.Day3_notes}}</td>
-            <td>{{form.Day4_notes}}</td>
-            <td>{{form.Day5_notes}}</td>
-            <td>{{form.Day6_notes}}</td>
-            <td>{{form.Day7_notes}}</td>
+            <td><textarea name="day1_notes_{{ forloop.counter0 }}" >{{ form1.Day1_notes.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day2_notes_{{ forloop.counter0 }}" >{{ form1.Day2_notes.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day3_notes_{{ forloop.counter0 }}" >{{ form1.Day3_notes.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day4_notes_{{ forloop.counter0 }}" >{{ form1.Day4_notes.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day5_notes_{{ forloop.counter0 }}" >{{ form1.Day5_notes.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day6_notes_{{ forloop.counter0 }}" >{{ form1.Day6_notes.value|default_if_none:"" }}</textarea></td>
+            <td><textarea name="day7_notes_{{ forloop.counter0 }}" >{{ form1.Day7_notes.value|default_if_none:"" }}</textarea></td>
 		</tr>
 		</tbody>
 	</table>
             </div>
-        <div style="margin-right: 1em">
-        <table class="responsive-table-input-matrix" style="align-items: center">
-            <thead>
-        <tr>
-			<th>תאריך</th>
-			<th>{{ day7|date:"d.m" }}</th>
-			<th>{{ day8|date:"d.m" }}</th>
-			<th>{{ day9|date:"d.m" }}</th>
-			<th>{{ day10|date:"d.m" }}</th>
-			<th>{{ day11|date:"d.m" }}</th>
-			<th>{{ day12|date:"d.m" }}</th>
-			<th>{{ day13|date:"d.m" }}</th>
-		</tr>
-		<tr>
-			<th></th>
-			<th>ראשון</th>
-			<th>שני</th>
-			<th>שלישי</th>
-			<th>רביעי</th>
-			<th>חמישי</th>
-			<th>שישי</th>
-			<th>שבת</th>
-		</tr>
-		</thead>
-		<tbody>
-
-		<tr style="align-content: end">
-			<td>6:30-14:30</td>
-			<td>{{form.Day8_630}}</td>
-			<td>{{form.Day9_630}}</td>
-            <td>{{form.Day10_630}}</td>
-            <td>{{form.Day11_630}}</td>
-            <td>{{form.Day12_630}}</td>
-            <td>{{form.Day13_630}}</td>
-            <td>{{form.Day14_630}}</td>
-		</tr>
-		<tr>
-			<td>7:00-15:00<br/>סריקה</td>
-			<td>{{form.Day8_700_search}}</td>
-			<td>{{form.Day9_700_search}}</td>
-            <td>{{form.Day10_700_search}}</td>
-            <td>{{form.Day11_700_search}}</td>
-            <td>{{form.Day12_700_search}}</td>
-            <td>{{form.Day13_700_search}}</td>
-            <td>{{form.Day14_700_search}}</td>
-		</tr>
-		<tr>
-		<td>7:00-15:00<br/>אחמ"ש</td>
-			<td>{{form.Day8_700_manager}}</td>
-			<td>{{form.Day9_700_manager}}</td>
-            <td>{{form.Day10_700_manager}}</td>
-            <td>{{form.Day11_700_manager}}</td>
-            <td>{{form.Day12_700_manager}}</td>
-            <td>{{form.Day13_700_manager}}</td>
-            <td>{{form.Day14_700_manager}}</td>
-		</tr>
-        <tr>
-			<td>7:20-15:20</td>
-			<td>{{form.Day8_720_1}}</td>
-			<td>{{form.Day9_720_1}}</td>
-            <td>{{form.Day10_720_1}}</td>
-            <td>{{form.Day11_720_1}}</td>
-            <td>{{form.Day12_720_1}}</td>
-            <td>{{form.Day13_720_1}}</td>
-            <td>{{form.Day14_720_1}}</td>
-		</tr>
-		<tr>
-			<td>7:20-17:20<br/>משיכה</td>
-			<td>{{form.Day8_720_pull}}</td>
-			<td>{{form.Day9_720_pull}}</td>
-            <td>{{form.Day10_720_pull}}</td>
-            <td>{{form.Day11_720_pull}}</td>
-            <td>{{form.Day12_720_pull}}</td>
-            <td>{{form.Day13_720_pull}}</td>
-            <td>{{form.Day14_720_pull}}</td>
-		</tr>
-        <tr>
-			<td>7:20-15:20</td>
-			<td>{{form.Day8_720_2}}</td>
-			<td>{{form.Day9_720_2}}</td>
-            <td>{{form.Day10_720_2}}</td>
-            <td>{{form.Day11_720_2}}</td>
-            <td>{{form.Day12_720_2}}</td>
-            <td>{{form.Day13_720_2}}</td>
-            <td>{{form.Day14_720_2}}</td>
-		</tr>
-        <tr>
-			<td>7:20-15:20</td>
-			<td>{{form.Day8_720_3}}</td>
-			<td>{{form.Day9_720_3}}</td>
-            <td>{{form.Day10_720_3}}</td>
-            <td>{{form.Day11_720_3}}</td>
-            <td>{{form.Day12_720_3}}</td>
-            <td>{{form.Day13_720_3}}</td>
-            <td>{{form.Day14_720_3}}</td>
-		</tr>
-        <tr>
-			<td>14:00-22:00</td>
-			<td>{{form.Day8_1400}}</td>
-			<td>{{form.Day9_1400}}</td>
-            <td>{{form.Day10_1400}}</td>
-            <td>{{form.Day11_1400}}</td>
-            <td>{{form.Day12_1400}}</td>
-            <td>{{form.Day13_1400}}</td>
-            <td>{{form.Day14_1400}}</td>
-		</tr>
-        <tr>
-			<td>15:00-19:00</td>
-			<td>{{form.Day8_1500_1900}}</td>
-			<td>{{form.Day9_1500_1900}}</td>
-            <td>{{form.Day10_1500_1900}}</td>
-            <td>{{form.Day11_1500_1900}}</td>
-            <td>{{form.Day12_1500_1900}}</td>
-            <td>{{form.Day13_1500_1900}}</td>
-            <td>{{form.Day14_1500_1900}}</td>
-		</tr>
-        <tr>
-			<td>15:00-23:00</td>
-			<td>{{form.Day8_1500}}</td>
-			<td>{{form.Day9_1500}}</td>
-            <td>{{form.Day10_1500}}</td>
-            <td>{{form.Day11_1500}}</td>
-            <td>{{form.Day12_1500}}</td>
-            <td>{{form.Day13_1500}}</td>
-            <td>{{form.Day14_1500}}</td>
-		</tr>
-        <tr>
-			<td>לילה</td>
-			<td>{{form.Day8_2300}}</td>
-			<td>{{form.Day9_2300}}</td>
-            <td>{{form.Day10_2300}}</td>
-            <td>{{form.Day11_2300}}</td>
-            <td>{{form.Day12_2300}}</td>
-            <td>{{form.Day13_2300}}</td>
-            <td>{{form.Day14_2300}}</td>
-		</tr>
-        <tr>
-			<td>הערות</td>
-			<td>{{form.Day8_notes}}</td>
-			<td>{{form.Day9_notes}}</td>
-            <td>{{form.Day10_notes}}</td>
-            <td>{{form.Day11_notes}}</td>
-            <td>{{form.Day12_notes}}</td>
-            <td>{{form.Day13_notes}}</td>
-            <td>{{form.Day14_notes}}</td>
-		</tr>
-		</tbody>
-        </table>
+        {% endfor %}

@@ -38,30 +38,33 @@
     {% endfor %}
     </div>
     </div>
-<table class="responsive-table-input-matrix" style="align-items: center">
+    {% for week in notes %}
+<table class="responsive-table-input-matrix" style="align-items: center; margin-top: 2em">
 		<thead>
 		<tr>
 			<th></th>
-			<th>ראשון {{ days.day0|date:"d.m" }}</th>
-			<th>שני {{ days.day1|date:"d.m" }}</th>
-			<th>שלישי {{ days.day2|date:"d.m" }}</th>
-			<th>רביעי {{ days.day3|date:"d.m" }}</th>
-			<th>חמישי {{ days.day4|date:"d.m" }}</th>
-			<th>שישי {{ days.day5|date:"d.m" }}</th>
-			<th>שבת {{ days.day6|date:"d.m" }}</th>
+            {% for day in days|clip_days:forloop.counter0 %}
+                <th>{{ day|date:"d.m" }}</th>
+                {% endfor %}
+		</tr>
+        <tr>
+			<th></th>
+			<th>ראשון</th>
+			<th>שני</th>
+			<th>שלישי</th>
+			<th>רביעי</th>
+			<th>חמישי</th>
+			<th>שישי</th>
+			<th>שבת</th>
 		</tr>
 		</thead>
 		<tbody>
 
 		<tr style="align-content: end">
 			<td>תגבור</td>
-			<td>{{served.day1}}</td>
-			<td>{{served.day2}}</td>
-            <td>{{served.day3}}</td>
-            <td>{{served.day4}}</td>
-            <td>{{served.day5}}</td>
-            <td>{{served.day6}}</td>
-            <td>{{served.day7}}</td>
+            {% for s in served|clip_dictionary:forloop.counter0 %}
+			<td>{{ s }}</td>
+                {% endfor %}
 		</tr>
 		<tr>
 			<td>הודעות</td>
@@ -76,51 +79,12 @@
 		</tbody>
 </table>
     <div style="margin-top: 2em; margin-bottom: 3em; font-size: 20px">
-        <a style="margin-top: 4em">הערות שבוע ראשון:</a>
-        <p>{{ notes.week1 }}</p>
+        <a style="margin-top: 4em">הערות שבוע {{ forloop.counter }}:</a>
+        <p>{{ week }}</p>
     </div>
-    <table class="responsive-table-input-matrix" style="align-items: center; margin-top: 2em">
-    <thead>
-		<tr>
-			<th></th>
-			<th>ראשון {{ days.day7|date:"d.m" }}</th>
-			<th>שני {{ days.day8|date:"d.m" }}</th>
-			<th>שלישי {{ days.day9|date:"d.m" }}</th>
-			<th>רביעי {{ days.day10|date:"d.m" }}</th>
-			<th>חמישי {{ days.day11|date:"d.m" }}</th>
-			<th>שישי {{ days.day12|date:"d.m" }}</th>
-			<th>שבת {{ days.day13|date:"d.m" }}</th>
-		</tr>
-		</thead>
-    <tbody>
-		<tr style="align-content: end">
-			<td>תגבור</td>
-			<td>{{served.day8}}</td>
-			<td>{{served.day9}}</td>
-            <td>{{served.day10}}</td>
-            <td>{{served.day11}}</td>
-            <td>{{served.day12}}</td>
-            <td>{{served.day13}}</td>
-            <td>{{served.day14}}</td>
-		</tr>
-		<tr>
-			<td>הודעות</td>
-			<td><textarea class="notes_organization"></textarea></td>
-			<td><textarea class="notes_organization"></textarea></td>
-            <td><textarea class="notes_organization"></textarea></td>
-            <td><textarea class="notes_organization"></textarea></td>
-            <td><textarea class="notes_organization"></textarea></td>
-            <td><textarea class="notes_organization"></textarea></td>
-            <td><textarea class="notes_organization"></textarea></td>
-		</tr>
-		</tbody>
-	</table>
-    <div style="margin-top: 2em; margin-bottom: 3em; font-size: 20px">
-        <a style="margin-top: 4em">הערות שבוע שני:</a>
-    <p>{{ notes.week2 }}</p>
-    </div>
+    {% endfor %}
     <div style="margin-top: 2em; margin-bottom: 3em; font-size: 20px">
         <a style="margin-top: 4em">הערות:</a>
-    <p>{{ notes.general }}</p>
+    <p>{{ notes_general }}</p>
     </div>
 {% endblock content %}

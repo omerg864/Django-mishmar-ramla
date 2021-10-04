@@ -1,53 +1,92 @@
 <div style="padding:10px 0">
-    <a>מספר רצפים לילה לצהריים: </a>{{ form.seq_night }}
+    {% if submitting %}
+    <a>מספר רצפים לילה לצהריים: </a><input type="number" value="{{ form.seq_night }}" name="seq_night" id="id_seq_night">
+    {% else %}
+        <a>מספר רצפים לילה לצהריים: </a><input type="number" value="{{ form.seq_night }}" name="seq_night" id="id_seq_night" disabled>
+    {% endif %}
 </div>
 <div style="padding:10px 0">
-    <a>מספר רצפים צהריים לבוקר: </a>{{ form.seq_noon }}
+    {% if submitting %}
+    <a>מספר רצפים צהריים לבוקר: </a><input type="number" value="{{ form.seq_noon }}" name="seq_noon" id="id_seq_noon">
+    {% else %}
+    <a>מספר רצפים צהריים לבוקר: </a><input type="number" value="{{ form.seq_noon }}" name="seq_noon" id="id_seq_noon" disabled>
+    {% endif %}
 </div>
+{% for f in forms %}
 <table class="responsive-table-input-matrix" style="align-items: center">
 		<thead>
 		<tr>
+			<th>תאריך</th>
+			{% for day in days|clip_days:forloop.counter0 %}
+                <th>{{ day|date:"d.m" }}</th>
+                {% endfor %}
+		</tr>
+		<tr>
 			<th></th>
-			<th>ראשון {{ days.day0|date:"d.m" }}</th>
-			<th>שני {{ days.day1|date:"d.m" }}</th>
-			<th>שלישי {{ days.day2|date:"d.m" }}</th>
-			<th>רביעי {{ days.day3|date:"d.m" }}</th>
-			<th>חמישי {{ days.day4|date:"d.m" }}</th>
-			<th>שישי {{ days.day5|date:"d.m" }}</th>
-			<th>שבת {{ days.day6|date:"d.m" }}</th>
+			<th>ראשון</th>
+			<th>שני</th>
+			<th>שלישי</th>
+			<th>רביעי</th>
+			<th>חמישי</th>
+			<th>שישי</th>
+			<th>שבת</th>
 		</tr>
 		</thead>
 		<tbody>
 
 		<tr style="align-content: end">
 			<td>בוקר</td>
-			<td>{{form.M1}}</td>
-			<td>{{form.M2}}</td>
-            <td>{{form.M3}}</td>
-            <td>{{form.M4}}</td>
-            <td>{{form.M5}}</td>
-            <td>{{form.M6}}</td>
-            <td>{{form.M7}}</td>
+        {% for field in f|get_form_data:"M" %}
+            {% if submitting %}
+            {% if field|default_if_none:False == False %}
+			<td><input type="checkbox" value="True" name="M{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}"></td>
+            {% else %}
+            <td><input type="checkbox" value="True" name="M{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}" checked></td>
+            {% endif %}
+            {% else %}
+            {% if field|default_if_none:False == False %}
+			<td><input type="checkbox" value="True" name="M{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}" disabled></td>
+            {% else %}
+            <td><input type="checkbox" value="True" name="M{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}" checked disabled></td>
+            {% endif %}
+            {% endif %}
+            {% endfor %}
 		</tr>
 		<tr>
 			<td>צהריים</td>
-			<td>{{form.A1}}</td>
-			<td>{{form.A2}}</td>
-            <td>{{form.A3}}</td>
-            <td>{{form.A4}}</td>
-            <td>{{form.A5}}</td>
-            <td>{{form.A6}}</td>
-            <td>{{form.A7}}</td>
+            {% for field in f|get_form_data:"A" %}
+                {% if submitting %}
+            {% if field|default_if_none:False == False %}
+			<td><input type="checkbox" value="True" name="A{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}"></td>
+            {% else %}
+            <td><input type="checkbox" value="True" name="A{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}" checked></td>
+            {% endif %}
+                {% else %}
+                    {% if field|default_if_none:False == False %}
+			<td><input type="checkbox" value="True" name="A{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}" disabled></td>
+            {% else %}
+            <td><input type="checkbox" value="True" name="A{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}" checked disabled></td>
+            {% endif %}
+                {% endif %}
+            {% endfor %}
 		</tr>
 		<tr>
 		<td>לילה</td>
-			<td>{{form.N1}}</td>
-			<td>{{form.N2}}</td>
-            <td>{{form.N3}}</td>
-            <td>{{form.N4}}</td>
-            <td>{{form.N5}}</td>
-            <td>{{form.N6}}</td>
-            <td>{{form.N7}}</td>
+            {% for field in f|get_form_data:"N" %}
+                {% if submitting %}
+            {% if field|default_if_none:False == False %}
+			<td><input type="checkbox" value="True" name="N{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}"></td>
+            {% else %}
+            <td><input type="checkbox" value="True" name="N{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}" checked></td>
+            {% endif %}
+                {% else %}
+                    {% if field|default_if_none:False == False %}
+			<td><input type="checkbox" value="True" name="N{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}" disabled></td>
+            {% else %}
+            <td><input type="checkbox" value="True" name="N{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}" checked disabled></td>
+            {% endif %}
+                {% endif %}
+            {% endfor %}
 		</tr>
         <tr>
 		<td>↑לילה<br>↓משיכה</td>
@@ -61,125 +100,62 @@
 		</tr>
         <tr>
 			<td>משיכה</td>
-			<td>{{form.P1}}</td>
-			<td>{{form.P2}}</td>
-            <td>{{form.P3}}</td>
-            <td>{{form.P4}}</td>
-            <td>{{form.P5}}</td>
-            <td>{{form.P6}}</td>
-            <td>{{form.P7}}</td>
+            {% for field in f|get_form_data:"P" %}
+                {% if submitting %}
+            {% if field|default_if_none:False == False %}
+			<td><input type="checkbox" value="True" name="P{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}"></td>
+            {% else %}
+            <td><input type="checkbox" value="True" name="P{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}" checked></td>
+            {% endif %}
+                {% else %}
+                    {% if field|default_if_none:False == False %}
+			<td><input type="checkbox" value="True" name="P{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}" disabled></td>
+            {% else %}
+            <td><input type="checkbox" value="True" name="P{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}" checked disabled></td>
+            {% endif %}
+                {% endif %}
+            {% endfor %}
 		</tr>
         <tr>
 			<td>תגבור</td>
-			<td>{{form.R1}}</td>
-			<td>{{form.R2}}</td>
-            <td>{{form.R3}}</td>
-            <td>{{form.R4}}</td>
-            <td>{{form.R5}}</td>
-            <td>{{form.R6}}</td>
-            <td>{{form.R7}}</td>
+            {% for field in f|get_form_data:"R" %}
+                {% if submitting %}
+            {% if field|default_if_none:False == False %}
+			<td><input type="checkbox" value="True" name="R{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}"></td>
+            {% else %}
+            <td><input type="checkbox" value="True" name="R{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}" checked></td>
+            {% endif %}
+                {% else %}
+                    {% if field|default_if_none:False == False %}
+			<td><input type="checkbox" value="True" name="R{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}" disabled></td>
+            {% else %}
+            <td><input type="checkbox" value="True" name="R{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}" checked disabled></td>
+            {% endif %}
+                {% endif %}
+            {% endfor %}
 		</tr>
 		<tr>
 			<td>הערות</td>
-			<td>{{form.notes1}}</td>
-			<td>{{form.notes2}}</td>
-            <td>{{form.notes3}}</td>
-            <td>{{form.notes4}}</td>
-            <td>{{form.notes5}}</td>
-            <td>{{form.notes6}}</td>
-            <td>{{form.notes7}}</td>
-		</tr>
-		</tbody>
-    <thead>
-		<tr>
-			<th></th>
-			<th>ראשון {{ days.day7|date:"d.m" }}</th>
-			<th>שני {{ days.day8|date:"d.m" }}</th>
-			<th>שלישי {{ days.day9|date:"d.m" }}</th>
-			<th>רביעי {{ days.day10|date:"d.m" }}</th>
-			<th>חמישי {{ days.day11|date:"d.m" }}</th>
-			<th>שישי {{ days.day12|date:"d.m" }}</th>
-			<th>שבת {{ days.day13|date:"d.m" }}</th>
-		</tr>
-		</thead>
-    <tbody>
-		<tr style="align-content: end">
-			<td>בוקר</td>
-			<td>{{form.M8}}</td>
-			<td>{{form.M9}}</td>
-            <td>{{form.M10}}</td>
-            <td>{{form.M11}}</td>
-            <td>{{form.M12}}</td>
-            <td>{{form.M13}}</td>
-            <td>{{form.M14}}</td>
-		</tr>
-		<tr>
-			<td>צהריים</td>
-			<td>{{form.A8}}</td>
-			<td>{{form.A9}}</td>
-            <td>{{form.A10}}</td>
-            <td>{{form.A11}}</td>
-            <td>{{form.A12}}</td>
-            <td>{{form.A13}}</td>
-            <td>{{form.A14}}</td>
-		</tr>
-		<tr>
-		<td>לילה</td>
-			<td>{{form.N8}}</td>
-			<td>{{form.N9}}</td>
-            <td>{{form.N10}}</td>
-            <td>{{form.N11}}</td>
-            <td>{{form.N12}}</td>
-            <td>{{form.N13}}</td>
-            <td>{{form.N14}}</td>
-		</tr>
-        <tr>
-		<td>↑לילה<br>↓משיכה</td>
-			<td>↑לילה<br>↓משיכה</td>
-			<td>↑לילה<br>↓משיכה</td>
-            <td>↑לילה<br>↓משיכה</td>
-            <td>↑לילה<br>↓משיכה</td>
-            <td>↑לילה<br>↓משיכה</td>
-            <td>↑לילה<br>↓משיכה</td>
-            <td>↑לילה<br>↓משיכה</td>
-		</tr>
-        <tr>
-			<td>משיכה</td>
-			<td>{{form.P8}}</td>
-			<td>{{form.P9}}</td>
-            <td>{{form.P10}}</td>
-            <td>{{form.P11}}</td>
-            <td>{{form.P12}}</td>
-            <td>{{form.P13}}</td>
-            <td>{{form.P14}}</td>
-		</tr>
-        <tr>
-			<td>תגבור</td>
-			<td>{{form.R8}}</td>
-			<td>{{form.R9}}</td>
-            <td>{{form.R10}}</td>
-            <td>{{form.R11}}</td>
-            <td>{{form.R12}}</td>
-            <td>{{form.R13}}</td>
-            <td>{{form.R14}}</td>
-		</tr>
-		<tr>
-			<td>הערות</td>
-			<td>{{form.notes8}}</td>
-			<td>{{form.notes9}}</td>
-            <td>{{form.notes10}}</td>
-            <td>{{form.notes11}}</td>
-            <td>{{form.notes12}}</td>
-            <td>{{form.notes13}}</td>
-            <td>{{form.notes14}}</td>
+            {% for field in f|get_form_data:"notes" %}
+                {% if submitting %}
+                <td><textarea name="notes{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}">{{ field|default_if_none:"" }}</textarea></td>
+                {% else %}
+                <td><textarea name="notes{{ forloop.counter }}_{{ forloop.parentloop.counter0 }}" disabled>{{ field|default_if_none:"" }}</textarea></td>
+                {% endif %}
+            {% endfor %}
 		</tr>
 		</tbody>
 	</table>
+{% endfor %}
             <div dir="rtl" class="row">
                 <notes >
                     <a>הערות:</a>
                 </notes>
                 <div STYLE="margin-top: 1.5em">
+                    {% if submitting %}
                     <textarea name="notesArea" class="notesArea">{{ notes_text }}</textarea>
+                    {% else %}
+                        <textarea name="notesArea" class="notesArea" disabled>{{ notes_text }}</textarea>
+                    {% endif %}
                 </div>
             </div>

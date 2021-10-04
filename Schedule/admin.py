@@ -19,7 +19,7 @@ class EventAdmin(admin.ModelAdmin):
     list_display = ("date2", "nickname", "description", "training", "night_before", "morning", "after_noon", "night")
 
 
-admin.site.register(Organization, OrganizationAdmin)
+admin.site.register(Organization)
 admin.site.register(Post)
 admin.site.register(Week)
 admin.site.register(Event, EventAdmin)

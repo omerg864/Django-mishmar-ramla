@@ -10,14 +10,14 @@
         <h1>לא הגשת משמרות עדיין וכבר לא ניתן השבוע</h1>
     {% elif not submitting %}
         <h3>לא ניתן להגיש/לשנות משמרות כבר</h3>
-        <h5>מתאריך {{ days.day0|date:"d/m" }} עד לתאריך {{ days.day13|date:"d/m" }} הגשה אחרונה: </h5>
+        <h5>מתאריך {{ days|first|date:"d/m" }} עד לתאריך {{ days|last|date:"d/m" }} הגשה אחרונה: </h5>
         {% block view_form %}
     {% include "Schedule/ShiftView.html" %}
 {% endblock %}
     {% else %}
     <h1>הגשת משמרות</h1>
 
-<h3>מתאריך {{ days.day0|date:"d/m" }} עד לתאריך {{ days.day13|date:"d/m" }}</h3>
+<h3>מתאריך {{ days|first|date:"d/m" }} עד לתאריך {{ days|last|date:"d/m" }}</h3>
         <form method="POST">
         {% csrf_token %}
         <fieldset class="form-group">

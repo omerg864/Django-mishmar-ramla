@@ -13,7 +13,8 @@ from django.http import HttpResponseRedirect
 from django.template.defaulttags import register
 from django.views.generic import UpdateView, ListView, DetailView, CreateView
 from .backend.Schedule.Organizer import Organizer
-from .forms import SettingsForm, ShiftForm, ShiftViewForm, OrganizationUpdateForm
+from .forms import SettingsForm, ShiftForm, ShiftViewForm, WeekUpdateForm, ShiftWeekForm, ShiftWeekViewForm
+from django.forms.models import model_to_dict
 from .models import Post
 from .models import Settings3 as Settings
 from .models import Shift1 as Shift
@@ -25,6 +26,7 @@ from users.models import UserSettings as USettings
 from django.utils.translation import activate
 import openpyxl
 from django.utils import timezone
+from openpyxl.utils import get_column_letter
 import requests
 from deep_translator import GoogleTranslator
 import os
@@ -45,23 +47,6 @@ def settings_view(request):
     settings = Settings.objects.all().last()
     checked = settings.submitting
     if request.method == 'POST':
-        shifts = Shift.objects.all()
-        for s in shifts:
-            n1 = ShiftWeek(username=s.username, num_week=0, date=s.date, M2=s.M2, A2=s.A2, N2=s.N2, P2=s.P2, R2=s.R2, notes2=s.notes2
-                           , M1=s.M1, A1=s.A1, N1=s.N1, P1=s.P1, R1=s.R1, notes1=s.notes1, M3=s.M3, A3=s.A3, N3=s.N3, P3=s.P3, R3=s.R3,
-                           notes3=s.notes3, M4=s.M4, A4=s.A4, N4=s.N4, P4=s.P4, R4=s.R4, notes4=s.notes4, M5=s.M5, A5=s.A5,
-                           N5=s.N5, P5=s.P5, R5=s.R5, notes5=s.notes5, M6=s.M6, A6=s.A6, N6=s.N6, P6=s.P6, R6=s.R6,
-                           notes6=s.notes6, M7=s.M7, A7=s.A7, N7=s.N7, P7=s.P7, R7=s.R7, notes7=s.notes7)
-            n1.save()
-            n2 = ShiftWeek(username=s.username, num_week=1, date=s.date, M2=s.M9, A2=s.A9, N2=s.N9, P2=s.P9, R2=s.R9,
-                           notes2=s.notes9
-                           , M1=s.M8, A1=s.A8, N1=s.N8, P1=s.P8, R1=s.R8, notes1=s.notes8, M3=s.M10, A3=s.A10, N3=s.N10,
-                           P3=s.P10, R3=s.R10,
-                           notes3=s.notes10, M4=s.M11, A4=s.A11, N4=s.N11, P4=s.P11, R4=s.R11, notes4=s.notes11, M5=s.M12,
-                           A5=s.A12,
-                           N5=s.N12, P5=s.P12, R5=s.R12, notes5=s.notes12, M6=s.M13, A6=s.A13, N6=s.N13, P6=s.P13, R6=s.R13,
-                           notes6=s.notes13, M7=s.M14, A7=s.A14, N7=s.N14, P7=s.P14, R7=s.R14, notes7=s.notes14)
-            n2.save()
         checked = request.POST.get("serv")
         if checked:
             checked = False
@@ -142,19 +127,24 @@ def error_404_view(request, exception):
 
 @login_required
 def shift_view(request):
+    organization = Organization.objects.order_by('-date')[0]
+    shifts_weeks_served = ShiftWeek.objects.all().filter(date=organization.date)
+    forms = []
+    for i in range(organization.num_weeks):
+        forms.append("")
     form = None
-    days = {}
     notes_text = ""
     empty = False
     settings = Settings.objects.last()
     submitting = settings.submitting
     user_settings = USettings.objects.all().filter(user=request.user).first()
-    for x in range(14):
-        days["day" + str(x)] = Organization.objects.order_by('-date')[0].date + datetime.timedelta(days=x)
+    days = []
+    for x in range(organization.num_weeks * 7):
+        days.append(Organization.objects.order_by('-date')[0].date + datetime.timedelta(days=x))
     events = Event.objects.all()
-    for x in range(14):
-        if len(events.filter(date2=days["day" + str(x)])) > 0:
-            for ev in events.filter(date2=days["day" + str(x)]):
+    for x in range(organization.num_weeks * 7):
+        if len(events.filter(date2=days[x])) > 0:
+            for ev in events.filter(date2=days[x]):
                 if user_settings.nickname == ev.nickname:
                     message = f'לא לשכוח בתאריך {ev.date2} יש {ev.description}. אם יש שינוי להודיע!'
                     message = translate_text(message, request.user, "hebrew")
@@ -165,53 +155,173 @@ def shift_view(request):
                     messages.info(request, message)
     if request.method == 'POST':
         if not already_submitted(request.user):
-            form = ShiftForm(request.POST)
+            #form = ShiftForm(request.POST)
+            shift = Shift()
+            for i in range(organization.num_weeks):
+                new_form = ShiftWeekForm(request.POST)
+                forms[i] = new_form
         else:
             last_date = Organization.objects.order_by('-date')[0].date
             shifts = Shift.objects.filter(date=last_date)
             shift = shifts.filter(username=request.user).first()
             notes_text = str(shift.notes)
-            form = ShiftForm(request.POST, instance=shift)
-        form.instance.username = request.user
-        form.instance.date = Organization.objects.order_by('-date')[0].date
+            #form = ShiftForm(request.POST, instance=shift)
+            weeks = shifts_weeks_served.filter(username=request.user).order_by('num_week')
+            for week in weeks:
+                new_form = ShiftWeekForm(request.POST, instance=week)
+                forms[week.num_week] = new_form
+        shift.username = request.user
+        shift.date = Organization.objects.order_by('-date')[0].date
         notes_area = request.POST.get("notesArea")
-        form.instance.notes = notes_area
-        if form.is_valid():
+        shift.notes = notes_area
+        shift.seq_night = request.POST.get(f"seq_night", 0)
+        shift.seq_noon = request.POST.get(f"seq_noon", 0)
+        error = False
+        shift.save()
+        if already_submitted(request.user):
+            for form in forms:
+                if not form.is_valid():
+                    error = True
+            if not error:
+                for j in range(len(forms)):
+                    forms[j].instance.username = request.user
+                    forms[j].instance.date = Organization.objects.order_by('-date')[0].date
+                    forms[j].instance.num_week = j
+                    forms[j].instance.M1 = request.POST.get(f"M1_{j}", False)
+                    forms[j].instance.M2 = request.POST.get(f"M2_{j}", False)
+                    forms[j].instance.M3 = request.POST.get(f"M3_{j}", False)
+                    forms[j].instance.M4 = request.POST.get(f"M4_{j}", False)
+                    forms[j].instance.M5 = request.POST.get(f"M5_{j}", False)
+                    forms[j].instance.M6 = request.POST.get(f"M6_{j}", False)
+                    forms[j].instance.M7 = request.POST.get(f"M7_{j}", False)
+                    forms[j].instance.A1 = request.POST.get(f"A1_{j}", False)
+                    forms[j].instance.A2 = request.POST.get(f"A2_{j}", False)
+                    forms[j].instance.A3 = request.POST.get(f"A3_{j}", False)
+                    forms[j].instance.A4 = request.POST.get(f"A4_{j}", False)
+                    forms[j].instance.A5 = request.POST.get(f"A5_{j}", False)
+                    forms[j].instance.A6 = request.POST.get(f"A6_{j}", False)
+                    forms[j].instance.A7 = request.POST.get(f"A7_{j}", False)
+                    forms[j].instance.N1 = request.POST.get(f"N1_{j}", False)
+                    forms[j].instance.N2 = request.POST.get(f"N2_{j}", False)
+                    forms[j].instance.N3 = request.POST.get(f"N3_{j}", False)
+                    forms[j].instance.N4 = request.POST.get(f"N4_{j}", False)
+                    forms[j].instance.N5 = request.POST.get(f"N5_{j}", False)
+                    forms[j].instance.N6 = request.POST.get(f"N6_{j}", False)
+                    forms[j].instance.N7 = request.POST.get(f"N7_{j}", False)
+                    forms[j].instance.P1 = request.POST.get(f"P1_{j}", False)
+                    forms[j].instance.P2 = request.POST.get(f"P2_{j}", False)
+                    forms[j].instance.P3 = request.POST.get(f"P3_{j}", False)
+                    forms[j].instance.P4 = request.POST.get(f"P4_{j}", False)
+                    forms[j].instance.P5 = request.POST.get(f"P5_{j}", False)
+                    forms[j].instance.P6 = request.POST.get(f"P6_{j}", False)
+                    forms[j].instance.P7 = request.POST.get(f"P7_{j}", False)
+                    forms[j].instance.R1 = request.POST.get(f"R1_{j}", False)
+                    forms[j].instance.R2 = request.POST.get(f"R2_{j}", False)
+                    forms[j].instance.R3 = request.POST.get(f"R3_{j}", False)
+                    forms[j].instance.R4 = request.POST.get(f"R4_{j}", False)
+                    forms[j].instance.R5 = request.POST.get(f"R5_{j}", False)
+                    forms[j].instance.R6 = request.POST.get(f"R6_{j}", False)
+                    forms[j].instance.R7 = request.POST.get(f"R7_{j}", False)
+                    forms[j].instance.notes1 = request.POST.get(f"notes1_{j}", False)
+                    forms[j].instance.notes2 = request.POST.get(f"notes2_{j}", False)
+                    forms[j].instance.notes3 = request.POST.get(f"notes3_{j}", False)
+                    forms[j].instance.notes4 = request.POST.get(f"notes4_{j}", False)
+                    forms[j].instance.notes5 = request.POST.get(f"notes5_{j}", False)
+                    forms[j].instance.notes6 = request.POST.get(f"notes6_{j}", False)
+                    forms[j].instance.notes7 = request.POST.get(f"notes7_{j}", False)
+                    forms[j].save()
+            else:
+                for j in range(organization.num_weeks):
+                    weeks = ShiftWeek.objects.all().filter(date=organization.date).order_by('num_week')
+                    new_shift = ShiftWeekForm(instance=weeks[j])
+                    new_shift.username = request.user
+                    new_shift.date = Organization.objects.order_by('-date')[0].date
+                    new_shift.num_week = j
+                    new_shift.M1 = request.POST.get(f"M1_{j}", False)
+                    new_shift.M2 = request.POST.get(f"M2_{j}", False)
+                    new_shift.M3 = request.POST.get(f"M3_{j}", False)
+                    new_shift.M4 = request.POST.get(f"M4_{j}", False)
+                    new_shift.M5 = request.POST.get(f"M5_{j}", False)
+                    new_shift.M6 = request.POST.get(f"M6_{j}", False)
+                    new_shift.M7 = request.POST.get(f"M7_{j}", False)
+                    new_shift.A1 = request.POST.get(f"A1_{j}", False)
+                    new_shift.A2 = request.POST.get(f"A2_{j}", False)
+                    new_shift.A3 = request.POST.get(f"A3_{j}", False)
+                    new_shift.A4 = request.POST.get(f"A4_{j}", False)
+                    new_shift.A5 = request.POST.get(f"A5_{j}", False)
+                    new_shift.A6 = request.POST.get(f"A6_{j}", False)
+                    new_shift.A7 = request.POST.get(f"A7_{j}", False)
+                    new_shift.N1 = request.POST.get(f"N1_{j}", False)
+                    new_shift.N2 = request.POST.get(f"N2_{j}", False)
+                    new_shift.N3 = request.POST.get(f"N3_{j}", False)
+                    new_shift.N4 = request.POST.get(f"N4_{j}", False)
+                    new_shift.N5 = request.POST.get(f"N5_{j}", False)
+                    new_shift.N6 = request.POST.get(f"N6_{j}", False)
+                    new_shift.N7 = request.POST.get(f"N7_{j}", False)
+                    new_shift.P1 = request.POST.get(f"P1_{j}", False)
+                    new_shift.P2 = request.POST.get(f"P2_{j}", False)
+                    new_shift.P3 = request.POST.get(f"P3_{j}", False)
+                    new_shift.P4 = request.POST.get(f"P4_{j}", False)
+                    new_shift.P5 = request.POST.get(f"P5_{j}", False)
+                    new_shift.P6 = request.POST.get(f"P6_{j}", False)
+                    new_shift.P7 = request.POST.get(f"P7_{j}", False)
+                    new_shift.R1 = request.POST.get(f"R1_{j}", False)
+                    new_shift.R2 = request.POST.get(f"R2_{j}", False)
+                    new_shift.R3 = request.POST.get(f"R3_{j}", False)
+                    new_shift.R4 = request.POST.get(f"R4_{j}", False)
+                    new_shift.R5 = request.POST.get(f"R5_{j}", False)
+                    new_shift.R6 = request.POST.get(f"R6_{j}", False)
+                    new_shift.R7 = request.POST.get(f"R7_{j}", False)
+                    new_shift.notes1 = request.POST.get(f"notes1_{j}", False)
+                    new_shift.notes2 = request.POST.get(f"notes2_{j}", False)
+                    new_shift.notes3 = request.POST.get(f"notes3_{j}", False)
+                    new_shift.notes4 = request.POST.get(f"notes4_{j}", False)
+                    new_shift.notes5 = request.POST.get(f"notes5_{j}", False)
+                    new_shift.notes6 = request.POST.get(f"notes6_{j}", False)
+                    new_shift.notes7 = request.POST.get(f"notes7_{j}", False)
+                    new_shift.save()
             if not already_submitted(request.user):
                 messages.success(request, translate_text(f'משמרות הוגשו בהצלחה!', request.user, "hebrew"))
             else:
                 messages.success(request, translate_text(f'משמרות עודכנו בהצלחה!', request.user, "hebrew"))
-            form.save()
             return redirect("Schedule-Home")
         else:
             messages.error(request, translate_text(f'שינויים לא נשמרו!', request.user, "hebrew"))
     else:
         if not submitting:
             shifts = Shift.objects.order_by('-date')
-            if len(shifts.filter(username=request.user).order_by('-date')) > 0:
+            if len(shifts.filter(username=request.user, date=organization.date).order_by('-date')) > 0:
                 shift = shifts.filter(username=request.user).order_by('-date')[0]
+                weeks = shifts_weeks_served.filter(username=request.user).order_by('-num_week')
                 notes_text = str(shift.notes)
-                for x in range(14):
-                    days["day" + str(x)] = shift.date + datetime.timedelta(days=x)
-                form = ShiftViewForm(instance=shift)
+                for i in range(len(weeks)):
+                    forms[i] = ShiftWeekViewForm(instance=weeks[i])
+                #form = ShiftViewForm(instance=shift)
             else:
                 empty = True
         elif not already_submitted(request.user):
-            form = ShiftForm()
+            #form = ShiftForm()
+            shift = Shift()
+            for i in range(organization.num_weeks):
+                forms[i] = ShiftWeekForm()
         else:
             last_date = Organization.objects.order_by('-date')[0].date
             shifts = Shift.objects.filter(date=last_date)
             shift = shifts.filter(username=request.user).first()
             notes_text = str(shift.notes)
-            form = ShiftForm(instance=shift)
+            #form = ShiftForm(instance=shift)
+            weeks = shifts_weeks_served.filter(username=request.user).order_by('num_week')
+            for i in range(len(weeks)):
+                forms[i] = ShiftWeekForm(instance=weeks[i])
     if not empty:
         context = {
-            "form": form,
+            "form": shift,
             "days": days,
             "submitting": submitting,
             "notes_text": notes_text,
             "empty": empty,
             "manager": False,
+            "forms": forms,
         }
     else:
         context = {
@@ -229,8 +339,7 @@ def already_submitted(user):
     else:
         if len(shifts.filter(username=user)) == 0:
             return False
-        else:
-            return True
+    return True
 
 
 def get_input(organization_last):
@@ -265,11 +374,133 @@ class ServedSumListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return False
 
 
+@login_required
+def shift_update_view(request, pk=None):
+    main_shift = Shift.objects.all().filter(id=pk).first()
+    organization = Organization.objects.all().filter(date=main_shift.date).first()
+    shifts_weeks_served = ShiftWeek.objects.all().filter(date=organization.date)
+    forms = []
+    for i in range(organization.num_weeks):
+        forms.append("")
+    form = None
+    notes_text = ""
+    user_settings = USettings.objects.all().filter(user=request.user).first()
+    days = []
+    for x in range(organization.num_weeks * 7):
+        days.append(organization.date + datetime.timedelta(days=x))
+    events = Event.objects.all()
+    for x in range(organization.num_weeks * 7):
+        if len(events.filter(date2=days[x])) > 0:
+            for ev in events.filter(date2=days[x]):
+                if user_settings.nickname == ev.nickname:
+                    message = f'לא לשכוח בתאריך {ev.date2} יש {ev.description}. אם יש שינוי להודיע!'
+                    message = translate_text(message, request.user, "hebrew")
+                    messages.info(request, message)
+                elif ev.nickname == 'כולם':
+                    message = f'לא לשכוח בתאריך {ev.date2} יש {ev.description}'
+                    message = translate_text(message, request.user, "hebrew")
+                    messages.info(request, message)
+    if request.method == 'POST':
+        last_date = organization.date
+        shifts = Shift.objects.filter(date=last_date)
+        shift = shifts.filter(username=request.user).first()
+        notes_text = str(shift.notes)
+        # form = ShiftForm(request.POST, instance=shift)
+        weeks = shifts_weeks_served.filter(username=request.user).order_by('num_week')
+        for week in weeks:
+            new_form = ShiftWeekForm(request.POST, instance=week)
+            forms[week.num_week] = new_form
+        shift.username = request.user
+        shift.date = organization.date
+        notes_area = request.POST.get("notesArea")
+        shift.notes = notes_area
+        shift.seq_night = request.POST.get(f"seq_night", 0)
+        shift.seq_noon = request.POST.get(f"seq_noon", 0)
+        error = False
+        shift.save()
+        for form in forms:
+            if not form.is_valid():
+                error = True
+        if not error:
+            for j in range(len(forms)):
+                forms[j].instance.username = request.user
+                forms[j].instance.date = organization.date
+                forms[j].instance.num_week = j
+                forms[j].instance.M1 = request.POST.get(f"M1_{j}", False)
+                forms[j].instance.M2 = request.POST.get(f"M2_{j}", False)
+                forms[j].instance.M3 = request.POST.get(f"M3_{j}", False)
+                forms[j].instance.M4 = request.POST.get(f"M4_{j}", False)
+                forms[j].instance.M5 = request.POST.get(f"M5_{j}", False)
+                forms[j].instance.M6 = request.POST.get(f"M6_{j}", False)
+                forms[j].instance.M7 = request.POST.get(f"M7_{j}", False)
+                forms[j].instance.A1 = request.POST.get(f"A1_{j}", False)
+                forms[j].instance.A2 = request.POST.get(f"A2_{j}", False)
+                forms[j].instance.A3 = request.POST.get(f"A3_{j}", False)
+                forms[j].instance.A4 = request.POST.get(f"A4_{j}", False)
+                forms[j].instance.A5 = request.POST.get(f"A5_{j}", False)
+                forms[j].instance.A6 = request.POST.get(f"A6_{j}", False)
+                forms[j].instance.A7 = request.POST.get(f"A7_{j}", False)
+                forms[j].instance.N1 = request.POST.get(f"N1_{j}", False)
+                forms[j].instance.N2 = request.POST.get(f"N2_{j}", False)
+                forms[j].instance.N3 = request.POST.get(f"N3_{j}", False)
+                forms[j].instance.N4 = request.POST.get(f"N4_{j}", False)
+                forms[j].instance.N5 = request.POST.get(f"N5_{j}", False)
+                forms[j].instance.N6 = request.POST.get(f"N6_{j}", False)
+                forms[j].instance.N7 = request.POST.get(f"N7_{j}", False)
+                forms[j].instance.P1 = request.POST.get(f"P1_{j}", False)
+                forms[j].instance.P2 = request.POST.get(f"P2_{j}", False)
+                forms[j].instance.P3 = request.POST.get(f"P3_{j}", False)
+                forms[j].instance.P4 = request.POST.get(f"P4_{j}", False)
+                forms[j].instance.P5 = request.POST.get(f"P5_{j}", False)
+                forms[j].instance.P6 = request.POST.get(f"P6_{j}", False)
+                forms[j].instance.P7 = request.POST.get(f"P7_{j}", False)
+                forms[j].instance.R1 = request.POST.get(f"R1_{j}", False)
+                forms[j].instance.R2 = request.POST.get(f"R2_{j}", False)
+                forms[j].instance.R3 = request.POST.get(f"R3_{j}", False)
+                forms[j].instance.R4 = request.POST.get(f"R4_{j}", False)
+                forms[j].instance.R5 = request.POST.get(f"R5_{j}", False)
+                forms[j].instance.R6 = request.POST.get(f"R6_{j}", False)
+                forms[j].instance.R7 = request.POST.get(f"R7_{j}", False)
+                forms[j].instance.notes1 = request.POST.get(f"notes1_{j}", False)
+                forms[j].instance.notes2 = request.POST.get(f"notes2_{j}", False)
+                forms[j].instance.notes3 = request.POST.get(f"notes3_{j}", False)
+                forms[j].instance.notes4 = request.POST.get(f"notes4_{j}", False)
+                forms[j].instance.notes5 = request.POST.get(f"notes5_{j}", False)
+                forms[j].instance.notes6 = request.POST.get(f"notes6_{j}", False)
+                forms[j].instance.notes7 = request.POST.get(f"notes7_{j}", False)
+                forms[j].save()
+            messages.success(request, translate_text(f'משמרות עודכנו בהצלחה!', request.user, "hebrew"))
+            return redirect("Schedule-Served-sum")
+        else:
+            messages.error(request, translate_text(f'שינויים לא נשמרו!', request.user, "hebrew"))
+    else:
+        last_date = organization.date
+        shifts = Shift.objects.filter(date=last_date)
+        shift = shifts.filter(username=request.user).first()
+        notes_text = str(shift.notes)
+        # form = ShiftForm(instance=shift)
+        weeks = shifts_weeks_served.filter(username=request.user).order_by('num_week')
+        for i in range(len(weeks)):
+            forms[i] = ShiftWeekForm(instance=weeks[i])
+    user = User.objects.filter(username=main_shift.username).first()
+    context = {
+            "form": shift,
+            "days": days,
+            "submitting": True,
+            "notes_text": notes_text,
+            "empty": False,
+            "manager": True,
+            "forms": forms,
+            "userview": USettings.objects.all().filter(user=user).first().nickname,
+    }
+    return render(request, "Schedule/shifts.html", context)
+
+
 class ShiftUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Shift
     template_name = "Schedule/shifts.html"
     fields_temp = []
-    for i in range(1, 15):
+    for i in range(1, 8):
         fields_temp.append("M" + str(i))
         fields_temp.append("A" + str(i))
         fields_temp.append("N" + str(i))
@@ -454,51 +685,46 @@ class ServedSumReinforcementsDetailView(LoginRequiredMixin, DetailView):
                     input_days[key][i] = input_days[key][i].replace("\n", "")
                     input_days[key][i] = input_days[key][i].replace("\r", "")
         shift_date = self.get_object().date
-        shifts_served = Shift.objects.all().filter(date=shift_date)
+        main_shifts_served = Shift.objects.all().filter(date=shift_date)
+        shifts_served = ShiftWeek.objects.all().filter(date=shift_date)
         weeks_notes = []
         for i in range(self.get_object().num_weeks):
             weeks_notes.append("")
         notes_general = ""
         users = {}
+        user_notes_added = []
         for shift in shifts_served:
             username = shift.username
             user = User.objects.all().filter(username=username).first()
             user_settings = USettings.objects.all().filter(user=user).first()
-            users[user_settings.nickname] = shift.id
+            main_shift = main_shifts_served.filter(username=username).first()
+            users[user_settings.nickname] = main_shifts_served.filter(username=username).first().id
             name = user_settings.nickname
             index = 1
-            shifts = [shift.R1, shift.R2, shift.R3, shift.R4, shift.R5, shift.R6, shift.R7, shift.R8, shift.R9,
-                      shift.R10, shift.R11, shift.R12, shift.R13, shift.R14]
+            shifts = [shift.R1, shift.R2, shift.R3, shift.R4, shift.R5, shift.R6, shift.R7]
             for s in shifts:
                 if s:
-                    served["day" + str(index)] = served["day" + str(index)] + name
+                    served["day" + str(index + (shift.num_week * 7))] += name
                 index += 1
-            notes1 = [shift.notes1, shift.notes2, shift.notes3,
+            notes = [shift.notes1, shift.notes2, shift.notes3,
                       shift.notes4, shift.notes5, shift.notes6, shift.notes7]
             index = 1
-            for n in notes1:
+            for n in notes:
                 if n != "":
-                    notes["week1"] = notes["week1"] + name + ": " \
+                    notes[shift.num_week] += name + ": " \
                                      + number_to_day2(index) + " - " + n + "\n"
                 index += 1
-            notes2 = [shift.notes8, shift.notes9, shift.notes10,
-                      shift.notes11, shift.notes12, shift.notes13, shift.notes14]
-            index = 1
-            for n in notes2:
-                if n != "":
-                    notes["week2"] = notes["week2"] + name + ": " \
-                                     + number_to_day2(index) + " - " + n + "\n"
-                index += 1
-            if shift.notes != "":
-                notes["general"] = notes["general"] + name + ": " + shift.notes + "\n"
-        days = {}
-        for x in range(14):
-            days["day" + str(x)] = self.get_object().date + datetime.timedelta(days=x)
+            if main_shift.notes != "" and name not in user_notes_added:
+                notes_general += name + ": " + main_shift.notes + "\n"
+                user_notes_added.append(name)
+        days = []
+        for x in range(self.get_object().num_weeks * 7):
+            days.append(self.get_object().date + datetime.timedelta(days=x))
         ##
         # Calculated Part
         if calculated:
             calc_served = {}
-            for x in range(1, 15):
+            for x in range(1, self.get_object().num_weeks * 7 + 1):
                 day = "day" + str(x)
                 calc_served[day] = ""
                 split = served[day].split("\n")
@@ -550,7 +776,8 @@ class ServedSumReinforcementsDetailView(LoginRequiredMixin, DetailView):
         ctx["calculated"] = calculated
         ctx["days"] = days
         ctx["served"] = served
-        ctx["notes"] = notes
+        ctx["notes"] = weeks_notes
+        ctx["notes_general"] = notes_general
         ctx["num_served"] = len(shifts_served)
         ctx["users"] = users
         return ctx
@@ -582,19 +809,25 @@ class ServedSumShiftDetailView(LoginRequiredMixin, DetailView):
     def get_data(self):
         ctx = {}
         served = {}
-        for i in range(1, 15):
+        for i in range(1, self.get_object().num_weeks * 7 + 1):
             served["M" + str(i)] = ""
             served["A" + str(i)] = ""
             served["N" + str(i)] = ""
         shift_date = self.get_object().date
-        shifts_served = Shift.objects.all().filter(date=shift_date)
-        notes = {"general": "", "week1": "", "week2": ""}
+        main_shifts_served = Shift.objects.all().filter(date=shift_date)
+        shifts_served = ShiftWeek.objects.all().filter(date=shift_date)
+        weeks_notes = []
+        for i in range(self.get_object().num_weeks):
+            weeks_notes.append("")
+        notes_general = ""
+        user_notes_added = []
         users = {}
         for shift in shifts_served:
             username = shift.username
             user = User.objects.all().filter(username=username).first()
             user_settings = USettings.objects.all().filter(user=user).first()
-            users[user_settings.nickname] = shift.id
+            main_shift = main_shifts_served.filter(username=username).first()
+            users[user_settings.nickname] = main_shift.id
             name = user_settings.nickname
             name = name.replace("\n", "")
             name = name.replace("\r", "")
@@ -606,31 +839,27 @@ class ServedSumShiftDetailView(LoginRequiredMixin, DetailView):
                       shift.P3,
                       shift.A3, shift.N3, shift.M4, shift.P4, shift.A4, shift.N4, shift.M5, shift.P5, shift.A5,
                       shift.N5,
-                      shift.M6, shift.P6, shift.A6, shift.N6, shift.M7, shift.P7, shift.A7, shift.N7, shift.M8,
-                      shift.P8,
-                      shift.A8, shift.N8, shift.M9, shift.P9, shift.A9, shift.N9, shift.M10, shift.P10, shift.A10,
-                      shift.N10, shift.M11, shift.P11, shift.A11, shift.N11, shift.M12, shift.P12, shift.A12, shift.N12,
-                      shift.M13, shift.P13, shift.A13, shift.N13, shift.M14, shift.P14, shift.A14, shift.N14]
+                      shift.M6, shift.P6, shift.A6, shift.N6, shift.M7, shift.P7, shift.A7, shift.N7]
             for s in shifts:
                 if s:
                     if count == 0:
                         morning = True
-                        served[kind + str(index)] = served[kind + str(index)] + name
+                        served[kind + str(index + (shift.num_week * 7))] += name
                     else:
                         if count == 1:
                             if morning:
-                                served[kind + str(index)] = served[kind + str(index)] + "\n"
+                                served[kind + str(index + (shift.num_week * 7))] += "\n"
                             morning = False
                         else:
                             if count == 2:
                                 kind = "A"
                             elif count == 3:
                                 kind = "N"
-                            served[kind + str(index)] = served[kind + str(index)] + name + "\n"
+                            served[kind + str(index + (shift.num_week * 7))] += name + "\n"
                 else:
                     if count == 1 and morning:
                         morning = False
-                        served[kind + str(index)] = served[kind + str(index)] + "\n" + "(לא משיכה)" + "\n"
+                        served[kind + str(index + (shift.num_week * 7))] += "\n" + "(לא משיכה)" + "\n"
                 if count == 3:
                     count = 0
                     index = index + 1
@@ -642,26 +871,20 @@ class ServedSumShiftDetailView(LoginRequiredMixin, DetailView):
             index = 1
             for n in notes1:
                 if n != "":
-                    notes["week1"] = notes["week1"] + name + ": " \
+                    weeks_notes[shift.num_week] += name + ": " \
                                      + number_to_day2(index) + " - " + n + "\n"
                 index += 1
-            notes2 = [shift.notes8, shift.notes9, shift.notes10,
-                      shift.notes11, shift.notes12, shift.notes13, shift.notes14]
-            index = 1
-            for n in notes2:
-                if n != "":
-                    notes["week2"] = notes["week2"] + name + ": " \
-                                     + number_to_day2(index) + " - " + n + "\n"
-                index += 1
-            if shift.notes != "":
-                notes["general"] = notes["general"] + name + ": " + shift.notes + "\n"
-        days = {}
-        for x in range(14):
-            days["day" + str(x)] = self.get_object().date + datetime.timedelta(days=x)
+            if main_shift.notes != "" and name not in user_notes_added:
+                notes_general += name + ": " + main_shift.notes + "\n"
+                user_notes_added.append(name)
+        days = []
+        for x in range(self.get_object().num_weeks * 7):
+            days.append(self.get_object().date + datetime.timedelta(days=x))
         ctx["days"] = days
         ctx["served"] = served
-        ctx["notes"] = notes
-        ctx["num_served"] = len(shifts_served)
+        ctx["notes"] = weeks_notes
+        ctx["notes_general"] = notes_general
+        ctx["num_served"] = len(main_shifts_served)
         ctx["users"] = users
         return ctx
 
@@ -675,579 +898,630 @@ class ServedSumShiftDetailView(LoginRequiredMixin, DetailView):
     def post(self, request, *args, **kwargs):
         if request.method == "POST":
             ctx = self.get_data()
-            return WriteToExcel(ctx["served"], ctx["notes"], ctx["days"], self.request.user)
+            return WriteToExcel(ctx["served"], ctx["notes"], ctx["notes_general"],ctx["days"], self.request.user)
 
 
-class OrganizationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    model = Organization
-    template_name = "Schedule/organization_update.html"
-    fields_temp = []
-    for i in range(1, 15):
-        fields_temp.append("Day" + str(i) + "_630")
-        fields_temp.append("Day" + str(i) + "_700_search")
-        fields_temp.append("Day" + str(i) + "_700_manager")
-        fields_temp.append("Day" + str(i) + "_720_1")
-        fields_temp.append("Day" + str(i) + "_720_pull")
-        fields_temp.append("Day" + str(i) + "_720_2")
-        fields_temp.append("Day" + str(i) + "_720_3")
-        fields_temp.append("Day" + str(i) + "_1400")
-        fields_temp.append("Day" + str(i) + "_1500")
-        fields_temp.append("Day" + str(i) + "_1500_1900")
-        fields_temp.append("Day" + str(i) + "_2300")
-        fields_temp.append("Day" + str(i) + "_notes")
-    fields = fields_temp
-
-    def form_valid(self, form):
-        super(OrganizationUpdateView, self).form_valid(form)
-        messages.success(self.request, f'עדכון הושלם')
-        return HttpResponseRedirect(self.request.path_info)
-
-    def get_context_data(self, **kwargs):
-        ctx = super(OrganizationUpdateView, self).get_context_data(**kwargs)
-        for x in range(14):
-            ctx["day" + str(x)] = self.object.date + datetime.timedelta(days=x)
-        ctx["checked"] = self.get_object().published
-        ctx["organization_id"] = self.object.id
-        return ctx
-
-    def test_func(self):
-        if self.request.user.is_staff:
-            return True
-        return False
-
-    def post(self, request, *args, **kwargs):
-        if request.method == 'POST':
-            action = request.POST.get("actions")
-            if 'check1' == action:
-                form = OrganizationUpdateForm(request.POST, instance=self.get_object())
-                pub = request.POST.get("pub")
-                if pub:
-                    published = False
-                else:
-                    published = True
-                form.instance.published = published
-                if form.is_valid():
-                    self.object = form.save()
-                    messages.success(self.request, translate_text(f'עדכון הושלם', self.request.user, "hebrew"))
-                    self.organization_valid()
-                    return HttpResponseRedirect(self.request.path_info)
-                else:
-                    messages.info(self.request, translate_text(f'תקלה טכנית לא ניתן לבדוק', self.request.user, "hebrew"))
-            elif 'delete' == action:
-                Organization.objects.filter(id=self.get_object().id).delete()
-                messages.success(self.request, translate_text(f'מחיקה הושלמה', self.request.user, "hebrew"))
-                return redirect("Schedule-Served-sum")
-            elif 'update' == action:
-                form = OrganizationUpdateForm(request.POST, instance=self.get_object())
-                pub = request.POST.get("pub")
-                if pub:
-                    published = False
-                else:
-                    published = True
-                form.instance.published = published
-                if form.is_valid():
-                    self.object = form.save()
-                    messages.success(self.request, translate_text(f'עדכון הושלם', self.request.user, "hebrew"))
-                else:
-                    messages.info(self.request, translate_text(f'עדכון לא הושלם תקלה טכנית', self.request.user, "hebrew"))
-                return HttpResponseRedirect(self.request.path_info)
-            elif 'upload' == action:
-                self.uplaod_organize(request)
-                return HttpResponseRedirect(self.request.path_info)
-            elif 'table' == action:
-                return redirect("organization-table-shift", self.get_object().id)
-            elif 'ready' == action:
-                return redirect("organization-detail", self.get_object().id)
-            elif 'clear' == action:
-                form = OrganizationUpdateForm(request.POST, instance=self.get_object())
-                form.data._mutable = True
-                fields_temp = []
-                for i in range(1, 15):
-                    form.data["Day" + str(i) + "_630"] = ""
-                    form.data["Day" + str(i) + "_700_search"] = ""
-                    form.data["Day" + str(i) + "_700_manager"] = ""
-                    form.data["Day" + str(i) + "_720_1"] = ""
-                    form.data["Day" + str(i) + "_720_pull"] = ""
-                    form.data["Day" + str(i) + "_720_2"] = ""
-                    form.data["Day" + str(i) + "_720_3"] = ""
-                    form.data["Day" + str(i) + "_1400"] = ""
-                    form.data["Day" + str(i) + "_1500"] = ""
-                    form.data["Day" + str(i) + "_1500_1900"] = ""
-                    form.data["Day" + str(i) + "_2300"] = ""
-                form.data._mutable = False
-                if form.is_valid():
-                    self.object = form.save()
-                    messages.success(self.request, translate_text(f'איפוס הושלם', self.request.user, "hebrew"))
-                else:
-                    messages.info(self.request, translate_text(f'איפוס לא הושלם תקלה טכנית', self.request.user, "hebrew"))
-                return HttpResponseRedirect(self.request.path_info)
-
-    def organization_valid(self):
-        organization1 = get_input(self.get_object())
-        input_days = {}
-        valid = True
-        keys = ["_630", "_700_manager", "_700_search", "_720_1", "_720_pull", "_720_2", "_720_3", "_1400", "_1500",
-                "_1500_1900",
-                "_2300"]
-        for i in range(1, 15):
-            day = "day" + str(i)
-            input_days[day + "M"] = []
-            input_days[day + "A"] = []
-            input_days[day + "N"] = []
-            for x in range(len(keys)):
-                if x < 7:
-                    input_days[day + "M"] += organization1[day + keys[x]].split("\n")
-                elif x < 10:
-                    input_days[day + "A"] += organization1[day + keys[x]].split("\n")
-                else:
-                    input_days[day + "N"] += organization1[day + keys[x]].split("\n")
-        for key in input_days:
-            for i in range(len(input_days[key])):
-                input_days[key][i] = input_days[key][i].replace(" ", "")
-                input_days[key][i] = input_days[key][i].replace("\n", "")
-                input_days[key][i] = input_days[key][i].replace("\r", "")
-        for key in input_days:
-            for i in range(input_days[key].count('')):
-                input_days[key].remove('')
-        massages_sent = []
-        for key in input_days:
-            for name in input_days[key]:
-                num_day = key.replace("day", "")
-                num_day = num_day.replace("A", "")
-                num_day = num_day.replace("N", "")
-                num_day = num_day.replace("M", "")
-                message1 = name + " ביום ה-" + num_day + " בשתי משמרות רצופות"
-                message2 = name + " ביום ה-" + num_day + " באותה משמרת פעמיים"
-                day = "day" + num_day
-                day_before = "day" + str(int(num_day) - 1)
-                day_after = "day" + str(int(num_day) + 1)
-                if name in input_days[day + "M"]:
-                    if is_more_than_once(input_days[day + "M"], name):
-                        if message2 not in massages_sent:
-                            messages.info(self.request, translate_text(message2, self.request.user, "hebrew"))
-                            massages_sent.append(message2)
-                        valid = False
-                    if int(num_day) != 1:
-                        if name in input_days[day + "A"] or name in input_days[day_before + "N"]:
-                            if message1 not in massages_sent:
-                                messages.info(self.request, translate_text(message1, self.request.user, "hebrew"))
-                                massages_sent.append(message1)
-                            valid = False
-                    else:
-                        if name in input_days[day + "A"]:
-                            if message1 not in massages_sent:
-                                messages.info(self.request, translate_text(message1, self.request.user, "hebrew"))
-                                massages_sent.append(message1)
-                            valid = False
-                if name in input_days[day + "A"]:
-                    if is_more_than_once(input_days[day + "A"], name):
-                        if message2 not in massages_sent:
-                            messages.info(self.request, translate_text(message2, self.request.user, "hebrew"))
-                            massages_sent.append(message2)
-                        valid = False
-                    if name in input_days[day + "M"] or name in input_days[day + "N"]:
-                        if message1 not in massages_sent:
-                            messages.info(self.request, translate_text(message1, self.request.user, "hebrew"))
-                            massages_sent.append(message1)
-                        valid = False
-                if name in input_days[day + "N"]:
-                    if is_more_than_once(input_days[day + "N"], name):
-                        if message2 not in massages_sent:
-                            messages.info(self.request, translate_text(message2, self.request.user, "hebrew"))
-                            massages_sent.append(message2)
-                        valid = False
-                    if int(num_day) != 14:
-                        if name in input_days[day + "A"] or name in input_days[day_after + "M"]:
-                            if message1 not in massages_sent:
-                                messages.info(self.request, translate_text(message1, self.request.user, "hebrew"))
-                                massages_sent.append(message1)
-                            valid = False
-                    else:
-                        if name in input_days[day + "A"]:
-                            if message1 not in massages_sent:
-                                messages.info(self.request, translate_text(message1, self.request.user, "hebrew"))
-                                massages_sent.append(message1)
-                            valid = False
-        if valid:
-            messages.success(self.request, translate_text("סידור תקין", self.request.user, "hebrew"))
-
-    def extract_data(self, request):
-        # extract from excel
-        myfile = request.FILES['myfile']
-        file_object = myfile.file
-        wb = openpyxl.load_workbook(file_object)
-        sheet = wb.active
-        ## Green background FFC6EFCE
-        ## Green font FF006100
-        ## Red background FFFFC7CE
-        ## Red font with red background FF9C0006
-        ## White background 00000000
-        ## Black font Values must be of type <class 'str'> rgb=None, indexed=None, auto=None, theme=1, tint=0.0, type='theme'
-        ## Red font FFFF0000
-        ## Empty font Values must be of type <class 'str'> rgb=None, indexed=None, auto=None, theme=1, tint=0.0, type='theme'
-        ## Empty value None
-        ## orange background FFFFEB9C
-        # print(str(sheet.cell(10, 3).value))
-        # print(str(sheet.cell(10, 3).font.color.rgb))  # Get the font color in the table
-        # print(str(sheet.cell(10, 3).fill.fgColor.rgb)) # background color
-        # if str(sheet.cell(10, 3).font.color.rgb) == "Values must be of type <class 'str'>":
-        end_morning_str = ""
-        end_noon_str = ""
-        end_night_str = ""
-        for rng in sheet.merged_cells.ranges:
-            if 'A5' in rng:
-                end_morning_str = str(rng)
-                break
-        end_morning_str = end_morning_str.replace("A5:A", "")
-        end_morning = int(end_morning_str)
-        for rng in sheet.merged_cells.ranges:
-            if f'A{end_morning + 1}' in rng:
-                end_noon_str = str(rng)
-                break
-        end_noon_str = end_noon_str.replace(f'A{end_morning + 1}:A', "")
-        end_noon = int(end_noon_str)
-        for rng in sheet.merged_cells.ranges:
-            if f'A{end_noon + 1}' in rng:
-                end_night_str = str(rng)
-                break
-        end_night_str = end_night_str.replace(f'A{end_noon + 1}:A', "")
-        end_night = int(end_night_str)
-        col = 1
-        names_days = {}
-        no_pull_names = {}
-        for x in range(14):
-            col += 1
-            names_days[f'day{x}_morning'] = []
-            no_pull_names[f'day{x}'] = []
-            names_days[f'day{x}_noon'] = []
-            names_days[f'day{x}_night'] = []
-            for j in range(5, end_morning + 1):
-                if str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFC6EFCE' \
-                        or str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFFFEB9C':
-                    names_days[f'day{x}_morning'].append(str(sheet.cell(j, col).value))
-                    if str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFFFEB9C':
-                        no_pull_names[f'day{x}'].append(str(sheet.cell(j, col).value))
-            for j in range(end_morning + 1, end_noon + 1):
-                if str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFC6EFCE':
-                    names_days[f'day{x}_noon'].append(str(sheet.cell(j, col).value))
-            for j in range(end_noon + 1, end_night + 1):
-                if str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFC6EFCE':
-                    names_days[f'day{x}_night'].append(str(sheet.cell(j, col).value))
-        # extract from database
-        shifts = Shift.objects.all().filter(date=self.get_object().date)
-        users = User.objects.all()
-        settings = Settings.objects.all().first()
-        max_seq0 = settings.max_seq0
-        max_seq1 = settings.max_seq1
-        sequence_count = {}
-        max_out_names = [[], []]
-        for s in shifts:
-            user = users.filter(username=s.username).first()
-            user_settings = USettings.objects.all().filter(user=user).first()
-            name = user_settings.nickname
-            sequence_count[f'{name}0'] = s.seq_night
-            sequence_count[f'{name}1'] = s.seq_noon
-            if sequence_count[f'{name}0'] >= max_seq0:
-                max_out_names[0].append(name)
-            if sequence_count[f'{name}1'] >= max_seq1:
-                max_out_names[1].append(name)
-        return [names_days, no_pull_names, sequence_count, max_out_names, max_seq0, max_seq1]
-
-    def search_and_put(self, form, for_list, check_list, day, time, max_out_names, seq,
-                       sequence_count, max_seq0, max_seq1, is_seq, extra_seq):
-        if seq == 0:
-            max_seq = max_seq0
-        else:
-            max_seq = max_seq1
-        for name in for_list:
-            if name in check_list and name not in extra_seq:
-                if is_seq:
-                    if name not in max_out_names:
-                        if f'{name}{seq}' in sequence_count.keys():
-                            sequence_count[f'{name}{seq}'] += 1
-                            if sequence_count[f'{name}{seq}'] >= max_seq:
-                                max_out_names.append(name)
-                        if form.data[f'Day{day + 1}_{time}'] == "":
-                            form.data[f'Day{day + 1}_{time}'] = name
-                        else:
-                            form.data[f'Day{day + 1}_{time}'] += "\n" + name
-                        check_list.remove(name)
-                        return True
-                else:
-                    if form.data[f'Day{day + 1}_{time}'] == "":
-                        form.data[f'Day{day + 1}_{time}'] = name
-                    else:
-                        form.data[f'Day{day + 1}_{time}'] += "\n" + name
-                    check_list.remove(name)
-                    return True
-        return False
-
-    def insert_all_to_form(self, form, for_list, day, time):
-        form.data[f'Day{day + 1}_{time}'] = '\n'.join(for_list)
-        for name in for_list:
-            for_list.remove(name)
-
-    def seperate_list(self, shift, max_out_names):
-        new_list = []
-        for s in shift:
-            if s not in max_out_names:
-                new_list.append(s)
-        return new_list
-
-    def insert_random(self, form, list1, time, day, count):
-        if len(list1) > 0:
-            r = random.randint(0, len(list1) - 1)
-            if count == 0:
-                form.data[f'Day{day + 1}_{time}'] = list1[r]
+@staff_member_required()
+def organization_update(request, pk=None):
+    organization = Organization.objects.all().filter(id=pk).first()
+    weeks = Week.objects.all().filter(date=organization.date)
+    days = []
+    for x in range(organization.num_weeks * 7):
+        days.append(organization.date + datetime.timedelta(days=x))
+    if request.method == "POST":
+        action = request.POST.get("actions")
+        forms = []
+        for i in range(organization.num_weeks):
+            forms.append("")
+        for week in weeks:
+            new_form = WeekUpdateForm(request.POST, instance=week)
+            forms[week.num_week] = new_form
+        error = False
+        for form in forms:
+            if not form.is_valid():
+                error = True
+        if not error:
+            for j in range(len(forms)):
+                to_week_form(forms[j], request, j)
+            for form in forms:
+                form.save()
+            pub = request.POST.get("pub")
+            if pub:
+                published = False
             else:
-                form.data[f'Day{day + 1}_{time}'] += "\n" + list1[r]
-            return list1.pop(r)
+                published = True
+            organization.published = published
+            organization.save()
+            messages.success(request, translate_text(f'עדכון הושלם', request.user, "hebrew"))
+            if 'update' == action:
+                return HttpResponseRedirect(request.path_info)
         else:
-            return None
+            messages.info(request, translate_text(f'תקלה טכנית לא ניתן לבדוק', request.user, "hebrew"))
+            return HttpResponseRedirect(request.path_info)
+        if 'check1' == action:
+            organization_valid(organization, request)
+        elif 'ready' == action:
+            return redirect("organization-detail", organization.id)
+        elif 'table' == action:
+            return redirect("organization-table-shift", organization.id)
+        elif 'upload' == action:
+            weeks_dicts = uplaod_organize(request, organization)
+            forms = []
+            for i in range(organization.num_weeks):
+                forms.append("")
+            #for week in weeks:
+            #    new_form = WeekUpdateForm(request.POST, instance=week)
+            #    forms[week.num_week] = new_form
+            for i in range(len(weeks)):
+                for key in weeks_dicts[i].keys():
+                    setattr(weeks[i], key, weeks_dicts[i][key])
+            error = False
+            #for form in forms:
+            #    if not form.is_valid():
+            #        error = True
+            if not error:
+                for week in weeks:
+                    week.save()
+                messages.success(request, translate_text(f'העלאה הושלמה', request.user, "hebrew"))
+            else:
+                messages.info(request, translate_text(f'עדכון לא הושלם תקלה טכנית', request.user, "hebrew"))
+            return HttpResponseRedirect(request.path_info)
+        elif 'clear' == action:
+            forms = []
+            for i in range(organization.num_weeks):
+                forms.append("")
+            for week in weeks:
+                new_form = WeekUpdateForm(request.POST, instance=week)
+                forms[week.num_week] = new_form
+            for j in range(len(forms)):
+                forms[j].data._mutable = True
+                for i in range(1, 8):
+                    forms[j].data["Day" + str(i) + "_630"] = ""
+                    forms[j].data["Day" + str(i) + "_700_search"] = ""
+                    forms[j].data["Day" + str(i) + "_700_manager"] = ""
+                    forms[j].data["Day" + str(i) + "_720_1"] = ""
+                    forms[j].data["Day" + str(i) + "_720_pull"] = ""
+                    forms[j].data["Day" + str(i) + "_720_2"] = ""
+                    forms[j].data["Day" + str(i) + "_720_3"] = ""
+                    forms[j].data["Day" + str(i) + "_1400"] = ""
+                    forms[j].data["Day" + str(i) + "_1500"] = ""
+                    forms[j].data["Day" + str(i) + "_1500_1900"] = ""
+                    forms[j].data["Day" + str(i) + "_2300"] = ""
+                forms[j].data._mutable = False
+            error = False
+            for form in forms:
+                if not form.is_valid():
+                    error = True
+            if not error:
+                for form in forms:
+                    form.save()
+                messages.success(request, translate_text(f'איפוס הושלם', request.user, "hebrew"))
+            else:
+                messages.info(request, translate_text(f'איפוס לא הושלם תקלה טכנית', request.user, "hebrew"))
+            return HttpResponseRedirect(request.path_info)
+        elif 'delete' == action:
+            Organization.objects.filter(id=organization.id).delete()
+            messages.success(request, translate_text(f'מחיקה הושלמה', request.user, "hebrew"))
+            return redirect("Schedule-Served-sum")
+    else:
+        forms = []
+        for i in range(organization.num_weeks):
+            forms.append("")
+        for week in weeks:
+            new_form = WeekUpdateForm(instance=week)
+            forms[week.num_week] = new_form
+    context = {
+        "forms": forms,
+        "checked": organization.published,
+        "organization_id": organization.id,
+        "days": days,
+    }
+    return render(request, "Schedule/organization_update.html", context)
 
-    def uplaod_organize(self, request):
-        extracted_data = self.extract_data(request)
-        names_days = extracted_data[0]
-        no_pull_names = extracted_data[1]
-        sequence_count = extracted_data[2]
-        max_out_names = extracted_data[3]
-        max_seq0 = extracted_data[4]
-        max_seq1 = extracted_data[5]
-        before_organization = Organization.objects.all().filter(
-            date=self.get_object().date - datetime.timedelta(days=14)).first()
-        if before_organization is not None:
-            before_names = {"motsash": before_organization.Day14_2300.split("\n"),
-                            "noon": before_organization.Day14_1500.split("\n"),
-                            "morning": before_organization.Day14_630.split("\n") +
-                                       before_organization.Day14_700_search.split("\n") +
-                                       before_organization.Day14_700_manager.split("\n") +
-                                       before_organization.Day14_720_1.split("\n")}
-            for key in before_names:
-                for v in before_names[key]:
-                    if v == '' or v == '\r' or v == ' ':
-                        count = before_names[key].count(v)
-                        for x in range(count):
-                            before_names[key].remove(v)
-                    else:
-                        before_names[key][before_names[key].index(v)] = v.replace("\r", "")
-        else:
-            before_names = {"motsash": [], "noon": [], "morning": []}
-        form = OrganizationUpdateForm(request.POST, instance=self.get_object())
-        form.data._mutable = True
-        manager_group = Group.objects.filter(name="manager").first()
-        manager_group_users = User.objects.filter(groups=manager_group)
-        managers = []
-        for m in manager_group_users:
-            user_settings = USettings.objects.all().filter(user=m).first()
-            managers.append(user_settings.nickname)
-        for x in range(13, -1, -1):
-            if x != 5 and x != 6 and x != 12 and x != 13:
-                is_manager = False
-                for name in managers:
-                    if name in names_days[f'day{x}_morning']:
-                        form.data[f'Day{x + 1}_700_manager'] = name
-                        names_days[f'day{x}_morning'].remove(name)
-                        is_manager = True
-                        break
-                if not is_manager:
-                    if Settings.objects.last().officer in names_days[f'day{x}_morning']:
-                        form.data[f'Day{x + 1}_700_manager'] = Settings.objects.last().officer
-                        names_days[f'day{x}_morning'].remove(Settings.objects.last().officer)
-                temp_morning = []
-                if len(names_days[f'day{x}_morning']) > 0:
-                    for name in names_days[f'day{x}_morning']:
+
+def extract_data(request, organization):
+    # extract from excel
+    myfile = request.FILES['myfile']
+    file_object = myfile.file
+    wb = openpyxl.load_workbook(file_object)
+    sheet = wb.active
+    ## Green background FFC6EFCE
+    ## Green font FF006100
+    ## Red background FFFFC7CE
+    ## Red font with red background FF9C0006
+    ## White background 00000000
+    ## Black font Values must be of type <class 'str'> rgb=None, indexed=None, auto=None, theme=1, tint=0.0, type='theme'
+    ## Red font FFFF0000
+    ## Empty font Values must be of type <class 'str'> rgb=None, indexed=None, auto=None, theme=1, tint=0.0, type='theme'
+    ## Empty value None
+    ## orange background FFFFEB9C
+    # print(str(sheet.cell(10, 3).value))
+    # print(str(sheet.cell(10, 3).font.color.rgb))  # Get the font color in the table
+    # print(str(sheet.cell(10, 3).fill.fgColor.rgb)) # background color
+    # if str(sheet.cell(10, 3).font.color.rgb) == "Values must be of type <class 'str'>":
+    end_morning_str = ""
+    end_noon_str = ""
+    end_night_str = ""
+    for rng in sheet.merged_cells.ranges:
+        if 'A5' in rng:
+            end_morning_str = str(rng)
+            break
+    end_morning_str = end_morning_str.replace("A5:A", "")
+    end_morning = int(end_morning_str)
+    for rng in sheet.merged_cells.ranges:
+        if f'A{end_morning + 1}' in rng:
+            end_noon_str = str(rng)
+            break
+    end_noon_str = end_noon_str.replace(f'A{end_morning + 1}:A', "")
+    end_noon = int(end_noon_str)
+    for rng in sheet.merged_cells.ranges:
+        if f'A{end_noon + 1}' in rng:
+            end_night_str = str(rng)
+            break
+    end_night_str = end_night_str.replace(f'A{end_noon + 1}:A', "")
+    end_night = int(end_night_str)
+    col = 1
+    names_days = {}
+    no_pull_names = {}
+    for x in range(14):
+        col += 1
+        names_days[f'day{x}_morning'] = []
+        no_pull_names[f'day{x}'] = []
+        names_days[f'day{x}_noon'] = []
+        names_days[f'day{x}_night'] = []
+        for j in range(5, end_morning + 1):
+            if str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFC6EFCE' \
+                    or str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFFFEB9C':
+                names_days[f'day{x}_morning'].append(str(sheet.cell(j, col).value))
+                if str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFFFEB9C':
+                    no_pull_names[f'day{x}'].append(str(sheet.cell(j, col).value))
+        for j in range(end_morning + 1, end_noon + 1):
+            if str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFC6EFCE':
+                names_days[f'day{x}_noon'].append(str(sheet.cell(j, col).value))
+        for j in range(end_noon + 1, end_night + 1):
+            if str(sheet.cell(j, col).fill.fgColor.rgb) == 'FFC6EFCE':
+                names_days[f'day{x}_night'].append(str(sheet.cell(j, col).value))
+    # extract from database
+    shifts = Shift.objects.all().filter(date=organization.date)
+    users = User.objects.all()
+    settings = Settings.objects.all().first()
+    max_seq0 = settings.max_seq0
+    max_seq1 = settings.max_seq1
+    sequence_count = {}
+    max_out_names = [[], []]
+    for s in shifts:
+        user = users.filter(username=s.username).first()
+        user_settings = USettings.objects.all().filter(user=user).first()
+        name = user_settings.nickname
+        sequence_count[f'{name}0'] = s.seq_night
+        sequence_count[f'{name}1'] = s.seq_noon
+        if sequence_count[f'{name}0'] >= max_seq0:
+            max_out_names[0].append(name)
+        if sequence_count[f'{name}1'] >= max_seq1:
+            max_out_names[1].append(name)
+    return [names_days, no_pull_names, sequence_count, max_out_names, max_seq0, max_seq1]
+
+
+def uplaod_organize(request, organization):
+    extracted_data = extract_data(request, organization)
+    names_days = extracted_data[0]
+    no_pull_names = extracted_data[1]
+    sequence_count = extracted_data[2]
+    max_out_names = extracted_data[3]
+    max_seq0 = extracted_data[4]
+    max_seq1 = extracted_data[5]
+    try:
+        before_organization = Organization.objects.order_by('-date')[1]
+    except:
+        before_organization = None
+    if before_organization is not None:
+        week_before = Week.objects.all().filter(date=before_organization.date,
+                                                num_week=before_organization.num_weeks - 1).first()
+        before_names = {"motsash": week_before.Day7_2300.split("\n"),
+                        "noon": week_before.Day7_1500.split("\n"),
+                        "morning": week_before.Day7_630.split("\n") +
+                                   week_before.Day7_700_search.split("\n") +
+                                   week_before.Day7_700_manager.split("\n") +
+                                   week_before.Day7_720_1.split("\n")}
+        for key in before_names:
+            for v in before_names[key]:
+                if v == '' or v == '\r' or v == ' ':
+                    count = before_names[key].count(v)
+                    for x in range(count):
+                        before_names[key].remove(v)
+                else:
+                    before_names[key][before_names[key].index(v)] = v.replace("\r", "")
+    else:
+        before_names = {"motsash": [], "noon": [], "morning": []}
+    weeks = Week.objects.all().filter(date=organization.date)
+    manager_group = Group.objects.filter(name="manager").first()
+    manager_group_users = User.objects.filter(groups=manager_group)
+    managers = []
+    for m in manager_group_users:
+        user_settings = USettings.objects.all().filter(user=m).first()
+        managers.append(user_settings.nickname)
+    num_week = organization.num_weeks - 1
+    days_count = 0
+    weeks_dicts = []
+    for i in range(organization.num_weeks):
+        weeks_dicts.append({})
+    no_fields = ["id", "date", "num_week"]
+    for i in range(organization.num_weeks):
+        fields = model_to_dict(weeks[0]).keys()
+        for field in fields:
+            if field not in no_fields:
+                weeks_dicts[i][field] = ""
+    for i in range(organization.num_weeks * 7 - 1, -1, -1):
+        names_x = i
+        x = i - 7 * num_week + 1
+        if x != 6 and x != 7:
+            is_manager = False
+            for name in managers:
+                if name in names_days[f'day{names_x}_morning']:
+                    weeks_dicts[num_week][f'Day{x}_700_manager'] = name
+                    names_days[f'day{names_x}_morning'].remove(name)
+                    is_manager = True
+                    break
+            if not is_manager:
+                if Settings.objects.last().officer in names_days[f'day{names_x}_morning']:
+                    weeks_dicts[num_week][f'Day{x}_700_manager'] = Settings.objects.last().officer
+                    names_days[f'day{names_x}_morning'].remove(Settings.objects.last().officer)
+            temp_morning = []
+            if len(names_days[f'day{names_x}_morning']) > 0:
+                for name in names_days[f'day{names_x}_morning']:
+                    temp_morning.append(name)
+                for name in temp_morning:
+                    if name in no_pull_names[f'day{names_x}'] or\
+                            name in names_days[f'day{names_x}_night']:
+                        if x == 1:
+                            temp_morning.remove(name)
+                        elif name in names_days[f'day{names_x - 1}_noon']:
+                            temp_morning.remove(name)
+                if len(temp_morning) > 0:
+                    inserted = insert_random(weeks_dicts[num_week], temp_morning, "720_pull", x, 0)
+                    names_days[f'day{names_x}_morning'].remove(inserted)
+                else:
+                    temp_morning = []
+                    for name in names_days[f'day{names_x}_morning']:
                         temp_morning.append(name)
                     for name in temp_morning:
-                        if name in no_pull_names[f'day{x}'] or name in names_days[f'day{x}_night']:
-                            if x == 0:
+                        if x != 1:
+                            if name in names_days[f'day{names_x - 1}_noon']:
                                 temp_morning.remove(name)
-                            elif name in names_days[f'day{x - 1}_noon']:
+                        else:
+                            if name in before_names["noon"] or name in before_names["morning"]:
                                 temp_morning.remove(name)
                     if len(temp_morning) > 0:
-                        inserted = self.insert_random(form, temp_morning, "720_pull", x, 0)
-                        names_days[f'day{x}_morning'].remove(inserted)
+                        inserted = insert_random(weeks_dicts[num_week], temp_morning, "720_pull", x, 0)
+                        names_days[f'day{names_x}_morning'].remove(inserted)
                     else:
-                        temp_morning = []
-                        for name in names_days[f'day{x}_morning']:
-                            temp_morning.append(name)
-                        for name in temp_morning:
-                            if x != 0:
-                                if name in names_days[f'day{x - 1}_noon']:
-                                    temp_morning.remove(name)
-                            else:
-                                if name in before_names["noon"] or name in before_names["morning"]:
-                                    temp_morning.remove(name)
-                        if len(temp_morning) > 0:
-                            inserted = self.insert_random(form, temp_morning, "720_pull", x, 0)
-                            names_days[f'day{x}_morning'].remove(inserted)
-                        else:
-                            self.insert_random(form, names_days[f'day{x}_morning'], "720_pull", x, 0)
-                chosen = False
-                if x == 0:
-                    chosen = self.search_and_put(form, before_names["noon"], names_days[f'day{x}_morning'], x,
+                        insert_random(weeks_dicts[num_week], names_days[f'day{names_x}_morning'], "720_pull", x, 0)
+            chosen = False
+            if x == 1 and num_week == 0:
+                chosen = search_and_put(weeks_dicts[num_week], before_names["noon"], names_days[f'day{names_x}_morning'], x,
+                                             "630", max_out_names[0], 0, sequence_count, max_seq0,
+                                             max_seq1, True, [])
+                if not chosen:
+                    chosen = search_and_put(weeks_dicts[num_week], before_names["morning"], names_days[f'day{names_x}_morning'], x,
                                                  "630", max_out_names[0], 0, sequence_count, max_seq0,
                                                  max_seq1, True, [])
-                    if not chosen:
-                        chosen = self.search_and_put(form, before_names["morning"], names_days[f'day{x}_morning'], x,
-                                                     "630", max_out_names[0], 0, sequence_count, max_seq0,
-                                                     max_seq1, True, [])
-                    if not chosen:
-                        temp_morning = self.seperate_list(names_days[f'day{x}_morning'], max_out_names)
-                        if len(temp_morning) > 0:
-                            chosen = self.insert_random(form, temp_morning, "630", x, 0)
-                            if chosen is not None:
-                                names_days[f'day{x}_morning'].remove(chosen)
-                        else:
-                            self.insert_random(form, names_days[f'day{x}_morning'], "630", x, 0)
-                    chosen = self.search_and_put(form, before_names["noon"], names_days[f'day{x}_morning'], x,
+                if not chosen:
+                    temp_morning = seperate_list(names_days[f'day{names_x}_morning'], max_out_names)
+                    if len(temp_morning) > 0:
+                        chosen = insert_random(weeks_dicts[num_week], temp_morning, "630", x, 0)
+                        if chosen is not None:
+                            names_days[f'day{names_x}_morning'].remove(chosen)
+                    else:
+                        insert_random(weeks_dicts[num_week], names_days[f'day{names_x}_morning'], "630", x, 0)
+                chosen = search_and_put(weeks_dicts[num_week], before_names["noon"], names_days[f'day{names_x}_morning'], x,
+                                             "700_search", max_out_names[0], 0, sequence_count, max_seq0,
+                                             max_seq1, False, [])
+                if not chosen:
+                    chosen = search_and_put(weeks_dicts[num_week], before_names["morning"], names_days[f'day{names_x}_morning'], x,
                                                  "700_search", max_out_names[0], 0, sequence_count, max_seq0,
                                                  max_seq1, False, [])
-                    if not chosen:
-                        chosen = self.search_and_put(form, before_names["morning"], names_days[f'day{x}_morning'], x,
-                                                     "700_search", max_out_names[0], 0, sequence_count, max_seq0,
-                                                     max_seq1, False, [])
-                    if not chosen:
-                        self.insert_random(form, names_days[f'day{x}_morning'], "700_search", x, 0)
-                    count = 0
-                    if len(names_days[f'day{x}_noon']) > 2:
-                        for name in before_names["motsash"]:
-                            if name in names_days[f'day{x}_noon'] and name not in max_out_names[0]:
-                                if f'{name}0' in sequence_count.keys():
-                                    sequence_count[f'{name}0'] += 1
-                                    if sequence_count[f'{name}0'] >= max_seq0:
-                                        max_out_names[0].append(name)
-                                if count == 0:
-                                    form.data[f'Day{x + 1}_1400'] = name
-                                else:
-                                    form.data[f'Day{x + 1}_1400'] += "\n" + name
-                                names_days[f'day{x}_noon'].remove(name)
-                                count += 1
-                                if count == 2:
-                                    break
-                        if count < 2:
-                            for name in names_days[f'day{x}_noon']:
-                                if count == 0:
-                                    form.data[f'Day{x + 1}_1400'] = name
-                                else:
-                                    form.data[f'Day{x + 1}_1400'] += "\n" + name
-                                names_days[f'day{x}_noon'].remove(name)
-                                count += 1
-                                if count == 2:
-                                    break
-                    else:
-                        for name in before_names["motsash"]:
-                            if name in names_days[f'day{x}_noon'] and name not in max_out_names[0]:
-                                if f'{name}0' in sequence_count.keys():
-                                    sequence_count[f'{name}0'] += 1
-                                    if sequence_count[f'{name}0'] >= max_seq0:
-                                        max_out_names[0].append(name)
-                                form.data[f'Day{x + 1}_1400'] = name
-                                names_days[f'day{x}_noon'].remove(name)
-                                count += 1
-                                break
-                        if count == 0:
-                            for name in names_days[f'day{x}_noon']:
-                                form.data[f'Day{x + 1}_1400'] = name
-                                names_days[f'day{x}_noon'].remove(name)
-                                count += 1
-                                break
-                    # noon
-                    self.insert_all_to_form(form, names_days[f'day{x}_noon'], x, "1500")
-                # morning 630 and 700 search
-                else:
-                    if x > 1:
-                        temp_morning = []
-                        for name in names_days[f'day{x}_morning']:
-                            temp_morning.append(name)
-                        chosen = self.search_and_put(form, names_days[f'day{x - 1}_noon'], names_days[f'day{x}_morning']
-                                                     , x, "630", max_out_names[1], 1, sequence_count, max_seq0,
-                                                     max_seq1, True, names_days[f'day{x - 2}_night'])
-                    else:
-                        chosen = self.search_and_put(form, names_days[f'day{x - 1}_noon'],
-                                                     names_days[f'day{x}_morning'], x,
-                                                     "630", max_out_names[1], 1, sequence_count, max_seq0,
-                                                     max_seq1, True, [])
-                    if not chosen:
-                        temp_morning = self.seperate_list(names_days[f'day{x}_morning'], max_out_names)
-                        if len(temp_morning) > 0:
-                            chosen = self.insert_random(form, temp_morning, "630", x, 0)
-                            if chosen is not None:
-                                names_days[f'day{x}_morning'].remove(chosen)
-                        else:
-                            self.insert_random(form, names_days[f'day{x}_morning'], "630", x, 0)
-                    chosen = self.search_and_put(form, names_days[f'day{x - 1}_noon'], names_days[f'day{x}_morning'], x,
-                                                 "700_search", max_out_names[1], 1, sequence_count, max_seq0,
-                                                 max_seq1, False, [])
-                    if not chosen and len(names_days[f'day{x}_morning']) > 0:
-                        chosen = self.insert_random(form, names_days[f'day{x}_morning'], "700_search", x, 0)
-                    # noon
-                    count = 0
-                    if len(names_days[f'day{x}_noon']) > 2:
-                        for name in names_days[f'day{x}_noon']:
-                            if name in names_days[f'day{x - 1}_night'] and name not in max_out_names[0]:
-                                if f'{name}0' in sequence_count.keys():
-                                    sequence_count[f'{name}0'] += 1
-                                    if sequence_count[f'{name}0'] >= max_seq0:
-                                        max_out_names[0].append(name)
-                                if count == 2:
-                                    break
-                                if count == 0:
-                                    form.data[f'Day{x + 1}_1400'] = name
-                                else:
-                                    form.data[f'Day{x + 1}_1400'] += "\n" + name
-                                count += 1
-                                names_days[f'day{x}_noon'].remove(name)
-                        if count < 2:
-                            while count < 2:
-                                self.insert_random(form, names_days[f'day{x}_noon'], "1400", x, count)
-                                count += 1
-                    else:
-                        chosen = self.search_and_put(form, names_days[f'day{x - 1}_night'],
-                                                     names_days[f'day{x}_noon'], x,
-                                                     "1400", max_out_names[0], 0, sequence_count, max_seq0,
-                                                     max_seq1, True, [])
-                        if not chosen:
-                            self.insert_random(form, names_days[f'day{x}_noon'], "1400", x, 0)
-                            chosen = True
-                    # noon
-                    self.insert_all_to_form(form, names_days[f'day{x}_noon'], x, "1500")
-                # morning
-                count = 0
                 if not chosen:
-                    self.insert_random(form, names_days[f'day{x}_morning'], "700_search", x, 0)
-                chosen = False
-                for morning in range(len(names_days[f'day{x}_morning'])):
-                    r = random.randint(0, len(names_days[f'day{x}_morning']) - 1)
-                    if count < 3:
-                        form.data[f'Day{x + 1}_720_{count + 1}'] = names_days[f'day{x}_morning'][r]
-                    else:
-                        form.data[f'Day{x + 1}_720_3'] += "\n" + names_days[f'day{x}_morning'][r]
-                    names_days[f'day{x}_morning'].pop(r)
-                    count += 1
-                # night
-                self.insert_all_to_form(form, names_days[f'day{x}_night'], x, "2300")
-            else:
+                    insert_random(weeks_dicts[num_week], names_days[f'day{names_x}_morning'], "700_search", x, 0)
                 count = 0
-                shift = "_700_search"
-                # morning
-                for name in names_days[f'day{x}_morning']:
-                    if count == 2:
-                        shift = "_700_manager"
-                    if count == 0 or count == 2:
-                        form.data[f'Day{x + 1}{shift}'] = name
-                    else:
-                        form.data[f'Day{x + 1}{shift}'] += "\n" + name
-                    count += 1
+                if len(names_days[f'day{names_x}_noon']) > 2:
+                    for name in before_names["motsash"]:
+                        if name in names_days[f'day{names_x}_noon'] and name not in max_out_names[0]:
+                            if f'{name}0' in sequence_count.keys():
+                                sequence_count[f'{name}0'] += 1
+                                if sequence_count[f'{name}0'] >= max_seq0:
+                                    max_out_names[0].append(name)
+                            if count == 0:
+                                weeks_dicts[num_week][f'Day{x}_1400'] = name
+                            else:
+                                weeks_dicts[num_week][f'Day{x}_1400'] += "\n" + name
+                            names_days[f'day{names_x}_noon'].remove(name)
+                            count += 1
+                            if count == 2:
+                                break
+                    if count < 2:
+                        for name in names_days[f'day{names_x}_noon']:
+                            if count == 0:
+                                weeks_dicts[num_week][f'Day{x}_1400'] = name
+                            else:
+                                weeks_dicts[num_week][f'Day{x}_1400'] += "\n" + name
+                            names_days[f'day{names_x}_noon'].remove(name)
+                            count += 1
+                            if count == 2:
+                                break
+                else:
+                    for name in before_names["motsash"]:
+                        if name in names_days[f'day{names_x}_noon'] and name not in max_out_names[0]:
+                            if f'{name}0' in sequence_count.keys():
+                                sequence_count[f'{name}0'] += 1
+                                if sequence_count[f'{name}0'] >= max_seq0:
+                                    max_out_names[0].append(name)
+                            weeks_dicts[num_week][f'Day{x}_1400'] = name
+                            names_days[f'day{names_x}_noon'].remove(name)
+                            count += 1
+                            break
+                    if count == 0:
+                        for name in names_days[f'day{names_x}_noon']:
+                            weeks_dicts[num_week][f'Day{x}_1400'] = name
+                            names_days[f'day{names_x}_noon'].remove(name)
+                            count += 1
+                            break
                 # noon
-                self.insert_all_to_form(form, names_days[f'day{x}_noon'], x, "1500")
-                # night
-                self.insert_all_to_form(form, names_days[f'day{x}_night'], x, "2300")
-        form.data._mutable = False
-        if form.is_valid():
-            self.object = form.save()
-            messages.success(self.request, translate_text(f'העלאה הושלמה', self.request.user, "hebrew"))
+                insert_all_to_form(weeks_dicts[num_week], names_days[f'day{names_x}_noon'], x, "1500")
+            # morning 630 and 700 search
+            else:
+                if x > 2:
+                    temp_morning = []
+                    for name in names_days[f'day{names_x}_morning']:
+                        temp_morning.append(name)
+                    chosen = search_and_put(weeks_dicts[num_week], names_days[f'day{names_x - 1}_noon'], names_days[f'day{names_x}_morning']
+                                                 , x, "630", max_out_names[1], 1, sequence_count, max_seq0,
+                                                 max_seq1, True, names_days[f'day{names_x - 2}_night'])
+                else:
+                    chosen = search_and_put(weeks_dicts[num_week], names_days[f'day{names_x - 1}_noon'],
+                                                 names_days[f'day{names_x}_morning'], x,
+                                                 "630", max_out_names[1], 1, sequence_count, max_seq0,
+                                                 max_seq1, True, [])
+                if not chosen:
+                    temp_morning = seperate_list(names_days[f'day{names_x}_morning'], max_out_names)
+                    if len(temp_morning) > 0:
+                        chosen = insert_random(weeks_dicts[num_week], temp_morning, "630", x, 0)
+                        if chosen is not None:
+                            names_days[f'day{names_x}_morning'].remove(chosen)
+                    else:
+                        insert_random(weeks_dicts[num_week], names_days[f'day{names_x}_morning'], "630", x, 0)
+                chosen = search_and_put(weeks_dicts[num_week], names_days[f'day{names_x - 1}_noon'], names_days[f'day{names_x}_morning'], x,
+                                             "700_search", max_out_names[1], 1, sequence_count, max_seq0,
+                                             max_seq1, False, [])
+                if not chosen and len(names_days[f'day{names_x}_morning']) > 0:
+                    chosen = insert_random(weeks_dicts[num_week], names_days[f'day{names_x}_morning'], "700_search", x, 0)
+                # noon
+                count = 0
+                if len(names_days[f'day{names_x}_noon']) > 2:
+                    for name in names_days[f'day{names_x}_noon']:
+                        if name in names_days[f'day{names_x -1}_night'] and name not in max_out_names[0]:
+                            if f'{name}0' in sequence_count.keys():
+                                sequence_count[f'{name}0'] += 1
+                                if sequence_count[f'{name}0'] >= max_seq0:
+                                    max_out_names[0].append(name)
+                            if count == 2:
+                                break
+                            if count == 0:
+                                weeks_dicts[num_week][f'Day{x}_1400'] = name
+                            else:
+                                weeks_dicts[num_week][f'Day{x}_1400'] += "\n" + name
+                            count += 1
+                            names_days[f'day{names_x}_noon'].remove(name)
+                    if count < 2:
+                        while count < 2:
+                            insert_random(weeks_dicts[num_week], names_days[f'day{names_x}_noon'], "1400", x, count)
+                            count += 1
+                else:
+                    chosen = search_and_put(weeks_dicts[num_week], names_days[f'day{names_x -1}_night'],
+                                                 names_days[f'day{names_x}_noon'], x,
+                                                 "1400", max_out_names[0], 0, sequence_count, max_seq0,
+                                                 max_seq1, True, [])
+                    if not chosen:
+                        insert_random(weeks_dicts[num_week], names_days[f'day{names_x}_noon'], "1400", x, 0)
+                        chosen = True
+                # noon
+                insert_all_to_form(weeks_dicts[num_week], names_days[f'day{names_x}_noon'], x, "1500")
+            # morning
+            count = 0
+            if not chosen:
+                insert_random(weeks_dicts[num_week], names_days[f'day{names_x}_morning'], "700_search", x, 0)
+            chosen = False
+            for morning in range(len(names_days[f'day{names_x}_morning'])):
+                r = random.randint(0, len(names_days[f'day{names_x}_morning']) - 1)
+                if count < 3:
+                    weeks_dicts[num_week][f'Day{x}_720_{count + 1}'] = names_days[f'day{names_x}_morning'][r]
+                else:
+                    weeks_dicts[num_week][f'Day{x}_720_3'] += "\n" + names_days[f'day{names_x}_morning'][r]
+                names_days[f'day{names_x}_morning'].pop(r)
+                count += 1
+            # night
+            insert_all_to_form(weeks_dicts[num_week], names_days[f'day{names_x}_night'], x, "2300")
         else:
-            messages.info(self.request, translate_text(f'עדכון לא הושלם תקלה טכנית', self.request.user, "hebrew"))
+            count = 0
+            shift = "_700_search"
+            # morning
+            for name in names_days[f'day{names_x}_morning']:
+                if count == 2:
+                    shift = "_700_manager"
+                if count == 0 or count == 2:
+                    weeks_dicts[num_week][f'Day{x + 1}{shift}'] = name
+                else:
+                    weeks_dicts[num_week][f'Day{x + 1}{shift}'] += "\n" + name
+                count += 1
+            # noon
+            insert_all_to_form(weeks_dicts[num_week], names_days[f'day{names_x}_noon'], x, "1500")
+            # night
+            insert_all_to_form(weeks_dicts[num_week], names_days[f'day{names_x}_night'], x, "2300")
+        if days_count == 6:
+            num_week -= 1
+            days_count = -1
+        days_count += 1
+    return weeks_dicts
+
+
+def search_and_put(weeks_dict, for_list, check_list, day, time, max_out_names, seq,
+                   sequence_count, max_seq0, max_seq1, is_seq, extra_seq):
+    if seq == 0:
+        max_seq = max_seq0
+    else:
+        max_seq = max_seq1
+    for name in for_list:
+        if name in check_list and name not in extra_seq:
+            if is_seq:
+                if name not in max_out_names:
+                    if f'{name}{seq}' in sequence_count.keys():
+                        sequence_count[f'{name}{seq}'] += 1
+                        if sequence_count[f'{name}{seq}'] >= max_seq:
+                            max_out_names.append(name)
+                    if weeks_dict.get(f'Day{day}_{time}', "") == "":
+                        weeks_dict[f'Day{day}_{time}'] = name
+                    else:
+                        weeks_dict[f'Day{day}_{time}'] += "\n" + name
+                    check_list.remove(name)
+                    return True
+            else:
+                if weeks_dict.get(f'Day{day}_{time}', "") == "":
+                    weeks_dict[f'Day{day}_{time}'] = name
+                else:
+                    weeks_dict[f'Day{day}_{time}'] += "\n" + name
+                check_list.remove(name)
+                return True
+    return False
+
+
+def insert_all_to_form(weeks_dict, for_list, day, time):
+    weeks_dict[f'Day{day}_{time}'] = '\n'.join(for_list)
+    for name in for_list:
+        for_list.remove(name)
+
+
+def seperate_list(shift, max_out_names):
+    new_list = []
+    for s in shift:
+        if s not in max_out_names:
+            new_list.append(s)
+    return new_list
+
+
+def insert_random(weeks_dict, list1, time, day, count):
+    if len(list1) > 0:
+        r = random.randint(0, len(list1) - 1)
+        if count == 0:
+            weeks_dict[f'Day{day}_{time}'] = list1[r]
+        else:
+            weeks_dict[f'Day{day}_{time}'] += "\n" + list1[r]
+        return list1.pop(r)
+    else:
+        return None
+
+
+def organization_valid(organization, request):
+    organization1 = get_input(organization)
+    input_days = {}
+    valid = True
+    keys = ["_630", "_700_manager", "_700_search", "_720_1", "_720_pull", "_720_2", "_720_3", "_1400", "_1500",
+            "_1500_1900",
+            "_2300"]
+    for i in range(1, 15):
+        day = "day" + str(i)
+        input_days[day + "M"] = []
+        input_days[day + "A"] = []
+        input_days[day + "N"] = []
+        for x in range(len(keys)):
+            if x < 7:
+                input_days[day + "M"] += organization1[day + keys[x]].split("\n")
+            elif x < 10:
+                input_days[day + "A"] += organization1[day + keys[x]].split("\n")
+            else:
+                input_days[day + "N"] += organization1[day + keys[x]].split("\n")
+    for key in input_days:
+        for i in range(len(input_days[key])):
+            input_days[key][i] = input_days[key][i].replace(" ", "")
+            input_days[key][i] = input_days[key][i].replace("\n", "")
+            input_days[key][i] = input_days[key][i].replace("\r", "")
+    for key in input_days:
+        for i in range(input_days[key].count('')):
+            input_days[key].remove('')
+    massages_sent = []
+    for key in input_days:
+        for name in input_days[key]:
+            num_day = key.replace("day", "")
+            num_day = num_day.replace("A", "")
+            num_day = num_day.replace("N", "")
+            num_day = num_day.replace("M", "")
+            message1 = name + " ביום ה-" + num_day + " בשתי משמרות רצופות"
+            message2 = name + " ביום ה-" + num_day + " באותה משמרת פעמיים"
+            day = "day" + num_day
+            day_before = "day" + str(int(num_day) - 1)
+            day_after = "day" + str(int(num_day) + 1)
+            if name in input_days[day + "M"]:
+                if is_more_than_once(input_days[day + "M"], name):
+                    if message2 not in massages_sent:
+                        messages.info(request, translate_text(message2, request.user, "hebrew"))
+                        massages_sent.append(message2)
+                    valid = False
+                if int(num_day) != 1:
+                    if name in input_days[day + "A"] or name in input_days[day_before + "N"]:
+                        if message1 not in massages_sent:
+                            messages.info(request, translate_text(message1, request.user, "hebrew"))
+                            massages_sent.append(message1)
+                        valid = False
+                else:
+                    if name in input_days[day + "A"]:
+                        if message1 not in massages_sent:
+                            messages.info(request, translate_text(message1, request.user, "hebrew"))
+                            massages_sent.append(message1)
+                        valid = False
+            if name in input_days[day + "A"]:
+                if is_more_than_once(input_days[day + "A"], name):
+                    if message2 not in massages_sent:
+                        messages.info(request, translate_text(message2, request.user, "hebrew"))
+                        massages_sent.append(message2)
+                    valid = False
+                if name in input_days[day + "M"] or name in input_days[day + "N"]:
+                    if message1 not in massages_sent:
+                        messages.info(request, translate_text(message1, request.user, "hebrew"))
+                        massages_sent.append(message1)
+                    valid = False
+            if name in input_days[day + "N"]:
+                if is_more_than_once(input_days[day + "N"], name):
+                    if message2 not in massages_sent:
+                        messages.info(request, translate_text(message2, request.user, "hebrew"))
+                        massages_sent.append(message2)
+                    valid = False
+                if int(num_day) != 14:
+                    if name in input_days[day + "A"] or name in input_days[day_after + "M"]:
+                        if message1 not in massages_sent:
+                            messages.info(request, translate_text(message1, request.user, "hebrew"))
+                            massages_sent.append(message1)
+                        valid = False
+                else:
+                    if name in input_days[day + "A"]:
+                        if message1 not in massages_sent:
+                            messages.info(request, translate_text(message1, request.user, "hebrew"))
+                            massages_sent.append(message1)
+                        valid = False
+    if valid:
+        messages.success(request, translate_text("סידור תקין", request.user, "hebrew"))
+
+def to_week_form(form, request, j):
+    for i in range(1, 8):
+        setattr(form.instance, f"Day{i}_630", request.POST.get(f"day{i}_630_{j}"))
+        setattr(form.instance, f"Day{i}_700_search", request.POST.get(f"day{i}_700_search_{j}"))
+        setattr(form.instance, f"Day{i}_700_manager", request.POST.get(f"day{i}_700_manager_{j}"))
+        setattr(form.instance, f"Day{i}_720_1", request.POST.get(f"day{i}_720_1_{j}"))
+        setattr(form.instance, f"Day{i}_720_pull", request.POST.get(f"day{i}_720_pull_{j}"))
+        setattr(form.instance, f"Day{i}_720_2", request.POST.get(f"day{i}_720_2_{j}"))
+        setattr(form.instance, f"Day{i}_720_3", request.POST.get(f"day{i}_720_3_{j}"))
+        setattr(form.instance, f"Day{i}_1400", request.POST.get(f"day{i}_1400_{j}"))
+        setattr(form.instance, f"Day{i}_1500_1900", request.POST.get(f"day{i}_1500_1900_{j}"))
+        setattr(form.instance, f"Day{i}_1500", request.POST.get(f"day{i}_1500_{j}"))
+        setattr(form.instance, f"Day{i}_2300", request.POST.get(f"day{i}_2300_{j}"))
+        setattr(form.instance, f"Day{i}_notes", request.POST.get(f"day{i}_notes_{j}"))
 
 
 def is_more_than_once(list, name):
@@ -1266,83 +1540,21 @@ def check_if_in_list(names, name):
     return None
 
 
-@login_required
-def organization(request):
-    is_empty = False
-    is_couple = False
-    days = {}
-    days_before = {}
-    all_organizations = Organization.objects.all()
-    user_settings = USettings.objects.all().filter(user=request.user).first()
-    organization_last = all_organizations.order_by('-date')[0]
-    if organization_last.published:
-        for x in range(14):
-            days["day" + str(x)] = organization_last.date + datetime.timedelta(days=x)
-        organization_last_input = get_input(organization_last)
-        is_couple = len(Organization.objects.all()) > 1
-        if is_couple:
-            organization_last = all_organizations.order_by('-date')[1]
-            for x in range(14):
-                days_before["day" + str(x)] = organization_last.date \
-                                              + datetime.timedelta(days=x)
-            organization_before_input = get_input(organization_last)
-    elif len(all_organizations) > 1:
-        organization_last = all_organizations.order_by('-date')[1]
-        for x in range(14):
-            days["day" + str(x)] = organization_last.date + datetime.timedelta(days=x)
-        organization_last_input = get_input(organization_last)
-        is_couple = len(Organization.objects.all()) > 2
-        if is_couple:
-            organization_last = all_organizations.order_by('-date')[2]
-            for x in range(14):
-                days_before["day" + str(x)] = organization_last.date \
-                                              + datetime.timedelta(days=x)
-            organization_before_input = get_input(organization_last)
-    else:
-        is_empty = True
-    if is_empty:
-        context = {
-            "is_empty": is_empty
-        }
-    else:
-        if is_couple:
-            organization_last1 = {"z_630": [], "z_700_search": [], "z_700_manager": [], "z_720_1": [], "z_720_2": [],
-                                  "z_720_3": [], "z_720_pull": [], "z_1400": [], "z_1500": [], "z_1500_1900": [],
-                                  "z_2300": [], "z_notes": []}
-            organization_last2 = {"z_630": [], "z_700_search": [], "z_700_manager": [], "z_720_1": [], "z_720_2": [],
-                                  "z_720_3": [], "z_720_pull": [], "z_1400": [], "z_1500": [], "z_1500_1900": [],
-                                  "z_2300": [], "z_notes": []}
-            for x in range(1, 15):
-                day = "day" + str(x)
-                for key in organization_last1:
-                    organization_last1[key].append(organization_last_input[day + key.replace("z", "")])
-                    organization_last2[key].append(organization_before_input[day + key.replace("z", "")])
-            context = {
-                "days": days,
-                "organization_input": organization_last1,
-                "is_couple": is_couple,
-                "organization_before_input": organization_last2,
-                "days_before": days_before,
-                "nickname": user_settings.nickname,
-            }
-        else:
-            organization_last1 = {"z_630": [], "z_700_search": [], "z_700_manager": [], "z_720_1": [], "z_720_2": [],
-                                  "z_720_3": [], "z_720_pull": [], "z_1400": [], "z_1500": [], "z_1500_1900": [],
-                                  "z_2300": [], "z_notes": []}
-            for x in range(1, 15):
-                day = "day" + str(x)
-                for key in organization_last1:
-                    organization_last1[key].append(organization_last_input[day + key.replace("z", "")])
-            context = {
-                "days": days,
-                "organization_input": organization_last1,
-                "is_couple": is_couple,
-                "nickname": user_settings.nickname,
-            }
-    return render(request, "Schedule/Organization.html", context)
+class OrganizationListView(LoginRequiredMixin, ListView):
+    model = Organization
+    template_name = "Schedule/organizations_list.html"
+    context_object_name = "organizations"
+    ordering = ["-date"]
+    paginate_by = 1
+
+    def get_context_data(self, **kwargs):
+        ctx = super(OrganizationListView, self).get_context_data(**kwargs)
+        weeks = Week.objects.all()
+        ctx["weeks"] = weeks
+        return ctx
 
 
-def WriteToExcel(served, notes, dates, user):
+def WriteToExcel(served, notes, notes_general, dates, user):
     # Create a workbook and add a worksheet.
     buffer = io.BytesIO()
     workbook = xlsxwriter.Workbook(buffer)
@@ -1407,144 +1619,159 @@ def WriteToExcel(served, notes, dates, user):
         'bottom': 5,
         'bottom_color': '#000000',
     })
+    border_right_format = workbook.add_format({
+        'right': 5,
+        'right_color': '#000000'
+    })
+    border_right_bottom_format = workbook.add_format({
+        'right': 5,
+        'right_color': '#000000',
+        'bottom': 5,
+        'bottom_color': '#000000',
+    })
     # Building first Structure
     col = 0
-    for x in range(15):
+    for x in range(len(dates) + 1):
         worksheet.write(4 + maxes["morning"], col, None, border_bottom_format)
         worksheet.write(4 + maxes["after_noon"] + maxes["morning"], col, None, border_bottom_format)
         col += 1
     row = 0
     sum_maxes = maxes["morning"] + maxes["after_noon"] + maxes["night"] + 6
-    for x in range(sum_maxes):
-        if x == 4 + maxes["morning"] or x == 4 + maxes["morning"] + maxes["after_noon"]:
-            worksheet.write(row, 8, None, border_left_bottom_format)
-        else:
-            worksheet.write(row, 8, None, border_left_format)
-        row += 1
+    for i in range(int(len(dates) / 7)):
+        row = 0
+        for x in range(sum_maxes):
+            if x == 4 + maxes["morning"] or x == 4 + maxes["morning"] + maxes["after_noon"]:
+                worksheet.write(row, 7 + 7 * i, None, border_right_bottom_format)
+            else:
+                worksheet.write(row, 7 + 7 * i, None, border_right_format)
+            row += 1
     # Building second Structure
     worksheet.merge_range('A1:H2', translate_text('הגשות', user, "hebrew"), title_format)
     worksheet.merge_range('I1:P2', translate_text('הגשות', user, "hebrew"), title_format)
-    worksheet.merge_range('Q1:X2', dates["day0"].strftime("%d.%m") + "-" + dates["day13"].strftime("%d.%m"),
+    worksheet.merge_range('Q1:X2', dates[0].strftime("%d.%m") + "-" + dates[-1].strftime("%d.%m"),
                           title_format)
     worksheet.write(2, 0, translate_text("תאריך", user, "hebrew"), cell_format)
     col = 1
     for d in dates:
-        worksheet.write(2, col, dates[d].strftime("%d.%m"), cell_format)
+        worksheet.write(2, col, d.strftime("%d.%m"), cell_format)
         col += 1
     worksheet.write(3, 0, translate_text("יום", user, "hebrew"), cell_format)
     col = 1
-    for d in days:
-        worksheet.write(3, col, d, cell_format)
-        worksheet.write(3, col + 7, d, cell_format)
-        col += 1
+    for i in range(int(len(dates) / 7)):
+        for d in days:
+            worksheet.write(3, col, d, cell_format)
+            col += 1
     worksheet.merge_range(f'A5:A{5 + maxes["morning"]}', translate_text('בוקר', user, "hebrew"), cell_format)
     worksheet.merge_range(
         f'A{5 + maxes["morning"] + 1}:A{5 + maxes["morning"] + maxes["after_noon"]}', translate_text('צהריים', user, "hebrew"), cell_format)
     worksheet.merge_range(
         f'A{5 + maxes["morning"] + maxes["after_noon"] + 1}:A{5 + maxes["morning"] + maxes["after_noon"] + maxes["night"]}',
         translate_text('לילה', user, "hebrew"), cell_format)
-    worksheet.merge_range('Q4:R4', 'שם', cell_format)
-    worksheet.write("S4", translate_text('בוקר', user, "hebrew") + " 1", cell_format)
-    worksheet.write("T4", translate_text('בוקר', user, "hebrew") + " 2", cell_format)
-    worksheet.write("U4", translate_text('צהריים', user, "hebrew") + " 1", cell_format)
-    worksheet.write("V4", translate_text('צהריים', user, "hebrew") + " 2", cell_format)
-    worksheet.write("W4", translate_text('לילה', user, "hebrew"), cell_format)
-    worksheet.write("X4", translate_text("סופ\"ש", user, "hebrew"), cell_format)
+    start_extra = len(dates) + 3
+    worksheet.merge_range(f'{get_column_letter(start_extra)}4:{get_column_letter(start_extra + 1)}4', 'שם', cell_format)
+    worksheet.write(f"{get_column_letter(start_extra + 2)}4", translate_text('בוקר', user, "hebrew") + " 1", cell_format)
+    worksheet.write(f"{get_column_letter(start_extra + 3)}4", translate_text('בוקר', user, "hebrew") + " 2", cell_format)
+    worksheet.write(f"{get_column_letter(start_extra + 4)}4", translate_text('צהריים', user, "hebrew") + " 1", cell_format)
+    worksheet.write(f"{get_column_letter(start_extra + 5)}4", translate_text('צהריים', user, "hebrew") + " 2", cell_format)
+    worksheet.write(f"{get_column_letter(start_extra + 6)}4", translate_text('לילה', user, "hebrew"), cell_format)
+    worksheet.write(f"{get_column_letter(start_extra + 7)}4", translate_text("סופ\"ש", user, "hebrew"), cell_format)
 
     # Adding Data
     users = []
     row = 4
     col = 1
     for key in served:
+        print(key)
         if key.count("M"):
-            day = int(key.replace("M", ""))
             row = 4
             split = served[key].split("\n")
             for x in range(len(split)):
                 if split[x] != "(לא משיכה)":
                     if x + 1 < len(split):
                         if split[x + 1] == "(לא משיכה)":
-                            worksheet.write(row, day, split[x], cell_no_pull_format)
+                            worksheet.write(row, col, split[x], cell_no_pull_format)
                         else:
-                            worksheet.write(row, day, split[x])
+                            worksheet.write(row, col, split[x])
                     else:
-                        worksheet.write(row, day, split[x])
+                        worksheet.write(row, col, split[x])
                     if split[x] not in users:
                         users.append(split[x])
                     row += 1
         elif key.count("A"):
-            day = int(key.replace("A", ""))
             row = 4 + maxes["morning"] + 1
             split = served[key].split("\n")
             for x in range(len(split)):
-                worksheet.write(row, day, split[x])
+                worksheet.write(row, col, split[x])
                 if split[x] not in users:
                     users.append(split[x])
                 row += 1
         else:
-            day = int(key.replace("N", ""))
             row = 4 + maxes["morning"] + maxes["after_noon"] + 1
             split = served[key].split("\n")
             for x in range(len(split)):
-                worksheet.write(row, day, split[x])
+                worksheet.write(row, col, split[x])
                 if split[x] not in users:
                     users.append(split[x])
                 row += 1
+            col += 1
 
     num_rows = len(users) + 1
-    col = 18
     for x in range(num_rows):
-        col = 18
+        col = len(dates) + 4
         if x == 0:
-            worksheet.merge_range(f'Q{4 + x + 1}:R{4 + x + 1}', '', cell_format)
+            worksheet.merge_range(f'{get_column_letter(col - 1)}{4 + x + 1}:{get_column_letter(col)}{4 + x + 1}', '', cell_format)
         else:
-            worksheet.merge_range(f'Q{4 + x + 1}:R{4 + x + 1}', users[x - 1], cell_format)
+            worksheet.merge_range(f'{get_column_letter(col - 1)}{4 + x + 1}:{get_column_letter(col)}{4 + x + 1}', users[x - 1], cell_format)
         for c in range(6):
-            worksheet.write(4 + x, col, "", cell_format)
-            col += 1
-    worksheet.merge_range(f'Q{4 + num_rows + 1}:R{4 + num_rows + 1}', translate_text('סה\"כ', user, "hebrew"), cell_format)
-    worksheet.write(f'S{4 + num_rows + 1}', f'=SUM(S5:S{4 + num_rows})', cell_format)
-    worksheet.write(f'T{4 + num_rows + 1}', f'=SUM(T5:T{4 + num_rows})', cell_format)
-    worksheet.write(f'U{4 + num_rows + 1}', f'=SUM(U5:U{4 + num_rows})', cell_format)
-    worksheet.write(f'V{4 + num_rows + 1}', f'=SUM(V5:V{4 + num_rows})', cell_format)
-    worksheet.write(f'W{4 + num_rows + 1}', f'=SUM(W5:W{4 + num_rows})', cell_format)
-    worksheet.write(f'X{4 + num_rows + 1}', f'=SUM(X5:X{4 + num_rows})', cell_format)
+            worksheet.write(4 + x, col + c, "", cell_format)
+    worksheet.merge_range(f'{get_column_letter(start_extra)}{4 + num_rows + 1}:{get_column_letter(start_extra + 1)}{4 + num_rows + 1}',
+                          translate_text('סה\"כ', user, "hebrew"), cell_format)
+    worksheet.write(f'{get_column_letter(start_extra + 2)}{4 + num_rows + 1}', f'=SUM({get_column_letter(start_extra + 2)}5:{get_column_letter(start_extra + 2)}{4 + num_rows})', cell_format)
+    worksheet.write(f'{get_column_letter(start_extra + 3)}{4 + num_rows + 1}', f'=SUM({get_column_letter(start_extra + 3)}5:{get_column_letter(start_extra + 3)}{4 + num_rows})', cell_format)
+    worksheet.write(f'{get_column_letter(start_extra + 4)}{4 + num_rows + 1}', f'=SUM({get_column_letter(start_extra + 4)}5:{get_column_letter(start_extra + 4)}{4 + num_rows})', cell_format)
+    worksheet.write(f'{get_column_letter(start_extra + 5)}{4 + num_rows + 1}', f'=SUM({get_column_letter(start_extra + 5)}5:{get_column_letter(start_extra + 5)}{4 + num_rows})', cell_format)
+    worksheet.write(f'{get_column_letter(start_extra + 6)}{4 + num_rows + 1}', f'=SUM({get_column_letter(start_extra + 6)}5:{get_column_letter(start_extra + 6)}{4 + num_rows})', cell_format)
+    worksheet.write(f'{get_column_letter(start_extra + 7)}{4 + num_rows + 1}', f'=SUM({get_column_letter(start_extra + 7)}5:{get_column_letter(start_extra + 7)}{4 + num_rows})', cell_format)
 
     row = 4 + num_rows + 4
 
-    worksheet.merge_range(f'Q{row}:X{row + 3}', translate_text('משמרות לאיכות', user, "hebrew"), title_format)
-    worksheet.merge_range(f'Q{row + 4}:X{row + 5}', translate_text('שבוע ראשון', user, "hebrew"), title_format)
-    worksheet.merge_range(f'Q{row + 6}:X{row + 6}', '', cell_format)
-    worksheet.merge_range(f'Q{row + 7}:X{row + 7}', '', cell_format)
-    worksheet.merge_range(f'Q{row + 8}:X{row + 9}', translate_text('שבוע שני', user, "hebrew"), title_format)
-    worksheet.merge_range(f'Q{row + 10}:X{row + 10}', '', cell_format)
-    worksheet.merge_range(f'Q{row + 11}:X{row + 11}', '', cell_format)
+    worksheet.merge_range(f'{get_column_letter(start_extra)}{row}:{get_column_letter(start_extra + 7)}{row + 3}', translate_text('משמרות לאיכות', user, "hebrew"), title_format)
+    worksheet.merge_range(f'{get_column_letter(start_extra)}{row + 4}:{get_column_letter(start_extra + 7)}{row + 5}', translate_text('שבוע ראשון', user, "hebrew"), title_format)
+    worksheet.merge_range(f'{get_column_letter(start_extra)}{row + 6}:{get_column_letter(start_extra + 7)}{row + 6}', '', cell_format)
+    worksheet.merge_range(f'{get_column_letter(start_extra)}{row + 7}:{get_column_letter(start_extra + 7)}{row + 7}', '', cell_format)
+    worksheet.merge_range(f'{get_column_letter(start_extra)}{row + 8}:{get_column_letter(start_extra + 7)}{row + 9}', translate_text('שבוע שני', user, "hebrew"), title_format)
+    worksheet.merge_range(f'{get_column_letter(start_extra)}{row + 10}:{get_column_letter(start_extra + 7)}{row + 10}', '', cell_format)
+    worksheet.merge_range(f'{get_column_letter(start_extra)}{row + 11}:{get_column_letter(start_extra + 7)}{row + 11}', '', cell_format)
 
     row = row + 13
     count = 0
-    for n in notes:
-        if n == "general":
-            worksheet.merge_range(f'Q{row + count}:X{row + count + 1}', translate_text('הערות', user, "hebrew"), title_format)
-            count += 2
-        elif n == "week1":
-            worksheet.merge_range(f'Q{row + count}:X{row + count}', translate_text('שבוע ראשון', user, "hebrew"), title_format)
+    worksheet.merge_range(
+        f'{get_column_letter(start_extra)}{row + count}:{get_column_letter(start_extra + 7)}{row + count + 1}',
+        translate_text('הערות', user, "hebrew"), title_format)
+    count += 2
+    split = notes_general.split("\n")
+    if len(split) > 0:
+        for s in split:
+            worksheet.merge_range(
+                f'{get_column_letter(start_extra)}{row + count}:{get_column_letter(start_extra + 7)}{row + count}', s,
+                cell_format)
             count += 1
-        else:
-            worksheet.merge_range(f'Q{row + count}:X{row + count}', translate_text('שבוע שני', user, "hebrew"), title_format)
-            count += 1
+    for n in range(len(notes)):
+        worksheet.merge_range(f'{get_column_letter(start_extra)}{row + count}:{get_column_letter(start_extra + 7)}{row + count}', translate_text(f'שבוע {str(n + 1)}', user, "hebrew"), title_format)
+        count += 1
         split = notes[n].split("\n")
         if len(split) > 0:
             for s in split:
-                worksheet.merge_range(f'Q{row + count}:X{row + count}', s, cell_format)
+                worksheet.merge_range(f'{get_column_letter(start_extra)}{row + count}:{get_column_letter(start_extra + 7)}{row + count}', s, cell_format)
                 count += 1
 
-    worksheet.merge_range(f'Z4:AE5', translate_text('אירועים', user, "hebrew"), title_format)
+    worksheet.merge_range(f'{get_column_letter(start_extra + 10)}4:{get_column_letter(start_extra + 15)}5', translate_text('אירועים', user, "hebrew"), title_format)
     events = Event.objects.all()
     events_notes = []
     temp = ""
-    for x in range(14):
-        if len(events.filter(date2=dates["day" + str(x)])) > 0:
-            for ev in events.filter(date2=dates["day" + str(x)]):
+    for x in range(len(dates)):
+        if len(events.filter(date2=dates[x])) > 0:
+            for ev in events.filter(date2=dates[x]):
                 if ev.nickname != "כולם":
                     events_notes.append(translate_text(f'בתאריך {ev.date2} יש {ev.description} ל{ev.nickname}', user, "hebrew"))
                 else:
@@ -1552,14 +1779,14 @@ def WriteToExcel(served, notes, dates, user):
     row = 6
     count = 0
     for s in events_notes:
-        worksheet.merge_range(f'Z{row + count}:AE{row + count}', s, cell_format)
+        worksheet.merge_range(f'{get_column_letter(start_extra + 10)}{row + count}:{get_column_letter(start_extra + 15)}{row + count}', s, cell_format)
         count += 1
 
     workbook.close()
     # FileResponse sets the Content-Disposition header so that browsers
     # present the option to save the file.
     buffer.seek(0)
-    file_name = "serve" + dates["day0"].strftime("%d.%m")
+    file_name = "serve" + dates[0].strftime("%d.%m")
     return FileResponse(buffer, as_attachment=True, filename=f'{file_name}.xlsx')
 
 
@@ -1830,8 +2057,85 @@ def is_string(item):
 
 
 @register.filter
+def clip_dictionary(served, num_week):
+    days = range((num_week * 7) + 1, (num_week * 7) + 8)
+    new_list = []
+    for day in days:
+        new_list.append(served[f'day{day}'])
+    return new_list
+
+
+@register.filter
+def clip_dictionary_served1(served, kind):
+    new_list = {}
+    for key in served.keys():
+        if kind in key:
+            new_list[key] = served[key]
+    return new_list
+
+
+@register.filter
+def clip_dictionary_served2(served, num_week):
+    kind = "M"
+    for key in served.keys():
+        if kind in key:
+            break
+        elif 'A' in key:
+            kind = 'A'
+            break
+        elif 'N' in key:
+            kind = 'N'
+            break
+    days = range((num_week * 7) + 1, (num_week * 7) + 8)
+    new_list = []
+    for day in days:
+        new_list.append(served[kind + str(day)])
+    return new_list
+
+
+@register.filter
 def clip_days(days, num_week):
     new_days = []
     for i in range(num_week * 7, num_week * 7 + 7):
         new_days.append(days[i])
     return new_days
+
+
+@register.filter
+def to_array(end, start):
+    start = int(start)
+    end = int(end)
+    return range(start, end)
+
+
+@register.filter
+def get_form_data(form, kind):
+    array = []
+    for i in range(1, 8):
+        array.append(getattr(form.instance, f"{kind}{i}"))
+    return array
+
+
+@register.filter
+def get_days(organization):
+    days = []
+    for x in range(organization.num_weeks * 7):
+        days.append(organization.date + datetime.timedelta(days=x))
+    return days
+
+
+@register.filter
+def get_weeks(organization):
+    weeks = Week.objects.all().filter(date=organization.date)
+    return weeks
+
+
+@register.filter
+def get_num_organization(organization):
+    organizations = Organization.objects.all().order_by('-date')
+    i = 0
+    for org in organizations:
+        if org.date == organization.date:
+            return i
+        i += 1
+    return -1

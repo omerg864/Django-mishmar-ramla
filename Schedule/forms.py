@@ -3,6 +3,8 @@ from users.models import UserSettings as UserSettings
 from .models import Settings3 as Settings
 from .models import Shift1 as Shift
 from .models import Organization as Organization
+from .models import Week as Week
+from .models import ShiftWeek as ShiftWeek
 from django.contrib.auth.models import User
 
 
@@ -20,8 +22,14 @@ class QualityUpdateForm(forms.ModelForm):
 class OrganizationUpdateForm(forms.ModelForm):
 
     class Meta:
+        model = Organization
+        fields = []
+
+class WeekUpdateForm(forms.ModelForm):
+
+    class Meta:
         fields_temp = []
-        for i in range(1, 15):
+        for i in range(1, 8):
             fields_temp.append("Day" + str(i) + "_630")
             fields_temp.append("Day" + str(i) + "_700_search")
             fields_temp.append("Day" + str(i) + "_700_manager")
@@ -34,7 +42,7 @@ class OrganizationUpdateForm(forms.ModelForm):
             fields_temp.append("Day" + str(i) + "_1500_1900")
             fields_temp.append("Day" + str(i) + "_2300")
             fields_temp.append("Day" + str(i) + "_notes")
-        model = Organization
+        model = Week
         fields = fields_temp
 
 
@@ -54,13 +62,6 @@ class ShiftForm(forms.ModelForm):
 
     class Meta:
         fields_temp = []
-        for i in range(1, 15):
-            fields_temp.append("M" + str(i))
-            fields_temp.append("A" + str(i))
-            fields_temp.append("N" + str(i))
-            fields_temp.append("P" + str(i))
-            fields_temp.append("R" + str(i))
-            fields_temp.append("notes" + str(i))
         fields_temp.append("seq_night")
         fields_temp.append("seq_noon")
         model = Shift
@@ -71,13 +72,6 @@ class ShiftViewForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ShiftViewForm, self).__init__(*args, **kwargs)
         fields_temp = []
-        for i in range(1, 15):
-            fields_temp.append("M" + str(i))
-            fields_temp.append("A" + str(i))
-            fields_temp.append("N" + str(i))
-            fields_temp.append("P" + str(i))
-            fields_temp.append("R" + str(i))
-            fields_temp.append("notes" + str(i))
         fields_temp.append("seq_night")
         fields_temp.append("seq_noon")
         for field in fields_temp:
@@ -85,14 +79,49 @@ class ShiftViewForm(forms.ModelForm):
 
     class Meta:
         fields_temp = []
-        for i in range(1, 15):
+        fields_temp.append("seq_night")
+        fields_temp.append("seq_noon")
+        model = Shift
+        fields = fields_temp
+
+
+class ShiftWeekForm(forms.ModelForm):
+
+    class Meta:
+        fields_temp = []
+        for i in range(1, 8):
             fields_temp.append("M" + str(i))
             fields_temp.append("A" + str(i))
             fields_temp.append("N" + str(i))
             fields_temp.append("P" + str(i))
             fields_temp.append("R" + str(i))
             fields_temp.append("notes" + str(i))
-        fields_temp.append("seq_night")
-        fields_temp.append("seq_noon")
-        model = Shift
+        model = ShiftWeek
+        fields = fields_temp
+
+
+class ShiftWeekViewForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(ShiftWeekViewForm, self).__init__(*args, **kwargs)
+        fields_temp = []
+        for i in range(1, 8):
+            fields_temp.append("M" + str(i))
+            fields_temp.append("A" + str(i))
+            fields_temp.append("N" + str(i))
+            fields_temp.append("P" + str(i))
+            fields_temp.append("R" + str(i))
+            fields_temp.append("notes" + str(i))
+        for field in fields_temp:
+            self.fields[field].disabled = True
+
+    class Meta:
+        fields_temp = []
+        for i in range(1, 8):
+            fields_temp.append("M" + str(i))
+            fields_temp.append("A" + str(i))
+            fields_temp.append("N" + str(i))
+            fields_temp.append("P" + str(i))
+            fields_temp.append("R" + str(i))
+            fields_temp.append("notes" + str(i))
+        model = ShiftWeek
         fields = fields_temp

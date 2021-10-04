@@ -6,6 +6,7 @@ from django.core.mail import send_mail
 from datetime import datetime
 from users.models import UserSettings as USettings
 import pytz
+from .models import ShiftWeek, Organization, Week
 import os
 
 
@@ -45,3 +46,11 @@ def send_number_served(sender, instance, created, **kwargs):
                 fail_silently=False,
             )
             print("sent")
+
+
+@receiver(post_save, sender=Organization)
+def create_weeks(sender, instance, created, **kwargs):
+    if created:
+        for i in range(instance.num_weeks):
+            nw = Week(date=instance.date, num_week=i)
+            nw.save()
