@@ -374,7 +374,8 @@ class ServedSumListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return False
 
 
-@login_required
+
+@staff_member_required
 def shift_update_view(request, pk=None):
     main_shift = Shift.objects.all().filter(id=pk).first()
     organization = Organization.objects.all().filter(date=main_shift.date).first()
@@ -576,7 +577,7 @@ class OrganizationCreateView(LoginRequiredMixin, CreateView, UserPassesTestMixin
         return super().form_valid(form)
 
 
-class ShifttableView(LoginRequiredMixin, DetailView):
+class ShifttableView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Organization
     template_name = "Schedule/shift-table-view.html"
 
@@ -662,8 +663,13 @@ class ShifttableView(LoginRequiredMixin, DetailView):
         ctx["num_weeks"] = self.get_object().num_weeks + 1
         return ctx
 
+    def test_func(self):
+        if self.request.user.is_staff:
+            return True
+        return False
 
-class ServedSumReinforcementsDetailView(LoginRequiredMixin, DetailView):
+
+class ServedSumReinforcementsDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Organization
     template_name = "Schedule/served_sum_reinforcements.html"
 
@@ -803,6 +809,11 @@ class ServedSumReinforcementsDetailView(LoginRequiredMixin, DetailView):
             ctx[c] = context[c]
         return ctx
 
+    def test_func(self):
+        if self.request.user.is_staff:
+            return True
+        return False
+
     def post(self, request, *args, **kwargs):
         if request.method == "POST":
             calculated = True
@@ -815,7 +826,7 @@ class ServedSumReinforcementsDetailView(LoginRequiredMixin, DetailView):
             return render(request, "Schedule/served_sum_reinforcements.html", ctx)
 
 
-class ServedSumShiftDetailView(LoginRequiredMixin, DetailView):
+class ServedSumShiftDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Organization
     template_name = "Schedule/Served-sum.html"
 
@@ -908,13 +919,18 @@ class ServedSumShiftDetailView(LoginRequiredMixin, DetailView):
             ctx[c] = context[c]
         return ctx
 
+    def test_func(self):
+        if self.request.user.is_staff:
+            return True
+        return False
+
     def post(self, request, *args, **kwargs):
         if request.method == "POST":
             ctx = self.get_data()
             return WriteToExcel(ctx["served"], ctx["notes"], ctx["notes_general"],ctx["days"], self.request.user)
 
 
-@staff_member_required()
+@staff_member_required
 def organization_update(request, pk=None):
     organization = Organization.objects.all().filter(id=pk).first()
     weeks = Week.objects.all().filter(date=organization.date)
