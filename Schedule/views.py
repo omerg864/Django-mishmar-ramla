@@ -583,6 +583,7 @@ class ShifttableView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super(ShifttableView, self).get_context_data(**kwargs)
         organization = get_input(self.get_object())
+        print(organization)
         users = set()
         for key in organization:
             if key.count("notes") == 0:
@@ -596,24 +597,33 @@ class ShifttableView(LoginRequiredMixin, DetailView):
         if "" in users:
             users.remove("")
         table_content = {}
-        sum_content = {"morning1": 0, "noon1": 0, "morning2": 0, "noon2": 0, "night": 0, "end": 0}
+        sum_content = {}
+        for i in range(self.get_object().num_weeks):
+            sum_content[f'morning{i + 1}'] = 0
+            sum_content[f'noon{i + 1}'] = 0
+        sum_content["night"] = 0
+        sum_content["end"] = 0
         for user in users:
-            table_content[user] = {"morning1": 0, "noon1": 0, "morning2": 0, "noon2": 0, "night": 0, "end": 0}
+            table_content[user] = {}
+            for i in range(self.get_object().num_weeks):
+                table_content[user][f'morning{i + 1}'] = 0
+                table_content[user][f'noon{i + 1}'] = 0
+            table_content[user]["night"] = 0
+            table_content[user]["end"] = 0
         morning_shifts = ["630", "700_search", "700_manager", "720_pull", "720_1", "720_2", "720_3"]
         noon_shifts = ["1400", "1500", "1500_1900"]
-        for x in range(1, 15):
+        num_week = 0
+        count = 1
+        for x in range(1, self.get_object().num_weeks * 7 + 1):
             day = f'day{x}_'
             for shift in morning_shifts:
                 split = organization[f'{day}{shift}'].split("\n")
                 for s in split:
                     s = s.replace(" ", "")
                     if s != "":
-                        if x < 6:
-                            table_content[s]["morning1"] += 1
-                            sum_content["morning1"] += 1
-                        elif 7 < x < 13:
-                            table_content[s]["morning2"] += 1
-                            sum_content["morning2"] += 1
+                        if count != 7:
+                            table_content[s][f"morning{num_week + 1}"] += 1
+                            sum_content[f"morning{num_week + 1}"] += 1
                         else:
                             table_content[s]["end"] += 1
                             sum_content["end"] += 1
@@ -622,12 +632,9 @@ class ShifttableView(LoginRequiredMixin, DetailView):
                 for s in split:
                     s = s.replace(" ", "")
                     if s != "":
-                        if x < 6:
-                            table_content[s]["noon1"] += 1
-                            sum_content["noon1"] += 1
-                        elif 7 < x < 13:
-                            table_content[s]["noon2"] += 1
-                            sum_content["noon2"] += 1
+                        if count < 6:
+                            table_content[s][f"noon{num_week + 1}"] += 1
+                            sum_content[f"noon{num_week + 1}"] += 1
                         else:
                             table_content[s]["end"] += 1
                             sum_content["end"] += 1
@@ -635,18 +642,24 @@ class ShifttableView(LoginRequiredMixin, DetailView):
             for s in split:
                 s = s.replace(" ", "")
                 if s != "":
-                    if x != 6 and x != 7 and x != 13 and x != 14:
+                    if count < 6:
                         table_content[s]["night"] += 1
                         sum_content["night"] += 1
                     else:
                         table_content[s]["end"] += 1
                         sum_content["end"] += 1
+            if count == 7:
+                count = 1
+                num_week += 1
+            count += 1
+        print(table_content)
         ctx["table"] = table_content
         ctx["sum"] = sum_content
         days = []
         for x in range(self.get_object().num_weeks * 7):
             days.append(self.get_object().date + datetime.timedelta(days=x))
         ctx["days"] = days
+        ctx["num_weeks"] = self.get_object().num_weeks + 1
         return ctx
 
 
@@ -940,6 +953,7 @@ def organization_update(request, pk=None):
             return HttpResponseRedirect(request.path_info)
         if 'check1' == action:
             organization_valid(organization, request)
+            return HttpResponseRedirect(request.path_info)
         elif 'ready' == action:
             return redirect("organization-detail", organization.id)
         elif 'table' == action:
@@ -1426,7 +1440,7 @@ def organization_valid(organization, request):
     keys = ["_630", "_700_manager", "_700_search", "_720_1", "_720_pull", "_720_2", "_720_3", "_1400", "_1500",
             "_1500_1900",
             "_2300"]
-    for i in range(1, 15):
+    for i in range(1, organization.num_weeks * 7 + 1):
         day = "day" + str(i)
         input_days[day + "M"] = []
         input_days[day + "A"] = []
@@ -2103,6 +2117,13 @@ def clip_days(days, num_week):
 
 @register.filter
 def to_array(end, start):
+    start = int(start)
+    end = int(end)
+    return range(start, end)
+
+
+@register.filter
+def to_array2(start, end):
     start = int(start)
     end = int(end)
     return range(start, end)

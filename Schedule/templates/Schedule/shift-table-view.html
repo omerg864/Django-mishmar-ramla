@@ -9,10 +9,10 @@
 		<thead>
         <tr>
             <th>שם</th>
-            <th>בוקר 1</th>
-            <th>צהריים 1</th>
-            <th>בוקר 2</th>
-            <th>צהריים 2</th>
+            {% for i in "1"|to_array2:num_weeks %}
+                <th>בוקר {{ i }}</th>
+                <th>צהריים {{ i }}</th>
+            {% endfor %}
             <th>לילה</th>
             <th>סופ"ש</th>
 		</tr>
