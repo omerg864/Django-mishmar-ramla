@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 from . import views
-from .views import ShiftUpdateView, OrganizationDetailView, ShifttableView
+from .views import OrganizationDetailView, ShifttableView
 from .views import ServedSumListView, ServedSumShiftDetailView, ServedSumReinforcementsDetailView
 from .views import OrganizationSuggestionView, OrganizationCreateView, OrganizationListView
 from .views import organization_update

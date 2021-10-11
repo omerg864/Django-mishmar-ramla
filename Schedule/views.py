@@ -374,7 +374,6 @@ class ServedSumListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return False
 
 
-
 @staff_member_required
 def shift_update_view(request, pk=None):
     main_shift = Shift.objects.all().filter(id=pk).first()
@@ -407,7 +406,6 @@ def shift_update_view(request, pk=None):
         shifts = Shift.objects.filter(date=last_date)
         shift = shifts.filter(username=user).first()
         notes_text = str(shift.notes)
-        # form = ShiftForm(request.POST, instance=shift)
         weeks = shifts_weeks_served.filter(username=user).order_by('num_week')
         for week in weeks:
             new_form = ShiftWeekForm(request.POST, instance=week)
@@ -495,46 +493,6 @@ def shift_update_view(request, pk=None):
             "userview": USettings.objects.all().filter(user=user).first().nickname,
     }
     return render(request, "Schedule/shifts.html", context)
-
-
-class ShiftUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    model = Shift
-    template_name = "Schedule/shifts.html"
-    fields_temp = []
-    for i in range(1, 8):
-        fields_temp.append("M" + str(i))
-        fields_temp.append("A" + str(i))
-        fields_temp.append("N" + str(i))
-        fields_temp.append("P" + str(i))
-        fields_temp.append("R" + str(i))
-        fields_temp.append("notes" + str(i))
-    fields_temp.append("seq_night")
-    fields_temp.append("seq_noon")
-    fields = fields_temp
-
-    def form_valid(self, form):
-        self.object.notes = self.request.POST.get("notesArea")
-        super(ShiftUpdateView, self).form_valid(form)
-        messages.success(self.request, translate_text(f'עדכון הושלם', self.request.user, "hebrew"))
-        return redirect("Schedule-Served-sum")
-
-    def get_context_data(self, **kwargs):
-        ctx = super(ShiftUpdateView, self).get_context_data(**kwargs)
-        ctx["days"] = {}
-        for x in range(14):
-            ctx["days"]["day" + str(x)] = self.object.date + datetime.timedelta(days=x)
-        ctx["notes_text"] = str(self.object.notes)
-        ctx["submitting"] = True
-        ctx["empty"] = False
-        ctx["manager"] = True
-        user = User.objects.filter(username=self.object.username).first()
-        ctx["userview"] = USettings.objects.all().filter(user=user).first().nickname
-        return ctx
-
-    def test_func(self):
-        if self.request.user.is_staff:
-            return True
-        return False
 
 
 class OrganizationDetailView(LoginRequiredMixin, DetailView):
@@ -1523,7 +1481,7 @@ def organization_valid(organization, request):
                         messages.info(request, translate_text(message2, request.user, "hebrew"))
                         massages_sent.append(message2)
                     valid = False
-                if int(num_day) != 14:
+                if int(num_day) != organization.num_weeks * 7:
                     if name in input_days[day + "A"] or name in input_days[day_after + "M"]:
                         if message1 not in massages_sent:
                             messages.info(request, translate_text(message1, request.user, "hebrew"))
@@ -1877,16 +1835,23 @@ class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, Detail
     def get_context_data(self, **kwargs):
         ctx = super(OrganizationSuggestionView, self).get_context_data(**kwargs)
         settings = Settings.objects.all().first()
-        last_organization = Organization.objects.all().filter(date=self.get_object().date - datetime.timedelta(days=14)).first()
+        try:
+            last_organization = Organization.objects.all().order_by('-date')[get_num_organization(self.get_object()) - 1]
+        except:
+            last_organization = ""
         users = User.objects.all()
         users_settings = USettings.objects.all()
-        days = {}
-        for x in range(14):
-            days["day" + str(x)] = self.get_object().date + datetime.timedelta(days=x)
+        days = []
+        for x in range(self.get_object().num_weeks * 7):
+            days.append(self.get_object().date + datetime.timedelta(days=x))
         ctx["days"] = days
         served, notes = self.get_served()
-        organizer = compare_organizations(served, guards_num, self.get_object(), settings.officer,
+        if last_organization != "":
+            organizer = compare_organizations(served, guards_num, self.get_object(), settings.officer,
                                           last_organization.Day14_2300.split("\n"), users, users_settings)
+        else:
+            organizer = compare_organizations(served, guards_num, self.get_object(), settings.officer,
+                                              "", users, users_settings)
         organized_str = {}
         for key in organizer.organized:
             organized_str[key] = '\n'.join(organizer.organized[key])
@@ -1915,16 +1880,22 @@ class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, Detail
             else:
                 guards_num[day] = int(self.request.POST.get(day, 1))
         settings = Settings.objects.all().first()
-        last_organization = Organization.objects.all().filter(
-            date=self.get_object().date - datetime.timedelta(days=14)).first()
+        try:
+            last_organization = Organization.objects.all().order_by('-date')[get_num_organization(self.get_object()) - 1]
+        except:
+            last_organization = ""
         users = User.objects.all()
         users_settings = USettings.objects.all()
-        days = {}
-        for x in range(14):
-            days["day" + str(x)] = self.get_object().date + datetime.timedelta(days=x)
+        days = []
+        for x in range(self.get_object().num_weeks * 7):
+            days.append(self.get_object().date + datetime.timedelta(days=x))
         served, notes = self.get_served()
-        organizer = compare_organizations(served, guards_num, self.get_object(), settings.officer,
-                                          last_organization.Day14_2300.split("\n"), users, users_settings)
+        if last_organization != "":
+            organizer = compare_organizations(served, guards_num, self.get_object(), settings.officer,
+                                              last_organization.Day14_2300.split("\n"), users, users_settings)
+        else:
+            organizer = compare_organizations(served, guards_num, self.get_object(), settings.officer,
+                                              "", users, users_settings)
         if 'organize' in request.POST:
             return HttpResponseRedirect(self.request.path_info)
         elif 'excel' in request.POST:
