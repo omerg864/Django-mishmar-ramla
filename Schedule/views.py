@@ -292,7 +292,7 @@ def shift_view(request):
             shifts = Shift.objects.order_by('-date')
             if len(shifts.filter(username=request.user, date=organization.date).order_by('-date')) > 0:
                 shift = shifts.filter(username=request.user).order_by('-date')[0]
-                weeks = shifts_weeks_served.filter(username=request.user).order_by('-num_week')
+                weeks = shifts_weeks_served.filter(username=request.user).order_by('num_week')
                 notes_text = str(shift.notes)
                 for i in range(len(weeks)):
                     forms[i] = ShiftWeekViewForm(instance=weeks[i])
