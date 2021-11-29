@@ -22,7 +22,19 @@
             <tr style="align-content: end">
             <td>{{ user }}</td>
                 {% for count in value %}
-                    <td>{{ value|get_item:count }}</td>
+                    {% if "morning" in count %}
+                        {% if value|get_item:count < 2 %}
+                            <td style="color: red">{{ value|get_item:count }}</td>
+                            {% else %}
+                            <td style="color: forestgreen">{{ value|get_item:count }}</td>
+                            {% endif %}
+                    {% else %}
+                    {% if value|get_item:count < 1 %}
+                            <td style="color: red">{{ value|get_item:count }}</td>
+                            {% else %}
+                            <td style="color: forestgreen">{{ value|get_item:count }}</td>
+                            {% endif %}
+                    {% endif %}
                 {% endfor %}
             </tr>
         {% endfor %}
