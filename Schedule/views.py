@@ -542,7 +542,6 @@ class ShifttableView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super(ShifttableView, self).get_context_data(**kwargs)
         organization = get_input(self.get_object())
-        print(organization)
         users = set()
         for key in organization:
             if key.count("notes") == 0:
@@ -572,9 +571,10 @@ class ShifttableView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         morning_shifts = ["630", "700_search", "700_manager", "720_pull", "720_1", "720_2", "720_3"]
         noon_shifts = ["1400", "1500", "1500_1900"]
         num_week = 0
-        count = 1
-        for x in range(1, self.get_object().num_weeks * 7 + 1):
-            day = f'day{x}_'
+        count = 0
+        for i in range(1, self.get_object().num_weeks * 7 + 1):
+            count += 1
+            day = f'day{i}_'
             for shift in morning_shifts:
                 split = organization[f'{day}{shift}'].split("\n")
                 for s in split:
@@ -608,9 +608,8 @@ class ShifttableView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
                         table_content[s]["end"] += 1
                         sum_content["end"] += 1
             if count == 7:
-                count = 1
+                count = 0
                 num_week += 1
-            count += 1
         print(table_content)
         ctx["table"] = table_content
         ctx["sum"] = sum_content
