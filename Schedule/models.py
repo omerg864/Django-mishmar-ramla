@@ -1,3 +1,4 @@
+from time import time
 from django import forms
 from django.db import models
 from django.utils import timezone
@@ -469,3 +470,20 @@ class IpBan(models.Model):
 class Gun(models.Model):
     full_name = models.CharField(verbose_name="שם מלא", max_length=50)
     short_name = models.CharField(verbose_name="שם קצר", max_length=20)
+
+class ArmingLog(models.Model):
+    name = models.CharField(max_length=50, verbose_name="שם", primary_key=True)
+    shift = models.CharField(max_length=50, verbose_name="משמרת")
+    date = models.DateField(default=timezone.now, verbose_name="תאריך")
+    time_in = models.TimeField(default=timezone.now, verbose_name="זמן כניסה")
+    gun = models.ForeignKey(Gun, on_delete=models.CASCADE, verbose_name="מספר נשק")
+    num_mags = models.IntegerField(default=2, verbose_name="מספר מחסניות")
+    hand_cuffs = models.IntegerField(default=6, verbose_name="אזיקים")
+    gun_case = models.IntegerField(default=6, verbose_name="פונדה")
+    mag_case = models.IntegerField(default=6, verbose_name="נרתיק")
+    keys = models.BooleanField(default=False, verbose_name="מפתחות")
+    radio = models.BooleanField(default=False, verbose_name="קשר")
+    radio_kit = models.BooleanField(default=False, verbose_name="ערכת שמע")
+    time_out = models.TimeField(default=timezone.now, verbose_name="זמן יציאה")
+    
+    
