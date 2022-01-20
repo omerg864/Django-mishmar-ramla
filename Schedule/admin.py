@@ -6,6 +6,7 @@ from .models import Organization as Organization
 from .models import IpBan
 from .models import Week
 from .models import ShiftWeek
+from .models import Gun
 
 admin.site.register(Shift)
 admin.site.register(ShiftWeek)
@@ -24,4 +25,5 @@ admin.site.register(Post)
 admin.site.register(Week)
 admin.site.register(Event, EventAdmin)
 admin.site.register(IpBan)
+admin.site.register(Gun)
 # Register your models here.
