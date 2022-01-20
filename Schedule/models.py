@@ -471,8 +471,8 @@ class Gun(models.Model):
     full_name = models.CharField(verbose_name="שם מלא", max_length=50)
     short_name = models.CharField(verbose_name="שם קצר", max_length=20)
 
-class ArmingLog(models.Model):
-    name = models.CharField(max_length=50, verbose_name="שם")
+class Arming_Log(models.Model):
+    name = models.CharField(max_length=50, verbose_name="שם", blank=False, default="")
     shift = models.CharField(max_length=50, verbose_name="משמרת", default="", blank=False)
     date = models.DateField(default=timezone.now, verbose_name="תאריך", blank=False)
     time_in = models.TimeField(default=timezone.now, verbose_name="זמן כניסה", blank=False)
