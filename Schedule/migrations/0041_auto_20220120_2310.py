@@ -38,7 +38,4 @@ class Migration(migrations.Migration):
             name='date',
             field=models.DateField(default=datetime.datetime(2022, 1, 20, 21, 10, 25, 694302, tzinfo=utc)),
         ),
-        migrations.DeleteModel(
-            name='ArmingLog',
-        ),
     ]
