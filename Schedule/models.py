@@ -464,3 +464,8 @@ class Event(models.Model):
 class IpBan(models.Model):
     ipaddress = models.GenericIPAddressField(verbose_name="כתובת IP")
     num_tries = models.IntegerField(default=0, verbose_name="מספר ניסיונות")
+
+
+class Gun(models.Model):
+    full_name = models.CharField(verbose_name="שם מלא", max_length=50)
+    short_name = models.CharField(verbose_name="שם קצר", max_length=20)
