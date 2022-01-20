@@ -472,7 +472,7 @@ class Gun(models.Model):
     short_name = models.CharField(verbose_name="שם קצר", max_length=20)
 
 class ArmingLog(models.Model):
-    name = models.CharField(max_length=50, verbose_name="שם", default="", blank=False)
+    name = models.CharField(max_length=50, verbose_name="שם")
     shift = models.CharField(max_length=50, verbose_name="משמרת", default="", blank=False)
     date = models.DateField(default=timezone.now, verbose_name="תאריך", blank=False)
     time_in = models.TimeField(default=timezone.now, verbose_name="זמן כניסה", blank=False)
@@ -482,7 +482,7 @@ class ArmingLog(models.Model):
     gun_case = models.IntegerField(default=6, verbose_name="פונדה", blank=False)
     mag_case = models.IntegerField(default=6, verbose_name="נרתיק", blank=False)
     keys = models.BooleanField(default=False, verbose_name="מפתחות", blank=False)
-    radio = models.BooleanField(default=False, verbose_name="קשר, blank=False")
+    radio = models.BooleanField(default=False, verbose_name="קשר", blank=False)
     radio_kit = models.BooleanField(default=False, verbose_name="ערכת שמע", blank=False)
     time_out = models.TimeField(default=timezone.now, verbose_name="זמן יציאה", blank=False)
     
