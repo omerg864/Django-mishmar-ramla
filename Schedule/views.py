@@ -17,7 +17,7 @@ from django.views.generic import UpdateView, ListView, DetailView, CreateView
 from .backend.Schedule.Organizer import Organizer
 from .forms import SettingsForm, ShiftForm, ShiftViewForm, WeekUpdateForm, ShiftWeekForm, ShiftWeekViewForm
 from django.forms.models import model_to_dict
-from .models import Post
+from .models import Post, ValidationLog
 from .models import Settings3 as Settings
 from .models import Shift1 as Shift
 from .models import Event
@@ -140,6 +140,9 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
         ctx = super(ArmingDayView, self).get_context_data(**kwargs)
         guns = Gun.objects.all()
         user_name = self.request.user.first_name + " " + self.request.user.last_name
+        months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
+        date1 = Date(self.kwargs['year'], months.index(getmonth(self.kwargs['month'].lower())) + 1, self.kwargs['day'])
+        validation_log = ValidationLog.objects.all().filter(date=date1).first()
         num_mags_list = [1, 2, 3]
         hand_cuffs_list = [6, 1, 2, 3, 4, 5, 7, 8]
         mag_case_list = [6, 1, 2, 3, 4, 5, 7]
@@ -150,7 +153,47 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
         ctx["gun_case_list"] = gun_case_list
         ctx["guns"] = guns
         ctx["user_name"] = user_name
+        ctx["validation_log"] = validation_log
         return ctx
+    
+    def validation_submit(self, request, shift):
+        gun_safe = request.POST.get(f"gun_safe{shift}")
+        gun_shift = request.POST.get(f"gun_shift{shift}")
+        time = request.POST.get(f"time{shift}")
+        manager = request.POST.get(f"manager{shift}")
+        val_logs = ValidationLog.objects.all()
+        months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
+        date1 = Date(self.kwargs['year'], months.index(getmonth(self.kwargs['month'].lower())) + 1, self.kwargs['day'])
+        log = val_logs.filter(date=date1)
+        if len(log) == 0:
+            if shift == 1:
+                new_log = ValidationLog(date=date1, num_guns_safe_m=gun_safe, num_guns_shift_m=gun_shift, time_checked_m=time, name_checked_m=manager)
+            elif shift == 2:
+                new_log = ValidationLog(date=date1, num_guns_safe_a=gun_safe, num_guns_shift_a=gun_shift, time_checked_a=time, name_checked_a=manager)
+            else:
+                new_log = ValidationLog(date=date1, num_guns_safe_n=gun_safe, num_guns_shift_n=gun_shift, time_checked_n=time, name_checked_n=manager)
+            new_log.save()
+        else:
+            log = log.first()
+            if shift == 1:
+                log.num_guns_safe_m = gun_safe
+                log.num_guns_shift_m = gun_shift
+                log.time_checked_m = time
+                log.name_checked_m = manager
+                log.save()
+            elif shift == 2:
+                log.num_guns_safe_a = gun_safe
+                log.num_guns_shift_a = gun_shift
+                log.time_checked_a = time
+                log.name_checked_a = manager
+                log.save()
+            else:
+                log.num_guns_safe_n = gun_safe
+                log.num_guns_shift_n = gun_shift
+                log.time_checked_n = time
+                log.name_checked_n = manager
+                log.save()
+
     
     def post(self, request, *args, **kwargs):
         if "add" in request.POST:
@@ -169,20 +212,20 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
             radio_kit = checkbox(request.POST.get("radio_kit"))
             time_out = request.POST.get("time_out")
             months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
-            date1 = Date(self.kwargs['year'], months.index(self.kwargs['month'].lower()) + 1, self.kwargs['day'])
+            date1 = Date(self.kwargs['year'], months.index(getmonth(self.kwargs['month'].lower())) + 1, self.kwargs['day'])
             new_log  = Arming_Log(name=name, id_num=id_num, shift_num=shift_num, date=date1, time_in=time_in,
             gun=gun, num_mags=num_mags, hand_cuffs=hand_cuffs, gun_case=gun_case, mag_case=mag_case, keys=keys,
             radio=radio, radio_kit=radio_kit, time_out=time_out)
             new_log.save()
+            messages.success(request, "הנתונים נשמרו בהצלחה")
             return HttpResponseRedirect(request.path_info)
         elif "change" in request.POST:
             log = Arming_Log.objects.get(id=request.POST.get("change"))
             gun_id = request.POST.get(f"guns{log.id}")
-            print(gun_id)
             gun = Gun.objects.get(id=gun_id)
             id_num = request.POST.get(f"id_num{log.id}")
             time_in = request.POST.get(f"time_in{log.id}")
-            print(time_in)
+            shift_num = int(request.POST.get(f"shifts{log.id}"))
             num_mags = int(request.POST.get(f"num_mags{log.id}"))
             hand_cuffs = int(request.POST.get(f"hand_cuffs{log.id}"))
             gun_case = int(request.POST.get(f"gun_case{log.id}"))
@@ -191,7 +234,7 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
             radio = checkbox(request.POST.get(f"radio{log.id}"))
             radio_kit = checkbox(request.POST.get(f"radio_kit{log.id}"))
             time_out = request.POST.get(f"time_out{log.id}")
-            print(time_out)
+            log.shift_num = shift_num
             log.gun = gun
             log.id_num = id_num
             log.time_in = time_in
@@ -204,9 +247,22 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
             log.radio_kit = radio_kit
             log.time_out = time_out
             log.save()
+            messages.success(request, "הנתונים נשמרו בהצלחה")
             return HttpResponseRedirect(request.path_info)
-        else:
+        elif "month_log" in request.POST:
             return redirect("armingmonth", year=self.kwargs['year'], month=self.kwargs['month'])
+        elif "shift1" in request.POST:
+            self.validation_submit(request, 1)
+            messages.success(request, "הנתונים נשמרו בהצלחה")
+            return HttpResponseRedirect(request.path_info)
+        elif "shift2" in request.POST:
+            self.validation_submit(request, 2)
+            messages.success(request, "הנתונים נשמרו בהצלחה")
+            return HttpResponseRedirect(request.path_info)
+        elif "shift3" in request.POST:
+            self.validation_submit(request, 3)
+            messages.success(request, "הנתונים נשמרו בהצלחה")
+            return HttpResponseRedirect(request.path_info)
 
 
 class ArmingMonthView(LoginRequiredMixin, MonthArchiveView):

@@ -84,9 +84,13 @@
                     {% csrf_token %}
                 {% for arming in object_list %}
             <tr style="align-content: end">
-                <td>{{arming.shift_num|num_to_shift}}</td>
-                <td>{{forloop.counter|counter_shifts:object_list}}</td>
                 {% if request.user|edit_permission:arming.name %}
+                <td><select name="shifts{{arming.id}}" id="shifts{{arming.id}}">
+                    <option value="1" {% if arming.shift_num == 1 %}selected{% endif %}>בוקר</option>
+                    <option value="2" {% if arming.shift_num == 2 %}selected{% endif %}>צהריים</option>
+                    <option value="3" {% if arming.shift_num == 3 %}selected{% endif %}>לילה</option>
+                </select></td>
+                <td>{{forloop.counter|counter_shifts:object_list}}</td>
                 <td><input type="text" name="id_num{{arming.id}}" id="id_num{{arming.id}}" required maxlength="9" minlength="9" value="{{arming.id_num}}" style="width: 100px;"></td>
                 <td>{{arming.name}}</td>
                 <td><input type="time" value="{{arming.time_in|timestr}}" name="time_in{{arming.id}}" id="time_in{{arming.id}}"></td>
@@ -153,6 +157,8 @@
                 <td><input type="time" value="{{arming.time_out|timestr}}" name="time_out{{arming.id}}" id="time_out{{arming.id}}"></td>
                 <td><button class="btn btn-info mb-4" type="submit" value="{{arming.id}}" id="change" name="change">שנה</button></td>
                 {% else %}
+                <td>{{arming.shift_num|num_to_shift}}</td>
+                <td>{{forloop.counter|counter_shifts:object_list}}</td>
                 <td>{{arming.id_num}}</td>
                 <td>{{arming.name}}</td>
                 <td>{{arming.time_in|timestr}}</td>
@@ -236,29 +242,38 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td><input type="number" placeholder="נשקים בכספת"></td>
-                        <td><input type="number" placeholder="נשקים בכספת"></td>
-                        <td><input type="number" placeholder="נשקים בכספת"></td>
+                        <td><a style="margin-left: 5px;">נשקים בכספת:</a><input type="number" placeholder="נשקים בכספת" name="gun_safe1" id="gun_safe1" value={{validation_log.num_guns_safe_m}}
+                            style="width: 50px;"></td>
+                        <td><a style="margin-left: 5px;">נשקים בכספת:</a><input type="number" placeholder="נשקים בכספת" name="gun_safe2" id="gun_safe2" value={{validation_log.num_guns_safe_a}}
+                            style="width: 50px;"></td>
+                        <td><a style="margin-left: 5px;">נשקים בכספת:</a><input type="number" placeholder="נשקים בכספת" name="gun_safe3" id="gun_safe3" value={{validation_log.num_guns_safe_n}}
+                            style="width: 50px;"></td>
+                    </tr>
+                    <tr> 
+                        <td><a style="margin-left: 5px;">נשקים במשמרת:</a><input type="number" placeholder="נשקים במשמרת" name="gun_shift1" id="gun_shift1" value={{validation_log.num_guns_shift_m}}
+                            style="width: 50px;"></td>
+                        <td><a style="margin-left: 5px;">נשקים במשמרת:</a><input type="number" placeholder="נשקים במשמרת" name="gun_shift2" id="gun_shift2" value={{validation_log.num_guns_shift_a}}
+                            style="width: 50px;"></td>
+                        <td><a style="margin-left: 5px;">נשקים במשמרת:</a><input type="number" placeholder="נשקים במשמרת" name="gun_shift3" id="gun_shift3" value={{validation_log.num_guns_shift_n}}
+                            style="width: 50px;"></td>
+                    </tr>
+                    <tr> 
+                        <td><a style="margin-left: 5px;">שעה:</a><input type="time" placeholder="שעה" name="time1" id="time1" value={{validation_log.time_checked_m}}></td>
+                        <td><a style="margin-left: 5px;">שעה:</a><input type="time" placeholder="שעה" name="time2" id="time2" value={{validation_log.time_checked_a}}></td>
+                        <td><a style="margin-left: 5px;">שעה:</a><input type="time" placeholder="שעה" name="time3" id="time3" value={{validation_log.time_checked_n}}></td>
+                    </tr>
+                    <tr> 
+                        <td><a style="margin-left: 10px;">שם אחמ"ש:</a><input type="text" placeholder="שם אחמ'ש" name="manager1" id="manager1" 
+                            style="width: 120px;" value={{validation_log.name_checked_m}}></td>
+                        <td><a style="margin-left: 10px;">שם אחמ"ש:</a><input type="text" placeholder="שם אחמ'ש" name="manager2" id="manager2" 
+                            style="width: 120px;" value={{validation_log.name_checked_a}}></td>
+                        <td><a style="margin-left: 10px;">שם אחמ"ש:</a><input type="text" placeholder="שם אחמ'ש" name="manager3" id="manager3" 
+                            style="width: 120px;" value={{validation_log.name_checked_n}}></td>>
                     </tr>
                     <tr>
-                        <td><input type="number" placeholder="נשקים במשמרת"></td>
-                        <td><input type="number" placeholder="נשקים במשמרת"></td>
-                        <td><input type="number" placeholder="נשקים במשמרת"></td>
-                    </tr>
-                    <tr>
-                        <td><input type="time" placeholder="שעה"></td>
-                        <td><input type="time" placeholder="שעה"></td>
-                        <td><input type="time" placeholder="שעה"></td>
-                    </tr>
-                    <tr>
-                        <td><input type="text" placeholder="שם אחמ'ש"></td>
-                        <td><input type="text" placeholder="שם אחמ'ש"></td>
-                        <td><input type="text" placeholder="שם אחמ'ש"></td>
-                    </tr>
-                    <tr>
-                        <td><button class="btn btn-info mb-4" name="1" id="1">חתימה</button></td>
-                        <td><button class="btn btn-info mb-4" name="2" id="2">חתימה</button></td>
-                        <td><button class="btn btn-info mb-4" name="3" id="3">חתימה</button></td>
+                        <td><button class="btn btn-info mb-4" type="submit" name="shift1" id="shift1">חתימה</button></td>
+                        <td><button class="btn btn-info mb-4" type="submit" name="shift2" id="shift2">חתימה</button></td>
+                        <td><button class="btn btn-info mb-4" type="submit" name="shift3" id="shift3">חתימה</button></td>
                     </tr>
                 </tbody>
                 </form>

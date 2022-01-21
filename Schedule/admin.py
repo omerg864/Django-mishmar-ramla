@@ -8,6 +8,7 @@ from .models import Week
 from .models import ShiftWeek
 from .models import Gun
 from .models import Arming_Log
+from .models import ValidationLog
 
 admin.site.register(Shift)
 admin.site.register(ShiftWeek)
@@ -28,4 +29,5 @@ admin.site.register(Event, EventAdmin)
 admin.site.register(IpBan)
 admin.site.register(Gun)
 admin.site.register(Arming_Log)
+admin.site.register(ValidationLog)
 # Register your models here.
