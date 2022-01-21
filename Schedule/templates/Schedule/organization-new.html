@@ -5,7 +5,7 @@
     <form method="POST">
         {% csrf_token %}
     <label for="date" style="margin-top: 10px">תאריך:</label>
-    <input type="date" id="date" name="date" value="{{ date1 }}">
+    <input type="date" id="date" name="date" value="{{ date1|date:"Y-m-d" }}">
         <div>
         <label for="num_weeks" style="margin-top: 10px">מ'ס שבועות:</label>
         {{ form.num_weeks }}

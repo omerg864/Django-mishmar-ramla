@@ -696,7 +696,7 @@ class OrganizationCreateView(LoginRequiredMixin, CreateView, UserPassesTestMixin
 
     def get_context_data(self, **kwargs):
         ctx = super(OrganizationCreateView, self).get_context_data(**kwargs)
-        ctx["date1"] = timezone.now
+        ctx["date1"] = timezone.now()
         return ctx
 
     def test_func(self):
