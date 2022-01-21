@@ -224,6 +224,45 @@
         </form>
             </tbody>
         </table>
+        <table style="margin-top: 20px;">
+            <form method="POST">
+                {% csrf_token %}
+                <thead>
+                    <tr>
+                        <th>משמרת בוקר</th>
+                        <th>משמרת צהריים</th>
+                        <th>משמרת לילה</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="number" placeholder="נשקים בכספת"></td>
+                        <td><input type="number" placeholder="נשקים בכספת"></td>
+                        <td><input type="number" placeholder="נשקים בכספת"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="number" placeholder="נשקים במשמרת"></td>
+                        <td><input type="number" placeholder="נשקים במשמרת"></td>
+                        <td><input type="number" placeholder="נשקים במשמרת"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="time" placeholder="שעה"></td>
+                        <td><input type="time" placeholder="שעה"></td>
+                        <td><input type="time" placeholder="שעה"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" placeholder="שם אחמ'ש"></td>
+                        <td><input type="text" placeholder="שם אחמ'ש"></td>
+                        <td><input type="text" placeholder="שם אחמ'ש"></td>
+                    </tr>
+                    <tr>
+                        <td><button class="btn btn-info mb-4" name="1" id="1">חתימה</button></td>
+                        <td><button class="btn btn-info mb-4" name="2" id="2">חתימה</button></td>
+                        <td><button class="btn btn-info mb-4" name="3" id="3">חתימה</button></td>
+                    </tr>
+                </tbody>
+                </form>
+        </table>
 </ul>
 <div class="center_div">
     <ul>

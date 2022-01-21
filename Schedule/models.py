@@ -474,6 +474,21 @@ class Gun(models.Model):
     def __str__(self):
         return self.short_name
 
+class ValidationLog(models.Model):
+    date = models.DateField(verbose_name="תאריך", default=timezone.now)
+    num_guns_safe_m = models.IntegerField(verbose_name="מספר נשקים בכספת בוקר", blank=True, default=0)
+    num_guns_shift_m = models.IntegerField(verbose_name="מספר נשקים במשמרת בוקר", blank=True, default=0)
+    time_checked_m = models.TimeField(verbose_name="שעת בדיקה בוקר", blank=True, default=timezone.now)
+    name_checked_m = models.CharField(max_length=50, verbose_name="שם בודק בוקר", blank=True, default="")
+    num_guns_safe_a = models.IntegerField(verbose_name="מספר נשקים בכספת צהריים", blank=True, default=0)
+    num_guns_shift_a = models.IntegerField(verbose_name="מספר נשקים במשמרת צהריים", blank=True, default=0)
+    time_checked_a = models.TimeField(verbose_name="שעת בדיקה צהריים", blank=True, default=timezone.now)
+    name_checked_a = models.CharField(max_length=50, verbose_name="שם בודק צהריים", blank=True, default="")
+    num_guns_safe_n = models.IntegerField(verbose_name="מספר נשקים בכספת לילה", blank=True, default=0)
+    num_guns_shift_n = models.IntegerField(verbose_name="מספר נשקים במשמרת לילה", blank=True, default=0)
+    time_checked_n = models.TimeField(verbose_name="שעת בדיקה לילה", blank=True, default=timezone.now)
+    name_checked_n = models.CharField(max_length=50, verbose_name="שם בודק לילה", blank=True, default="")
+
 class Arming_Log(models.Model):
     name = models.CharField(max_length=50, verbose_name="שם", blank=False, default="")
     id_num = models.CharField(max_length=9, verbose_name="תעודת זהות", blank=False, default="")
@@ -491,18 +506,6 @@ class Arming_Log(models.Model):
     time_out = models.TimeField(default=timezone.now, verbose_name="זמן יציאה", blank=True)
     valid_in = models.BooleanField(default=False, verbose_name="אישור מורשה")
     valid_out = models.BooleanField(default=False, verbose_name="אישור מורשה")
-    num_guns_safe_m = models.IntegerField(verbose_name="מספר נשקים בכספת בוקר", blank=True, default=0)
-    num_guns_shift_m = models.IntegerField(verbose_name="מספר נשקים במשמרת בוקר", blank=True, default=0)
-    time_checked_m = models.TimeField(verbose_name="שעת בדיקה בוקר", blank=True, default=timezone.now)
-    name_checked_m = models.CharField(max_length=50, verbose_name="שם בודק בוקר", blank=True, default="")
-    num_guns_safe_a = models.IntegerField(verbose_name="מספר נשקים בכספת צהריים", blank=True, default=0)
-    num_guns_shift_a = models.IntegerField(verbose_name="מספר נשקים במשמרת צהריים", blank=True, default=0)
-    time_checked_a = models.TimeField(verbose_name="שעת בדיקה צהריים", blank=True, default=timezone.now)
-    name_checked_a = models.CharField(max_length=50, verbose_name="שם בודק צהריים", blank=True, default="")
-    num_guns_safe_n = models.IntegerField(verbose_name="מספר נשקים בכספת לילה", blank=True, default=0)
-    num_guns_shift_n = models.IntegerField(verbose_name="מספר נשקים במשמרת לילה", blank=True, default=0)
-    time_checked_n = models.TimeField(verbose_name="שעת בדיקה לילה", blank=True, default=timezone.now)
-    name_checked_n = models.CharField(max_length=50, verbose_name="שם בודק לילה", blank=True, default="")
 
 
     def __str__(self):
