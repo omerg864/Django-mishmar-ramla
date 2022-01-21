@@ -213,6 +213,7 @@ class ArmingMonthView(LoginRequiredMixin, MonthArchiveView):
     queryset = Arming_Log.objects.all()
     date_field = "date"
     allow_future = True
+    allow_empty = True
     template_name = "Schedule/arming-month.html"
     ordering = ["date", "time_in"]
 
