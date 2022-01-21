@@ -161,6 +161,9 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
         gun_shift = request.POST.get(f"gun_shift{shift}")
         time = request.POST.get(f"time{shift}")
         manager = request.POST.get(f"manager{shift}")
+        if manager == "":
+            messages.info(request, translate_text("נא למלא את שם המנהל", request.user, "hebrew"))
+            return False
         val_logs = ValidationLog.objects.all()
         months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
         date1 = Date(self.kwargs['year'], months.index(getmonth(self.kwargs['month'].lower())) + 1, self.kwargs['day'])
@@ -193,6 +196,7 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
                 log.time_checked_n = time
                 log.name_checked_n = manager
                 log.save()
+        return True
 
     
     def post(self, request, *args, **kwargs):
@@ -252,16 +256,19 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
         elif "month_log" in request.POST:
             return redirect("armingmonth", year=self.kwargs['year'], month=self.kwargs['month'])
         elif "shift1" in request.POST:
-            self.validation_submit(request, 1)
-            messages.success(request, "הנתונים נשמרו בהצלחה")
+            valid = self.validation_submit(request, 1)
+            if valid:
+                messages.success(request, "הנתונים נשמרו בהצלחה")
             return HttpResponseRedirect(request.path_info)
         elif "shift2" in request.POST:
-            self.validation_submit(request, 2)
-            messages.success(request, "הנתונים נשמרו בהצלחה")
+            valid = self.validation_submit(request, 2)
+            if valid:
+                messages.success(request, "הנתונים נשמרו בהצלחה")
             return HttpResponseRedirect(request.path_info)
         elif "shift3" in request.POST:
-            self.validation_submit(request, 3)
-            messages.success(request, "הנתונים נשמרו בהצלחה")
+            valid = self.validation_submit(request, 3)
+            if valid:
+                messages.success(request, "הנתונים נשמרו בהצלחה")
             return HttpResponseRedirect(request.path_info)
 
 

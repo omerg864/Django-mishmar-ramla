@@ -243,34 +243,34 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td><a style="margin-left: 5px;">נשקים בכספת:</a><input type="number" min="0" max="1000" step="1" placeholder="נשקים בכספת" name="gun_safe1" id="gun_safe1" value={{validation_log.num_guns_safe_m}}
+                        <td><a style="margin-left: 5px;">נשקים בכספת:</a><input type="number" placeholder="נשקים בכספת" name="gun_safe1" id="gun_safe1" value={{validation_log.num_guns_safe_m}}
                             style="width: 50px;"></td>
-                        <td><a style="margin-left: 5px;">נשקים בכספת:</a><input type="number" min="0" max="1000" step="1" placeholder="נשקים בכספת" name="gun_safe2" id="gun_safe2" value={{validation_log.num_guns_safe_a}}
+                        <td><a style="margin-left: 5px;">נשקים בכספת:</a><input type="number" placeholder="נשקים בכספת" name="gun_safe2" id="gun_safe2" value={{validation_log.num_guns_safe_a}}
                             style="width: 50px;"></td>
-                        <td><a style="margin-left: 5px;">נשקים בכספת:</a><input type="number" min="0" max="1000" step="1" placeholder="נשקים בכספת" name="gun_safe3" id="gun_safe3" value={{validation_log.num_guns_safe_n}}
+                        <td><a style="margin-left: 5px;">נשקים בכספת:</a><input type="number" placeholder="נשקים בכספת" name="gun_safe3" id="gun_safe3" value={{validation_log.num_guns_safe_n}}
                             style="width: 50px;"></td>
                     </tr>
                     <tr> 
-                        <td><a style="margin-left: 5px;">נשקים במשמרת:</a><input type="number" min="0" max="1000" step="1" placeholder="נשקים במשמרת" name="gun_shift1" id="gun_shift1" value={{validation_log.num_guns_shift_m}}
+                        <td><a style="margin-left: 5px;">נשקים במשמרת:</a><input type="number" placeholder="נשקים במשמרת" name="gun_shift1" id="gun_shift1" value={{validation_log.num_guns_shift_m}}
                             style="width: 50px;"></td>
-                        <td><a style="margin-left: 5px;">נשקים במשמרת:</a><input type="number" min="0" max="1000" step="1" placeholder="נשקים במשמרת" name="gun_shift2" id="gun_shift2" value={{validation_log.num_guns_shift_a}}
+                        <td><a style="margin-left: 5px;">נשקים במשמרת:</a><input type="number" placeholder="נשקים במשמרת" name="gun_shift2" id="gun_shift2" value={{validation_log.num_guns_shift_a}}
                             style="width: 50px;"></td>
-                        <td><a style="margin-left: 5px;">נשקים במשמרת:</a><input type="number" min="0" max="1000" step="1" placeholder="נשקים במשמרת" name="gun_shift3" id="gun_shift3" value={{validation_log.num_guns_shift_n}}
+                        <td><a style="margin-left: 5px;">נשקים במשמרת:</a><input type="number" placeholder="נשקים במשמרת" name="gun_shift3" id="gun_shift3" value={{validation_log.num_guns_shift_n}}
                             style="width: 50px;"></td>
                     </tr>
                     <tr> 
                         <td><a style="margin-left: 5px;">שעה:</a><input type="time" placeholder="שעה" name="time1" id="time1" 
-                            {% if validation_log.name_checked_n != None %} value={{validation_log.time_checked_m}} {% else %} value="07:00" {% endif %}></td>
+                            {% if validation_log.name_checked_m != None and validation_log.name_checked_m != "" %} value={{validation_log.time_checked_m|timestr}} {% else %} value="07:00" {% endif %}></td>
                         <td><a style="margin-left: 5px;">שעה:</a><input type="time" placeholder="שעה" name="time2" id="time2" 
-                            {% if validation_log.name_checked_n != None %} value={{validation_log.time_checked_a}} {% else %} value="07:00" {% endif %}></td>
+                            {% if validation_log.name_checked_a != None and validation_log.name_checked_a != "" %} value={{validation_log.time_checked_a|timestr}} {% else %} value="07:00" {% endif %}></td>
                         <td><a style="margin-left: 5px;">שעה:</a><input type="time" placeholder="שעה" name="time3" id="time3" 
-                            {% if validation_log.name_checked_n != None %} value={{validation_log.time_checked_n}} {% else %} value="07:00" {% endif %}></td>
+                            {% if validation_log.name_checked_n != None and validation_log.name_checked_n != "" %} value={{validation_log.time_checked_n|timestr}} {% else %} value="07:00" {% endif %}></td>
                     </tr>
                     <tr> 
                         <td><a style="margin-left: 10px;">שם אחמ"ש:</a><input type="text" placeholder="שם אחמ'ש" name="manager1" id="manager1" 
                             style="width: 120px;" value={{validation_log.name_checked_m}}></td>
                         <td><a style="margin-left: 10px;">שם אחמ"ש:</a><input type="text" placeholder="שם אחמ'ש" name="manager2" id="manager2" 
-                            style="width: 120px;" value={{validation_log.name_checked_a}}></td>
+                            style="width: 120px;" value={{validation_log.name_checked_a}} ></td>
                         <td><a style="margin-left: 10px;">שם אחמ"ש:</a><input type="text" placeholder="שם אחמ'ש" name="manager3" id="manager3" 
                             style="width: 120px;" value={{validation_log.name_checked_n}}></td>
                     </tr>
