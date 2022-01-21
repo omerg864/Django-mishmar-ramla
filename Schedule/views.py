@@ -27,7 +27,6 @@ from .models import ShiftWeek
 from .models import Arming_Log
 from .models import Gun
 from users.models import UserSettings as USettings
-from django.utils.translation import activate
 import openpyxl
 from django.utils import timezone
 from openpyxl.utils import get_column_letter
@@ -36,7 +35,6 @@ from deep_translator import GoogleTranslator
 import os
 from django.views.generic.dates import DayArchiveView, MonthArchiveView
 
-activate('he')
 default_language = os.environ.get("DEFAULT_LANGUAGE")
 
 if len(Settings.objects.all()) == 0:
@@ -2088,6 +2086,10 @@ def getfullname(user):
 
 @register.filter
 def getday(string):
+    letter = datetime.datetime.now().strftime("%b").lower()[0]
+    if (letter >= 'a' and letter <= 'z'):
+        return datetime.datetime.now()
+
     return datetime.datetime.now()
 
 @register.filter
