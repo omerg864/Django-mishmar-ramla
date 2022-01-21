@@ -2081,6 +2081,17 @@ class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, Detail
 # filters
 
 @register.filter
+def getmonth(month):
+    letter = month.lower()[0]
+    if (letter >= 'a' and letter <= 'z'):
+        return month
+    else:
+        months_he = ["ינו", "פבר", "מרץ", "אפר", "מאי", "יונ", "יול", "אוג", "ספט", "אוק", "נוב", "דצמ"]
+        months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
+        return months[months_he.index(month)]
+
+
+@register.filter
 def getfullname(user):
     return user.first_name + " " + user.last_name
 
@@ -2089,7 +2100,6 @@ def getday(string):
     letter = datetime.datetime.now().strftime("%b").lower()[0]
     if (letter >= 'a' and letter <= 'z'):
         return datetime.datetime.now()
-
     return datetime.datetime.now()
 
 @register.filter

@@ -228,12 +228,12 @@
 <div class="center_div">
     <ul>
         {% if previous_day %}
-                <a class="btn btn-info mb-4" href="{% url 'armingday' year=previous_day|date:'Y' month=previous_day|date:'b' day=previous_day|date:'d' %}" style="margin-top: 10px; margin-left: 60%;">
+                <a class="btn btn-info mb-4" href="{% url 'armingday' year=previous_day|date:'Y' month=previous_day|date:'b'|getmonth day=previous_day|date:'d' %}" style="margin-top: 10px; margin-left: 60%;">
                     אתמול
                 </a>
         {% endif %}
         {% if next_day %}
-                <a class="btn btn-info mb-4" href="{% url 'armingday' year=next_day|date:'Y' month=next_day|date:'b' day=next_day|date:'d' %}" style="margin-top: 10px;">
+                <a class="btn btn-info mb-4" href="{% url 'armingday' year=next_day|date:'Y' month=next_day|date:'b'|getmonth day=next_day|date:'d' %}" style="margin-top: 10px;">
                     מחר</a>
         {% endif %}
     </ul>

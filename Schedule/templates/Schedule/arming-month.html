@@ -114,12 +114,12 @@
 <div class="center_div">
     <ul>
         {% if previous_month %}
-                <a class="btn btn-info mb-4" href="{% url 'armingmonth' year=previous_month|date:'Y' month=previous_month|date:'b' %}" style="margin-top: 10px; margin-left: 60%;">
+                <a class="btn btn-info mb-4" href="{% url 'armingmonth' year=previous_month|date:'Y' month=previous_month|date:'b'|getmonth %}" style="margin-top: 10px; margin-left: 60%;">
                     חודש שעבר
                 </a>
         {% endif %}
         {% if next_month %}
-                <a class="btn btn-info mb-4" href="{% url 'armingmonth' year=next_month|date:'Y' month=next_month|date:'b' %}" style="margin-top: 10px;">
+                <a class="btn btn-info mb-4" href="{% url 'armingmonth' year=next_month|date:'Y' month=next_month|date:'b'|getmonth %}" style="margin-top: 10px;">
                     חודש הבא</a>
         {% endif %}
     </ul>
