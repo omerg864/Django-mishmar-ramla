@@ -22,6 +22,8 @@ from .models import Event
 from .models import Organization as Organization
 from .models import Week
 from .models import ShiftWeek
+from .models import Arming_Log
+from .models import Gun
 from users.models import UserSettings as USettings
 from django.utils.translation import activate
 import openpyxl
@@ -30,6 +32,7 @@ from openpyxl.utils import get_column_letter
 import requests
 from deep_translator import GoogleTranslator
 import os
+from django.views.generic.dates import DayArchiveView
 
 activate('he')
 default_language = os.environ.get("DEFAULT_LANGUAGE")
@@ -123,6 +126,20 @@ def home(request):
 
 def error_404_view(request, exception):
     return render(request, 'Schedule/404.html')
+
+
+class ArmingDayView(LoginRequiredMixin, DayArchiveView):
+    queryset = Arming_Log.objects.all()
+    date_field = "date"
+    allow_future = True
+    template_name = "Schedule/arming.html"
+    ordering = ["shift_num"]
+
+    def get_context_data(self, **kwargs):
+        ctx = super(ArmingDayView, self).get_context_data(**kwargs)
+        weeks = Week.objects.all()
+        ctx["weeks"] = weeks
+        return ctx
 
 
 @login_required
@@ -1962,6 +1979,34 @@ class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, Detail
 
 
 # filters
+
+@register.filter
+def num_to_shift(num):
+    if num == 1:
+        return "בוקר"
+    elif num == 2:
+        return "צהריים"
+    return "לילה"
+
+@register.filter
+def counter_shifts(counter, arming_logs):
+    morning = 0
+    afternoon = 0
+    night = 0
+    for log in arming_logs:
+        if log.shift == "בוקר":
+            morning += 1
+        elif log.shift == "צהריים":
+            afternoon += 1
+        else:
+            night += 1
+    if counter <= morning:
+        return counter
+    elif counter <= morning + afternoon:
+        return counter - morning
+    else:
+        return counter - morning - afternoon
+
 @register.filter(name="translate_text")
 def translate_text(text, user, from_language="hebrew"):
     if user.is_authenticated:

@@ -473,7 +473,8 @@ class Gun(models.Model):
 
 class Arming_Log(models.Model):
     name = models.CharField(max_length=50, verbose_name="שם", blank=False, default="")
-    shift = models.CharField(max_length=50, verbose_name="משמרת", default="", blank=False)
+    id_num = models.CharField(max_length=50, verbose_name="תעודת זהות", blank=False, default="")
+    shift_num = models.IntegerField(verbose_name="מספר משמרת", default=1, blank=False)
     date = models.DateField(default=timezone.now, verbose_name="תאריך", blank=False)
     time_in = models.TimeField(default=timezone.now, verbose_name="זמן כניסה", blank=False)
     gun = models.ForeignKey(Gun, on_delete=models.CASCADE, verbose_name="מספר נשק", blank=False)

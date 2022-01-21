@@ -1,0 +1,81 @@
+{% extends "Schedule/base.html" %}
+{% block content %}
+<h1>{{ day }}</h1>
+
+<ul>
+        <h1>יומן חימוש</h1>
+        <table class="responsive-table-input-matrix" style="align-items: center">
+            <thead>
+                <tr>
+                    <th>טופס מסירה - קבלת ציוד</th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th>החזרת ציוד - כליי ירייה</th>
+                </tr>
+            <tr>
+                <th>משמרת</th>
+                <th>מס"ד</th>
+                <th>ת.ז.</th>
+                <th>שם</th>
+                <th>שעה</th>
+                <th>מס' נשק</th>
+                <th>מס' מחסניות</th>
+                <th>אזיקים</th>
+                <th>פונדה</th>
+                <th>נרתיק</th>
+                <th>מפתחות</th>
+                <th>קשר</th>
+                <th>ערכת שמע</th>
+                <th>שעה</th>
+            </tr>
+            </thead>
+            <tbody>
+                {% for arming in object_list %}
+            <tr style="align-content: end">
+                <td>{{arming.shift_num|num_to_shift}}</td>
+                <td>{{forloop.counter|counter_shifts:object_list}}</td>
+                <td>{{arming.id_num}}</td>
+                <td>{{arming.name}}</td>
+                <td>{{arming.time_in}}</td>
+                <td>{{arming.gun}}</td>
+                <td>{{arming.num_mags}}</td>
+                <td>{{arming.hand_cuffs}}</td>
+                <td>{{arming.mag_case}}</td>
+                <td>{{arming.gun_case}}</td>
+                <td>{{arming.keys}}</td>
+                <td>{{arming.radio}}</td>
+                <td>{{arming.radio_kit}}</td>
+                <td>{{arming.time_out}}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+</ul>
+<div class="pagination pull-left">
+    <ul>
+        {% if previous_day %}
+            <li class="prev">
+                <a href="{% url 'armingday' year=previous_day|date:'Y' month=previous_day|date:'b' day=previous_day|date:'d' %}">
+                    &larr; {{ previous_day }}
+                </a>
+            </li>
+        {% endif %}
+        {% if next_day %}
+            <li class="next">
+                <a href="{% url 'armingday' year=next_day|date:'Y' month=next_day|date:'b' day=next_day|date:'d' %}">
+                    {{ next_day }} &rarr;</a>
+            </li>
+        {% endif %}
+    </ul>
+</div>
+{% endblock content %}

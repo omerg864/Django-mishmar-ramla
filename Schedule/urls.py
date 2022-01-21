@@ -5,6 +5,7 @@ from .views import OrganizationDetailView, ShifttableView
 from .views import ServedSumListView, ServedSumShiftDetailView, ServedSumReinforcementsDetailView
 from .views import OrganizationSuggestionView, OrganizationCreateView, OrganizationListView
 from .views import organization_update
+from .views import ArmingDayView
 
 urlpatterns = [
     path("", views.home, name="Schedule-Home"),
@@ -20,4 +21,5 @@ urlpatterns = [
     path('organization/table/shift/<int:pk>/', ShifttableView.as_view(), name='organization-table-shift'),
     path("organization/<int:pk>/suggestion", OrganizationSuggestionView.as_view(), name="organization-suggestion"),
     path("organization/new", OrganizationCreateView.as_view(), name="organization-new"),
+    path('<int:year>/<str:month>/<int:day>/', ArmingDayView.as_view(), name="armingday"),
 ]
