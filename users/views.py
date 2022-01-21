@@ -9,11 +9,9 @@ from requests import get
 from Schedule.models import IpBan
 
 
-activate('he')
 
 
 def register(request, *args, **kwargs):
-    activate('he')
     settings = Settings.objects.first()
     pin_code = int(settings.pin_code)
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -57,7 +55,6 @@ def register(request, *args, **kwargs):
 
 @login_required
 def profile(request):
-    activate('he')
     user_settings = USettings.objects.all().filter(user=request.user).first()
     if request.method == "POST":
         u_form = UserUpdateForm(request.POST, instance=request.user)
