@@ -154,8 +154,7 @@
                     {% else %}
                     <td><input type="checkbox" name="radio_kit{{arming.id}}" id="radio_kit{{arming.id}}"></td>
                     {% endif %}
-
-                <td><input type="time" {% if arming.time_out == None %} value="{{arming.time_out|timestr}}" {% else %} value="07:00" {% endif %}
+                <td><input type="time" {% if arming.time_out != None %} value="{{arming.time_out|timestr}}" {% else %} value="07:00" {% endif %}
                     name="time_out{{arming.id}}" id="time_out{{arming.id}}"></td>
                 <td><button class="btn btn-info mb-4" type="submit" value="{{arming.id}}" id="change" name="change">שנה</button></td>
                 {% else %}
@@ -260,17 +259,20 @@
                             style="width: 50px;"></td>
                     </tr>
                     <tr> 
-                        <td><a style="margin-left: 5px;">שעה:</a><input type="time" placeholder="שעה" name="time1" id="time1" value={{validation_log.time_checked_m}}></td>
-                        <td><a style="margin-left: 5px;">שעה:</a><input type="time" placeholder="שעה" name="time2" id="time2" value={{validation_log.time_checked_a}}></td>
-                        <td><a style="margin-left: 5px;">שעה:</a><input type="time" placeholder="שעה" name="time3" id="time3" value={{validation_log.time_checked_n}}></td>
+                        <td><a style="margin-left: 5px;">שעה:</a><input type="time" placeholder="שעה" name="time1" id="time1" 
+                            {% if validation_log.name_checked_n != None %} value={{validation_log.time_checked_m}} {% else %} value="07:00" {% endif %}></td>
+                        <td><a style="margin-left: 5px;">שעה:</a><input type="time" placeholder="שעה" name="time2" id="time2" 
+                            {% if validation_log.name_checked_n != None %} value={{validation_log.time_checked_a}} {% else %} value="07:00" {% endif %}></td>
+                        <td><a style="margin-left: 5px;">שעה:</a><input type="time" placeholder="שעה" name="time3" id="time3" 
+                            {% if validation_log.name_checked_n != None %} value={{validation_log.time_checked_n}} {% else %} value="07:00" {% endif %}></td>
                     </tr>
                     <tr> 
                         <td><a style="margin-left: 10px;">שם אחמ"ש:</a><input type="text" placeholder="שם אחמ'ש" name="manager1" id="manager1" 
-                            style="width: 120px;" {% if validation_log.name_checked_m != None %} value={{validation_log.name_checked_m}} {% else %} value="07:00" {% endif %}></td>
+                            style="width: 120px;" value={{validation_log.name_checked_m}}></td>
                         <td><a style="margin-left: 10px;">שם אחמ"ש:</a><input type="text" placeholder="שם אחמ'ש" name="manager2" id="manager2" 
-                            style="width: 120px;" {% if validation_log.name_checked_a != None %} value={{validation_log.name_checked_a}} {% else %} value="07:00" {% endif %}></td>
+                            style="width: 120px;" value={{validation_log.name_checked_a}}></td>
                         <td><a style="margin-left: 10px;">שם אחמ"ש:</a><input type="text" placeholder="שם אחמ'ש" name="manager3" id="manager3" 
-                            style="width: 120px;" {% if validation_log.name_checked_n != None %} value={{validation_log.name_checked_n}} {% else %} value="07:00" {% endif %}></td>
+                            style="width: 120px;" value={{validation_log.name_checked_n}}></td>
                     </tr>
                     <tr>
                         <td><button class="btn btn-info mb-4" type="submit" name="shift1" id="shift1">חתימה</button></td>
