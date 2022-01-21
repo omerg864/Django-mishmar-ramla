@@ -266,11 +266,11 @@
                     </tr>
                     <tr> 
                         <td><a style="margin-left: 10px;">שם אחמ"ש:</a><input type="text" placeholder="שם אחמ'ש" name="manager1" id="manager1" 
-                            style="width: 120px;" {% if validation_log.name_checked_m == None %} value={{validation_log.name_checked_m}} {% else %} value="07:00" {% endif %}></td>
+                            style="width: 120px;" {% if validation_log.name_checked_m != None %} value={{validation_log.name_checked_m}} {% else %} value="07:00" {% endif %}></td>
                         <td><a style="margin-left: 10px;">שם אחמ"ש:</a><input type="text" placeholder="שם אחמ'ש" name="manager2" id="manager2" 
-                            style="width: 120px;" {% if validation_log.name_checked_a == None %} value={{validation_log.name_checked_a}} {% else %} value="07:00" {% endif %}></td>
+                            style="width: 120px;" {% if validation_log.name_checked_a != None %} value={{validation_log.name_checked_a}} {% else %} value="07:00" {% endif %}></td>
                         <td><a style="margin-left: 10px;">שם אחמ"ש:</a><input type="text" placeholder="שם אחמ'ש" name="manager3" id="manager3" 
-                            style="width: 120px;" {% if validation_log.name_checked_n == None %} value={{validation_log.name_checked_n}} {% else %} value="07:00" {% endif %}></td>
+                            style="width: 120px;" {% if validation_log.name_checked_n != None %} value={{validation_log.name_checked_n}} {% else %} value="07:00" {% endif %}></td>
                     </tr>
                     <tr>
                         <td><button class="btn btn-info mb-4" type="submit" name="shift1" id="shift1">חתימה</button></td>
