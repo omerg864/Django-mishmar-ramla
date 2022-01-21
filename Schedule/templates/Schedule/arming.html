@@ -1,27 +1,22 @@
 {% extends "Schedule/base.html" %}
 {% block content %}
-<h1>{{ day }}</h1>
 
 <ul>
-        <h1>יומן חימוש</h1>
+        <h1>יומן חימוש - {{ day|date:"d/m/Y" }}</h1>
+        <form method="POST">
+            {% csrf_token %}
+        <button class="but effect01" type="submit" name="month_log"><span>יומן חימוש אישי</span></button>
+    </form>
         <table class="responsive-table-input-matrix" style="align-items: center">
             <thead>
                 <tr>
-                    <th>טופס מסירה - קבלת ציוד</th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
+                    <th style="width:84.9%">טופס מסירה - קבלת ציוד</th>
                     <th>החזרת ציוד - כליי ירייה</th>
                 </tr>
+                </thead>
+        </table>
+        <table class="responsive-table-input-matrix" style="align-items: center">
+            <thead>
             <tr>
                 <th>משמרת</th>
                 <th>מס"ד</th>
@@ -37,44 +32,209 @@
                 <th>קשר</th>
                 <th>ערכת שמע</th>
                 <th>שעה</th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
+                <form method="POST">
+                    {% csrf_token %}
+                <tr style="align-content: end">
+                    <td><select name="shifts" id="shifts">
+                        <option value="1">בוקר</option>
+                        <option value="2">צהריים</option>
+                        <option value="3">לילה</option>
+                    </select></td>
+                    <td>0</td>
+                    <td><input type="text" name="id_num" id="id_num" required maxlength="9" minlength="9" style="width:100px;"></td>
+                    <td>{{user_name}}</td>
+                    <td><input type="time" name="time_in" id="time_in" required></td>
+                    <td><select name="guns" id="guns">
+                        {% for gun in guns %}
+                        <option value="{{gun.id}}">{{gun.short_name}}</option>
+                        {% endfor %}
+                    </select></td>
+                    <td><select name="num_mags" id="num_mags">
+                        {% for num_mag in num_mags_list %}
+                        <option value="{{num_mag}}">{{num_mag}}</option>
+                        {% endfor %}
+                    </select></td>
+                    <td><select name="hand_cuffs" id="hand_cuffs">
+                        {% for hand in hand_cuffs_list %}
+                        <option value="{{hand}}">{{hand}}</option>
+                        {% endfor %}
+                    </select></td>
+                    <td><select name="mag_case" id="mag_case">
+                        {% for mag in mag_case_list %}
+                        <option value="{{mag}}">{{mag}}</option>
+                        {% endfor %}
+                    </select></td>
+                    <td><select name="gun_case" id="gun_case">
+                        {% for gun in gun_case_list %}
+                        <option value="{{gun}}">{{gun}}</option>
+                        {% endfor %}
+                    </select></td>
+                    <td><input type="checkbox" name="keys" id="keys"></td>
+                    <td><input type="checkbox" name="radio" id="radio"></td>
+                    <td><input type="checkbox" name="radio_kit" id="radio_kit"></td>
+                    <td><input type="time" name="time_out" id="time_out"></td>
+                    <td style="padding-top:20px;"><button class="btn btn-info mb-4" type="submit" name="add" id="add">הוסף</button></td>
+                </tr>
+                </form>
+                <form method="POST">
+                    {% csrf_token %}
                 {% for arming in object_list %}
             <tr style="align-content: end">
                 <td>{{arming.shift_num|num_to_shift}}</td>
                 <td>{{forloop.counter|counter_shifts:object_list}}</td>
+                {% if request.user|edit_permission:arming.name %}
+                <td><input type="text" name="id_num{{arming.id}}" id="id_num{{arming.id}}" required maxlength="9" minlength="9" value="{{arming.id_num}}" style="width: 100px;"></td>
+                <td>{{arming.name}}</td>
+                <td><input type="time" value="{{arming.time_in|timestr}}" name="time_in{{arming.id}}" id="time_in{{arming.id}}"></td>
+                <td><select name="guns{{arming.id}}" id="guns{{arming.id}}">
+                    {% for gun in guns %}
+                    {% if gun == arming.gun %}
+                    <option value="{{gun.id}}" selected>{{gun.short_name}}</option>
+                    {% else %}
+                    <option value="{{gun.id}}">{{gun.short_name}}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select></td>
+                <td><select name="num_mags{{arming.id}}" id="num_mags{{arming.id}}">
+                    {% for num_mag in num_mags_list %}
+                    {% if num_mag == arming.num_mags %}
+                    <option value="{{num_mag}}" selected>{{num_mag}}</option>
+                    {% else %}
+                    <option value="{{num_mag}}">{{num_mag}}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select></td>
+                <td><select name="hand_cuffs{{arming.id}}" id="hand_cuffs{{arming.id}}">
+                    {% for hand in hand_cuffs_list %}
+                    {% if hand == arming.hand_cuffs %}
+                    <option value="{{hand}}" selected>{{hand}}</option>
+                    {% else %}
+                    <option value="{{hand}}">{{hand}}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select></td>
+                <td><select name="mag_case{{arming.id}}" id="mag_case{{arming.id}}">
+                    {% for mag in mag_case_list %}
+                    {% if mag == arming.mag_case %}
+                    <option value="{{mag}}" selected>{{mag}}</option>
+                    {% else %}
+                    <option value="{{mag}}">{{mag}}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select></td>
+                <td><select name="gun_case{{arming.id}}" id="gun_case{{arming.id}}">
+                    {% for gun in gun_case_list %}
+                    {% if gun == arming.gun_case %}
+                    <option value="{{gun}}" selected>{{gun}}</option>
+                    {% else %}
+                    <option value="{{gun}}">{{gun}}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select></td>
+                {% if arming.keys == True %}
+                    <td><input type="checkbox" name="keys{{arming.id}}" id="keys{{arming.id}}" checked></td>
+                    {% else %}
+                    <td><input type="checkbox" name="keys{{arming.id}}" id="keys{{arming.id}}"></td>
+                    {% endif %}
+                    {% if arming.radio == True %}
+                    <td><input type="checkbox" name="radio{{arming.id}}" id="radio{{arming.id}}" checked></td>
+                    {% else %}
+                    <td><input type="checkbox" name="radio{{arming.id}}" id="radio{{arming.id}}"></td>
+                    {% endif %}
+                    {% if arming.radio_kit == True %}
+                    <td><input type="checkbox" name="radio_kit{{arming.id}}" id="radio_kit{{arming.id}}" checked></td>
+                    {% else %}
+                    <td><input type="checkbox" name="radio_kit{{arming.id}}" id="radio_kit{{arming.id}}"></td>
+                    {% endif %}
+                <td><input type="time" value="{{arming.time_out|timestr}}" name="time_out{{arming.id}}" id="time_out{{arming.id}}"></td>
+                <td><button class="btn btn-info mb-4" type="submit" value="{{arming.id}}" id="change" name="change">שנה</button></td>
+                {% else %}
                 <td>{{arming.id_num}}</td>
                 <td>{{arming.name}}</td>
-                <td>{{arming.time_in}}</td>
-                <td>{{arming.gun}}</td>
-                <td>{{arming.num_mags}}</td>
-                <td>{{arming.hand_cuffs}}</td>
-                <td>{{arming.mag_case}}</td>
-                <td>{{arming.gun_case}}</td>
-                <td>{{arming.keys}}</td>
-                <td>{{arming.radio}}</td>
-                <td>{{arming.radio_kit}}</td>
-                <td>{{arming.time_out}}</td>
+                <td>{{arming.time_in|timestr}}</td>
+                <td><select name="guns{{arming.id}}" id="guns{{arming.id}}">
+                    {% for gun in guns %}
+                    {% if gun == arming.gun %}
+                    <option value="{{gun.id}}" selected disabled>{{gun.short_name}}</option>
+                    {% else %}
+                    <option value="{{gun.id}}" disabled>{{gun.short_name}}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select></td>
+                <td><select name="num_mags{{arming.id}}" id="num_mags{{arming.id}}">
+                    {% for num_mag in num_mags_list %}
+                    {% if num_mag == arming.num_mags %}
+                    <option value="{{num_mag}}" selected disabled>{{num_mag}}</option>
+                    {% else %}
+                    <option value="{{num_mag}}" disabled>{{num_mag}}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select></td>
+                <td><select name="hand_cuffs{{arming.id}}" id="hand_cuffs{{arming.id}}">
+                    {% for hand in hand_cuffs_list %}
+                    {% if hand == arming.hand_cuffs %}
+                    <option value="{{hand}}" selected disabled>{{hand}}</option>
+                    {% else %}
+                    <option value="{{hand}}" disabled>{{hand}}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select></td>
+                <td><select name="mag_case{{arming.id}}" id="mag_case{{arming.id}}">
+                    {% for mag in mag_case_list %}
+                    {% if mag == arming.mag_case %}
+                    <option value="{{mag}}" selected disabled>{{mag}}</option>
+                    {% else %}
+                    <option value="{{mag}}" disabled>{{mag}}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select></td>
+                <td><select name="gun_case{{arming.id}}" id="gun_case{{arming.id}}">
+                    {% for gun in gun_case_list %}
+                    {% if gun == arming.gun_case %}
+                    <option value="{{gun}}" selected disabled>{{gun}}</option>
+                    {% else %}
+                    <option value="{{gun}}" disabled>{{gun}}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select></td>
+                {% if arming.keys == True %}
+                    <td><input type="checkbox" name="keys{{arming.id}}" id="keys{{arming.id}}" checked disabled></td>
+                    {% else %}
+                    <td><input type="checkbox" name="keys{{arming.id}}" id="keys{{arming.id}}" disabled></td>
+                    {% endif %}
+                    {% if arming.radio == True %}
+                    <td><input type="checkbox" name="radio{{arming.id}}" id="radio{{arming.id}}" checked disabled></td>
+                    {% else %}
+                    <td><input type="checkbox" name="radio{{arming.id}}" id="radio{{arming.id}}" disabled></td>
+                    {% endif %}
+                    {% if arming.radio_kit == True %}
+                    <td><input type="checkbox" name="radio_kit{{arming.id}}" id="radio_kit{{arming.id}}" checked disabled></td>
+                    {% else %}
+                    <td><input type="checkbox" name="radio_kit{{arming.id}}" id="radio_kit{{arming.id}}" disabled></td>
+                    {% endif %}
+                <td>{{arming.time_out|timestr}}</td>
+                <td><button class="btn btn-info mb-4" type="submit" value="{{arming.id}}" id="change" name="change" disabled>שנה</button></td>
+                {% endif %}
             </tr>
             {% endfor %}
+        </form>
             </tbody>
         </table>
 </ul>
-<div class="pagination pull-left">
+<div class="center_div">
     <ul>
         {% if previous_day %}
-            <li class="prev">
-                <a href="{% url 'armingday' year=previous_day|date:'Y' month=previous_day|date:'b' day=previous_day|date:'d' %}">
-                    &larr; {{ previous_day }}
+                <a class="btn btn-info mb-4" href="{% url 'armingday' year=previous_day|date:'Y' month=previous_day|date:'b' day=previous_day|date:'d' %}" style="margin-top: 10px; margin-left: 60%;">
+                    אתמול
                 </a>
-            </li>
         {% endif %}
         {% if next_day %}
-            <li class="next">
-                <a href="{% url 'armingday' year=next_day|date:'Y' month=next_day|date:'b' day=next_day|date:'d' %}">
-                    {{ next_day }} &rarr;</a>
-            </li>
+                <a class="btn btn-info mb-4" href="{% url 'armingday' year=next_day|date:'Y' month=next_day|date:'b' day=next_day|date:'d' %}" style="margin-top: 10px;">
+                    מחר</a>
         {% endif %}
     </ul>
 </div>

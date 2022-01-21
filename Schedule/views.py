@@ -1,6 +1,8 @@
 import datetime
+from datetime import date as Date
 import io
 import random
+from time import time
 import xlsxwriter as xlsxwriter
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
@@ -32,7 +34,7 @@ from openpyxl.utils import get_column_letter
 import requests
 from deep_translator import GoogleTranslator
 import os
-from django.views.generic.dates import DayArchiveView
+from django.views.generic.dates import DayArchiveView, MonthArchiveView
 
 activate('he')
 default_language = os.environ.get("DEFAULT_LANGUAGE")
@@ -132,14 +134,114 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
     queryset = Arming_Log.objects.all()
     date_field = "date"
     allow_future = True
+    allow_empty = True
     template_name = "Schedule/arming.html"
-    ordering = ["shift_num"]
+    ordering = ["shift_num", "time_in"]
 
     def get_context_data(self, **kwargs):
         ctx = super(ArmingDayView, self).get_context_data(**kwargs)
-        weeks = Week.objects.all()
-        ctx["weeks"] = weeks
+        guns = Gun.objects.all()
+        user_name = self.request.user.first_name + " " + self.request.user.last_name
+        num_mags_list = [1, 2, 3]
+        hand_cuffs_list = [6, 1, 2, 3, 4, 5, 7, 8]
+        mag_case_list = [6, 1, 2, 3, 4, 5, 7]
+        gun_case_list = [6, 1, 2, 3, 4, 5, 7, 8]
+        ctx["num_mags_list"] = num_mags_list
+        ctx["hand_cuffs_list"] = hand_cuffs_list
+        ctx["mag_case_list"] = mag_case_list
+        ctx["gun_case_list"] = gun_case_list
+        ctx["guns"] = guns
+        ctx["user_name"] = user_name
         return ctx
+    
+    def post(self, request, *args, **kwargs):
+        if "add" in request.POST:
+            gun_id = request.POST.get("guns")
+            gun = Gun.objects.get(id=gun_id)
+            name = request.user.first_name + " " + request.user.last_name
+            id_num = request.POST.get("id_num")
+            shift_num = int(request.POST.get("shifts"))
+            time_in = request.POST.get("time_in")
+            num_mags = int(request.POST.get("num_mags"))
+            hand_cuffs = int(request.POST.get("hand_cuffs"))
+            gun_case = int(request.POST.get("gun_case"))
+            mag_case = int(request.POST.get("mag_case"))
+            keys = checkbox(request.POST.get("keys"))
+            radio = checkbox(request.POST.get("radio"))
+            radio_kit = checkbox(request.POST.get("radio_kit"))
+            time_out = request.POST.get("time_out")
+            months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
+            date1 = Date(self.kwargs['year'], months.index(self.kwargs['month'].lower()) + 1, self.kwargs['day'])
+            new_log  = Arming_Log(name=name, id_num=id_num, shift_num=shift_num, date=date1, time_in=time_in,
+            gun=gun, num_mags=num_mags, hand_cuffs=hand_cuffs, gun_case=gun_case, mag_case=mag_case, keys=keys,
+            radio=radio, radio_kit=radio_kit, time_out=time_out)
+            new_log.save()
+            return HttpResponseRedirect(request.path_info)
+        elif "change" in request.POST:
+            log = Arming_Log.objects.get(id=request.POST.get("change"))
+            gun_id = request.POST.get(f"guns{log.id}")
+            print(gun_id)
+            gun = Gun.objects.get(id=gun_id)
+            id_num = request.POST.get(f"id_num{log.id}")
+            time_in = request.POST.get(f"time_in{log.id}")
+            print(time_in)
+            num_mags = int(request.POST.get(f"num_mags{log.id}"))
+            hand_cuffs = int(request.POST.get(f"hand_cuffs{log.id}"))
+            gun_case = int(request.POST.get(f"gun_case{log.id}"))
+            mag_case = int(request.POST.get(f"mag_case{log.id}"))
+            keys = checkbox(request.POST.get(f"keys{log.id}"))
+            radio = checkbox(request.POST.get(f"radio{log.id}"))
+            radio_kit = checkbox(request.POST.get(f"radio_kit{log.id}"))
+            time_out = request.POST.get(f"time_out{log.id}")
+            print(time_out)
+            log.gun = gun
+            log.id_num = id_num
+            log.time_in = time_in
+            log.num_mags = num_mags
+            log.hand_cuffs = hand_cuffs
+            log.gun_case = gun_case
+            log.mag_case = mag_case
+            log.keys = keys
+            log.radio = radio
+            log.radio_kit = radio_kit
+            log.time_out = time_out
+            log.save()
+            return HttpResponseRedirect(request.path_info)
+        else:
+            return redirect("armingmonth", year=self.kwargs['year'], month=self.kwargs['month'])
+
+
+class ArmingMonthView(LoginRequiredMixin, MonthArchiveView):
+    queryset = Arming_Log.objects.all()
+    date_field = "date"
+    allow_future = True
+    template_name = "Schedule/arming-month.html"
+    ordering = ["date", "time_in"]
+
+    def get_context_data(self, **kwargs):
+        ctx = super(ArmingMonthView, self).get_context_data(**kwargs)
+        guns = Gun.objects.all()
+        user_name = self.request.user.first_name + " " + self.request.user.last_name
+        num_mags_list = [1, 2, 3]
+        hand_cuffs_list = [6, 1, 2, 3, 4, 5, 7, 8]
+        mag_case_list = [6, 1, 2, 3, 4, 5, 7]
+        gun_case_list = [6, 1, 2, 3, 4, 5, 7, 8]
+        ctx["num_mags_list"] = num_mags_list
+        ctx["hand_cuffs_list"] = hand_cuffs_list
+        ctx["mag_case_list"] = mag_case_list
+        ctx["gun_case_list"] = gun_case_list
+        ctx["guns"] = guns
+        ctx["user_name"] = user_name
+        return ctx
+    
+    def post(self, request, *args, **kwargs):
+        pass
+
+
+def checkbox(value):
+        if value == "on":
+            return True
+        return False
 
 
 @login_required
@@ -1981,6 +2083,25 @@ class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, Detail
 # filters
 
 @register.filter
+def getfullname(user):
+    return user.first_name + " " + user.last_name
+
+@register.filter
+def getday(string):
+    return datetime.datetime.now()
+
+@register.filter
+def edit_permission(user, name):
+    username = user.first_name + " " + user.last_name
+    if user.groups.filter(name="manager").exists() or username == name:
+        return True
+    return False
+
+@register.filter
+def timestr(time):
+    return time.strftime("%H:%M")
+
+@register.filter
 def num_to_shift(num):
     if num == 1:
         return "בוקר"
@@ -1994,9 +2115,9 @@ def counter_shifts(counter, arming_logs):
     afternoon = 0
     night = 0
     for log in arming_logs:
-        if log.shift == "בוקר":
+        if log.shift_num == 1:
             morning += 1
-        elif log.shift == "צהריים":
+        elif log.shift_num == 2:
             afternoon += 1
         else:
             night += 1
