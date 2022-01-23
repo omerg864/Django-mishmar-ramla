@@ -34,9 +34,6 @@ import requests
 from deep_translator import GoogleTranslator
 import os
 from django.views.generic.dates import DayArchiveView, MonthArchiveView
-from jsignature.widgets import JSignatureWidget
-from jsignature.forms import JSignatureField
-from .forms import ArmingForm
 
 default_language = os.environ.get("DEFAULT_LANGUAGE")
 
@@ -150,7 +147,6 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
         hand_cuffs_list = [6, 1, 2, 3, 4, 5, 7, 8]
         mag_case_list = [6, 1, 2, 3, 4, 5, 7]
         gun_case_list = [6, 1, 2, 3, 4, 5, 7, 8]
-        ctx["form"] = ArmingForm()
         ctx["num_mags_list"] = num_mags_list
         ctx["hand_cuffs_list"] = hand_cuffs_list
         ctx["mag_case_list"] = mag_case_list

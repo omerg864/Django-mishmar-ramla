@@ -7,8 +7,6 @@ from .models import Week as Week
 from .models import ShiftWeek as ShiftWeek
 from .models import Arming_Log
 from django.contrib.auth.models import User
-from jsignature.forms import JSignatureField
-from jsignature.widgets import JSignatureWidget
 
 
 class QualityUpdateForm(forms.ModelForm):
@@ -128,10 +126,3 @@ class ShiftWeekViewForm(forms.ModelForm):
             fields_temp.append("notes" + str(i))
         model = ShiftWeek
         fields = fields_temp
-
-class ArmingForm(forms.ModelForm):
-    signature = JSignatureField(widget=JSignatureWidget(jsignature_attrs={'color': '#CCC', 'width': '200px', 'height': '900px'}))
-
-    class Meta:
-        model = Arming_Log
-        fields = ['signature']

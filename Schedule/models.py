@@ -6,7 +6,6 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.core.mail import send_mail
 import datetime
-from jsignature.fields import JSignatureField
 
 
 class Post(models.Model):
@@ -507,7 +506,7 @@ class Arming_Log(models.Model):
     time_out = models.TimeField(verbose_name="זמן יציאה", blank=True, null=True)
     valid_in = models.BooleanField(default=False, verbose_name="אישור מורשה")
     valid_out = models.BooleanField(default=False, verbose_name="אישור מורשה")
-    signature = JSignatureField(null=True, blank=True)
+    signature = models.TextField(verbose_name="signature", null=True, blank=True)
 
 
     def __str__(self):
