@@ -504,9 +504,10 @@ class Arming_Log(models.Model):
     radio = models.BooleanField(default=False, verbose_name="קשר", blank=False)
     radio_kit = models.BooleanField(default=False, verbose_name="ערכת שמע", blank=False)
     time_out = models.TimeField(verbose_name="זמן יציאה", blank=True, null=True)
-    valid_in = models.BooleanField(default=False, verbose_name="אישור מורשה")
-    valid_out = models.BooleanField(default=False, verbose_name="אישור מורשה")
-    signature = models.TextField(verbose_name="signature", null=True, blank=True)
+    valid_in = models.TextField(verbose_name="חתימת מנהל כניסה", null=True, blank=True)
+    valid_out = models.TextField(verbose_name="חתימת מנהל יציאה", null=True, blank=True) 
+    signature_in = models.TextField(verbose_name="חתימת כניסה", null=True, blank=True)
+    signature_out = models.TextField(verbose_name="חתימת יציאה", null=True, blank=True)
 
 
     def __str__(self):

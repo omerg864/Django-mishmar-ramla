@@ -260,6 +260,10 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
             return HttpResponseRedirect(request.path_info)
         elif "month_log" in request.POST:
             return redirect("armingmonth", year=self.kwargs['year'], month=self.kwargs['month'])
+        elif 'sig-submitBtn' in request.POST:
+            sig = request.POST.get(f"sig-dataUrl")
+            print(sig)
+            return HttpResponseRedirect(request.path_info)
         elif "shift1" in request.POST:
             valid = self.validation_submit(request, 1)
             if valid:
@@ -275,6 +279,18 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
             if valid:
                 messages.success(request, "הנתונים נשמרו בהצלחה")
             return HttpResponseRedirect(request.path_info)
+
+class ArmingLogUpdate(LoginRequiredMixin, UpdateView):
+    model = Arming_Log
+    template_name = "Schedule/signature_page.html"
+    fields = ('date')
+
+    def get_context_data(self, **kwargs):
+        ctx = super(ArmingLogUpdate, self).get_context_data(**kwargs)
+        return ctx
+    
+    def post(self, request, *args, **kwargs):
+        return HttpResponseRedirect(request.path_info)
 
 
 class ArmingMonthView(LoginRequiredMixin, MonthArchiveView):
