@@ -76,7 +76,7 @@
                     <td><input type="checkbox" name="keys" id="keys"></td>
                     <td><input type="checkbox" name="radio" id="radio"></td>
                     <td><input type="checkbox" name="radio_kit" id="radio_kit"></td>
-                    <td><input type="time" name="time_out" id="time_out" value="--:--"></td>
+                    <td><input type="time" name="time_out" id="time_out" style="width: 70px; height: 30px"></td>
                     <td style="padding-top:20px;"><button class="btn btn-info mb-4" type="submit" name="add" id="add">הוסף</button></td>
                 </tr>
                 </form>
@@ -154,7 +154,7 @@
                     {% else %}
                     <td><input type="checkbox" name="radio_kit{{arming.id}}" id="radio_kit{{arming.id}}"></td>
                     {% endif %}
-                <td><input type="time" {% if arming.time_out != None %} value="{{arming.time_out|timestr}}" {% else %} value="07:00" {% endif %}
+                <td><input type="time" {% if arming.time_out != None %} value="{{arming.time_out|timestr}}" {% else %} style="width: 70px; height: 30px" {% endif %}
                     name="time_out{{arming.id}}" id="time_out{{arming.id}}"></td>
                 <td><button class="btn btn-info mb-4" type="submit" value="{{arming.id}}" id="change" name="change">שנה</button></td>
                 {% else %}
