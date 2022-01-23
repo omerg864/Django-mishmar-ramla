@@ -3,7 +3,6 @@
 import datetime
 from django.db import migrations, models
 from django.utils.timezone import utc
-import jsignature.fields
 
 
 class Migration(migrations.Migration):
@@ -16,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='arming_log',
             name='signature',
-            field=jsignature.fields.JSignatureField(blank=True, null=True),
+            field=models.TextField(blank=True, null=True, verbose_name='signature'),
         ),
         migrations.AlterField(
             model_name='week',
