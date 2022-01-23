@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'Schedule.apps.ScheduleConfig',
     'users.apps.UsersConfig',
     'crispy_forms',
+    'jsignature',
 ]
 
 MIDDLEWARE = [
