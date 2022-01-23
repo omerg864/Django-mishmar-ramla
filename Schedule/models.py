@@ -503,7 +503,7 @@ class Arming_Log(models.Model):
     keys = models.BooleanField(default=False, verbose_name="מפתחות", blank=False)
     radio = models.BooleanField(default=False, verbose_name="קשר", blank=False)
     radio_kit = models.BooleanField(default=False, verbose_name="ערכת שמע", blank=False)
-    time_out = models.TimeField(verbose_name="זמן יציאה", blank=True)
+    time_out = models.TimeField(verbose_name="זמן יציאה", blank=True, null=True)
     valid_in = models.BooleanField(default=False, verbose_name="אישור מורשה")
     valid_out = models.BooleanField(default=False, verbose_name="אישור מורשה")
 
