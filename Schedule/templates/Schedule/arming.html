@@ -437,6 +437,11 @@
       e.preventDefault();
     }
   }, false);
+  document.body.addEventListener("touchcancel", function(e) {
+    if (e.target == canvas) {
+      e.preventDefault();
+    }
+  }, false);
 
   (function drawLoop() {
     requestAnimFrame(drawLoop);

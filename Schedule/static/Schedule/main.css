@@ -379,4 +379,5 @@ input[type=password]{
   border: 2px dotted #CCCCCC;
   border-radius: 15px;
   cursor: crosshair;
+  touch-action: none;
 }
