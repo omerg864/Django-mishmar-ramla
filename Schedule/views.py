@@ -217,9 +217,14 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
             time_out = request.POST.get("time_out")
             months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
             date1 = Date(self.kwargs['year'], months.index(getmonth(self.kwargs['month'].lower())) + 1, self.kwargs['day'])
-            new_log  = Arming_Log(name=name, id_num=id_num, shift_num=shift_num, date=date1, time_in=time_in,
-            gun=gun, num_mags=num_mags, hand_cuffs=hand_cuffs, gun_case=gun_case, mag_case=mag_case, keys=keys,
-            radio=radio, radio_kit=radio_kit, time_out=time_out)
+            if time_out != "":
+                new_log  = Arming_Log(name=name, id_num=id_num, shift_num=shift_num, date=date1, time_in=time_in,
+                gun=gun, num_mags=num_mags, hand_cuffs=hand_cuffs, gun_case=gun_case, mag_case=mag_case, keys=keys,
+                radio=radio, radio_kit=radio_kit, time_out=time_out)
+            else:
+                new_log  = Arming_Log(name=name, id_num=id_num, shift_num=shift_num, date=date1, time_in=time_in,
+                gun=gun, num_mags=num_mags, hand_cuffs=hand_cuffs, gun_case=gun_case, mag_case=mag_case, keys=keys,
+                radio=radio, radio_kit=radio_kit)
             new_log.save()
             messages.success(request, "הנתונים נשמרו בהצלחה")
             return HttpResponseRedirect(request.path_info)
