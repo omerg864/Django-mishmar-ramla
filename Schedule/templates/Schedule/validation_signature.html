@@ -1,59 +1,70 @@
 {% extends "Schedule/base.html" %}
 {% block content %}
 
-<ul style="margin-right: -200px">
-        <h1>יומן חימוש חתימת אחמ"ש- {{ day|date:"d/m/Y" }}</h1> 
+<ul >
+        <h1>יומן חימוש חתימת אחמ"ש</h1>
+        <h2> {{ date|date:"d/m/Y" }}</h2>
         <table style="margin-top: 20px;">
             <form method="POST">
                 {% csrf_token %}
                 <thead>
                     <tr>
+                        {% if shift == 1 %}
                         <th>משמרת בוקר</th>
+                        {% elif shift == 2 %}
                         <th>משמרת צהריים</th>
+                        {% else %}
                         <th>משמרת לילה</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><a style="margin-left: 5px;">נשקים בכספת:</a><input type="number" placeholder="נשקים בכספת" name="gun_safe1" id="gun_safe1" value={{validation_log.num_guns_safe_m}}
-                            style="width: 50px;"></td>
-                        <td><a style="margin-left: 5px;">נשקים בכספת:</a><input type="number" placeholder="נשקים בכספת" name="gun_safe2" id="gun_safe2" value={{validation_log.num_guns_safe_a}}
-                            style="width: 50px;"></td>
-                        <td><a style="margin-left: 5px;">נשקים בכספת:</a><input type="number" placeholder="נשקים בכספת" name="gun_safe3" id="gun_safe3" value={{validation_log.num_guns_safe_n}}
-                            style="width: 50px;"></td>
+                        <td><a style="margin-left: 5px;">נשקים בכספת:</a>{{gun_safe}}</td>
                     </tr>
                     <tr> 
-                        <td><a style="margin-left: 5px;">נשקים במשמרת:</a><input type="number" placeholder="נשקים במשמרת" name="gun_shift1" id="gun_shift1" value={{validation_log.num_guns_shift_m}}
-                            style="width: 50px;"></td>
-                        <td><a style="margin-left: 5px;">נשקים במשמרת:</a><input type="number" placeholder="נשקים במשמרת" name="gun_shift2" id="gun_shift2" value={{validation_log.num_guns_shift_a}}
-                            style="width: 50px;"></td>
-                        <td><a style="margin-left: 5px;">נשקים במשמרת:</a><input type="number" placeholder="נשקים במשמרת" name="gun_shift3" id="gun_shift3" value={{validation_log.num_guns_shift_n}}
-                            style="width: 50px;"></td>
+                        <td><a style="margin-left: 5px;">נשקים במשמרת:</a>{{gun_shift}}</td>
                     </tr>
                     <tr> 
-                        <td><a style="margin-left: 5px;">שעה:</a><input type="time" placeholder="שעה" name="time1" id="time1" 
-                            {% if validation_log.name_checked_m != None and validation_log.name_checked_m != "" %} value={{validation_log.time_checked_m|timestr}} {% else %} value="07:00" {% endif %}></td>
-                        <td><a style="margin-left: 5px;">שעה:</a><input type="time" placeholder="שעה" name="time2" id="time2" 
-                            {% if validation_log.name_checked_a != None and validation_log.name_checked_a != "" %} value={{validation_log.time_checked_a|timestr}} {% else %} value="07:00" {% endif %}></td>
-                        <td><a style="margin-left: 5px;">שעה:</a><input type="time" placeholder="שעה" name="time3" id="time3" 
-                            {% if validation_log.name_checked_n != None and validation_log.name_checked_n != "" %} value={{validation_log.time_checked_n|timestr}} {% else %} value="07:00" {% endif %}></td>
+                        <td><a style="margin-left: 5px;">שעה:</a>{{time|timestr}}</td>
                     </tr>
                     <tr> 
-                        <td><a style="margin-left: 10px;">שם אחמ"ש:</a><input type="text" placeholder="שם אחמ'ש" name="manager1" id="manager1" 
-                            style="width: 120px;" value={{validation_log.name_checked_m}}></td>
-                        <td><a style="margin-left: 10px;">שם אחמ"ש:</a><input type="text" placeholder="שם אחמ'ש" name="manager2" id="manager2" 
-                            style="width: 120px;" value={{validation_log.name_checked_a}} ></td>
-                        <td><a style="margin-left: 10px;">שם אחמ"ש:</a><input type="text" placeholder="שם אחמ'ש" name="manager3" id="manager3" 
-                            style="width: 120px;" value={{validation_log.name_checked_n}}></td>
-                    </tr>
-                    <tr>
-                        <td><button class="btn btn-info mb-4" type="submit" name="shift1" id="shift1">חתימה</button></td>
-                        <td><button class="btn btn-info mb-4" type="submit" name="shift2" id="shift2">חתימה</button></td>
-                        <td><button class="btn btn-info mb-4" type="submit" name="shift3" id="shift3">חתימה</button></td>
+                        <td><a style="margin-left: 5px;">שם אחמ"ש:</a>{{manager}}</td>
                     </tr>
                 </tbody>
                 </form>
         </table>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="row">
+            <div>
+                <div class="row">
+                    <div class="col-md-12">
+                    <h4>חתימה</h4>
+                    </div>
+                </div>
+                <div class="row" id="sigdiv">
+                    <div class="col-md-12">
+                         <canvas id="sig-canvas" name="sig-canvas" width="300" height="160" >
+                             Get a better browser, bro.
+                         </canvas>
+                     </div>
+                </div>
+                <div style="text-align:center">
+                        <button type="button" class="btn btn-default" id="sig-clearBtn">נקה חתימה</button>
+                </div>
+                <br/>
+                <div class="row">
+                    <div class="col-md-12">
+                        <textarea id="sig-dataUrl" hidden name="sig-dataUrl" class="form-control" rows="5">Data URL for your signature will go here!</textarea>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 100px; margin-right: 50px">
+                <button class="btn btn-primary" id="sig-submitBtn" name="sig-submitBtn">חתום</button>
+        </div>
+    </div>
+            </form>
 </ul>
 <script>
     (function() {

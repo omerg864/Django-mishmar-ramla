@@ -162,49 +162,6 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
         ctx["validation_log"] = validation_log
         return ctx
     
-    def validation_submit(self, request, shift):
-        gun_safe = request.POST.get(f"gun_safe{shift}")
-        gun_shift = request.POST.get(f"gun_shift{shift}")
-        time = request.POST.get(f"time{shift}")
-        manager = request.POST.get(f"manager{shift}")
-        if manager == "":
-            messages.info(request, translate_text("נא למלא את שם המנהל", request.user, "hebrew"))
-            return False
-        val_logs = ValidationLog.objects.all()
-        months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
-        date1 = Date(self.kwargs['year'], months.index(getmonth(self.kwargs['month'].lower())) + 1, self.kwargs['day'])
-        log = val_logs.filter(date=date1)
-        if len(log) == 0:
-            if shift == 1:
-                new_log = ValidationLog(date=date1, num_guns_safe_m=gun_safe, num_guns_shift_m=gun_shift, time_checked_m=time, name_checked_m=manager)
-            elif shift == 2:
-                new_log = ValidationLog(date=date1, num_guns_safe_a=gun_safe, num_guns_shift_a=gun_shift, time_checked_a=time, name_checked_a=manager)
-            else:
-                new_log = ValidationLog(date=date1, num_guns_safe_n=gun_safe, num_guns_shift_n=gun_shift, time_checked_n=time, name_checked_n=manager)
-            new_log.save()
-        else:
-            log = log.first()
-            if shift == 1:
-                log.num_guns_safe_m = gun_safe
-                log.num_guns_shift_m = gun_shift
-                log.time_checked_m = time
-                log.name_checked_m = manager
-                log.save()
-            elif shift == 2:
-                log.num_guns_safe_a = gun_safe
-                log.num_guns_shift_a = gun_shift
-                log.time_checked_a = time
-                log.name_checked_a = manager
-                log.save()
-            else:
-                log.num_guns_safe_n = gun_safe
-                log.num_guns_shift_n = gun_shift
-                log.time_checked_n = time
-                log.name_checked_n = manager
-                log.save()
-        return True
-
-    
     def post(self, request, *args, **kwargs):
         shift = 0
         if "add" in request.POST:
@@ -259,7 +216,7 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
                 name = request.user.first_name + " " + request.user.last_name
             else:
                 name = request.POST.get(f"user_name{log.id}")
-            request.session["name"] = name
+            request.session["name"] = log.name
             if name == log.name and request.user.groups.filter(name="manager").exists():
                 request.session["reqtype"] = "change manager"
             elif name == log.name:
@@ -276,22 +233,10 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
             return redirect("armingmonth", year=self.kwargs['year'], month=self.kwargs['month'])
         elif "shift1" in request.POST:
             shift = 1
-            valid = self.validation_submit(request, 1)
-            if valid:
-                messages.success(request, "הנתונים נשמרו בהצלחה")
-            return HttpResponseRedirect(request.path_info)
         elif "shift2" in request.POST:
             shift = 2
-            valid = self.validation_submit(request, 2)
-            if valid:
-                messages.success(request, "הנתונים נשמרו בהצלחה")
-            return HttpResponseRedirect(request.path_info)
         elif "shift3" in request.POST:
             shift = 3
-            valid = self.validation_submit(request, 3)
-            if valid:
-                messages.success(request, "הנתונים נשמרו בהצלחה")
-            return HttpResponseRedirect(request.path_info)
         elif "goto" in request.POST:
             date = request.POST.get("goto_date")
             print(date)
@@ -322,16 +267,22 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
             messages.info(request, " הנתונים הועברו בהצלחה כדי לשמור יש לחתום")
             return redirect("validation-signature")
 
-class ArmingLogUpdate(LoginRequiredMixin, UpdateView):
+class ArmingLogUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Arming_Log
     template_name = "Schedule/signature_page.html"
     fields = ('valid_in', 'valid_out', 'signature_in', 'signature_out')
     context_object_name = 'arming'
 
+    def test_func(self):
+        name = self.request.user.first_name + " " + self.request.user.last_name
+        if self.get_object().name == name or self.request.user.groups.filter(name="manager").exists() or self.request.user.username == "metagber":
+            return True
+        return False
+
     def get_context_data(self, **kwargs):
         ctx = super(ArmingLogUpdate, self).get_context_data(**kwargs)
         guns = Gun.objects.all()
-        user_name = self.request.user.first_name + " " + self.request.user.last_name
+        user_name = self.request.session["name"]
         num_mags_list = [1, 2, 3]
         hand_cuffs_list = [6, 1, 2, 3, 4, 5, 7, 8]
         mag_case_list = [6, 1, 2, 3, 4, 5, 7]
@@ -488,6 +439,8 @@ def Validation_Log_Signature(request):
     session_keyes = ["gun_safe", "gun_shift", "time", "manager", "reqtype", "shift", "year", "month", "day"]
     for key in session_keyes:
         context[key] = request.session[key]
+    date1 = Date(int(context["year"]), int(context["month"]), int(context["day"]))
+    context["date"] = date1
     if request.method == "POST":
         sig = request.POST.get('sig-dataUrl')
         if sig == EMPTY_SIGNATURE:
@@ -501,22 +454,22 @@ def Validation_Log_Signature(request):
                 shift = "a"
             else:
                 shift = "n"
-            date1 = Date(int(context["year"]), int(context["month"]), int(context["day"]))
             if context["reqtype"] == "add":
                 log = ValidationLog()
                 log.date = date1
             else:
                 log = ValidationLog.objects.filter(date=date1).first()
-            log[f"num_guns_safe_{shift}"] = context["gun_safe"]
-            log[f"num_guns_shift_{shift}"] = context["gun_shift"]
-            log[f"time_{shift}"] = context["time"]
-            log[f"manager_{shift}"] = context["manager"]
+            log.__setattr__(f"num_guns_safe_{shift}", context["gun_safe"])
+            log.__setattr__(f"num_guns_shift_{shift}", context["gun_shift"])
+            log.__setattr__(f"time_checked_{shift}", context["time"])
+            log.__setattr__(f"name_checked_{shift}", context["manager"])
+            log.__setattr__(f"sig_{shift}", sig)
             for key in session_keyes:
                 del request.session[key]
             log.save()
             messages.success(request, "החתימה נשמרה בהצלחה")
             return redirect('armingday', year=int(date1.strftime("%Y")), month=date1.strftime("%b"), day=int(date1.strftime("%d")))
-    return render(request, "validation-signature.html", context)
+    return render(request, "Schedule/validation_signature.html", context)
 
 
 

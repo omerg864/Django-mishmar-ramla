@@ -102,8 +102,8 @@
                     {% else %}
                     <td><input type="checkbox" name="radio_kit{{arming.id}}" id="radio_kit{{arming.id}}" disabled></td>
                     {% endif %}
-                <td>{{arming.time_out|timestr}}</td>
-                <td><button class="btn btn-info mb-4" type="submit" value="{{arming.id}}" id="change" name="change" disabled>שנה</button></td>
+                <td>{% if arming.time_out != None and arming.time_out != "" %}{{arming.time_out|timestr}} {% else %} <a>אין יציאה</a> {% endif %}</td>
+                <td><button class="btn btn-info mb-4" type="submit" value="{{arming.id}}"  id="change" name="change" disabled>שנה</button></td>
             </tr>
             {% endif %}
             {% endfor %}
@@ -111,10 +111,10 @@
             </tbody>
         </table>
 </ul>
-<div class="center_div">
+<div >
     <ul>
         {% if previous_month %}
-                <a class="btn btn-info mb-4" href="{% url 'armingmonth' year=previous_month|date:'Y' month=previous_month|date:'b'|getmonth %}" style="margin-top: 10px; margin-left: 60%;">
+                <a class="btn btn-info mb-4" href="{% url 'armingmonth' year=previous_month|date:'Y' month=previous_month|date:'b'|getmonth %}" style="margin-top: 10px;">
                     חודש שעבר
                 </a>
         {% endif %}

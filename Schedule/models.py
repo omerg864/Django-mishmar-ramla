@@ -494,6 +494,7 @@ class ValidationLog(models.Model):
 
 class Arming_Log(models.Model):
     name = models.CharField(max_length=50, verbose_name="שם", blank=False, default="")
+    username = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="שם משתמש", blank=False, null=True)
     id_num = models.CharField(max_length=9, verbose_name="תעודת זהות", blank=False, default="")
     shift_num = models.IntegerField(verbose_name="מספר משמרת", default=1, blank=False)
     date = models.DateField(default=timezone.now, verbose_name="תאריך", blank=False)

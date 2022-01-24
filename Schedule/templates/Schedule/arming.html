@@ -10,7 +10,7 @@
         <table class="responsive-table-input-matrix" style="align-items: center">
             <thead>
                 <tr>
-                    <th style="width:84.9%">טופס מסירה - קבלת ציוד</th>
+                    <th style="width:74%">טופס מסירה - קבלת ציוד</th>
                     <th>החזרת ציוד - כליי ירייה</th>
                 </tr>
                 </thead>
@@ -51,7 +51,7 @@
                     <td>0</td>
                     <td><input type="text" name="id_num" id="id_num" required maxlength="9" minlength="9" style="width:100px;"></td>
                     {% if user.username != 'metagber' %}
-                    <td>{{user_name}}</td>
+                    <td><a name="user_name" id="user_name" value="{{user_name}}">{{user_name}}</a></td>
                     {% else %}
                     <td><input type="text" name="user_name" id="user_name" required style="width:100px;"></td>
                     {% endif %}
@@ -89,7 +89,7 @@
                     <td><input type="time" name="time_out" id="time_out" style="width: 80px; height: 30px"></td>
                     <td></td>
                     <td></td>
-                    <td style="padding-top:20px;"><button class="btn btn-info mb-4" type="submit" name="add" id="add">הוסף</button></td>
+                    <td style="padding-top:20px;"><button class="btn btn-info mb-4" type="submit" name="add" id="add">חתימה</button></td>
                 </tr>
                 </form>
                 <form method="POST">
@@ -105,7 +105,7 @@
                 <td>{{forloop.counter|counter_shifts:object_list}}</td>
                 <td><input type="text" name="id_num{{arming.id}}" id="id_num{{arming.id}}" required maxlength="9" minlength="9" value="{{arming.id_num}}" style="width: 100px;"></td>
                 {% if user.username != 'metagber' %}
-                <td>{{arming.name}}</td>
+                <td><a name="user_name{{arming.id}}" id="user_name{{arming.id}}" value="{{arming.name}}">{{arming.name}}</a></td>
                 {% else %}
                 <td><input type="text" name="user_name{{arming.id}}" id="user_name{{arming.id}}" required value="{{arming.name}}" style="width: 100px;"></td>
                 {% endif %}
@@ -176,12 +176,12 @@
                     name="time_out{{arming.id}}" id="time_out{{arming.id}}"></td>
                     <td>{% if arming.signature_out != "" and arming.signature_out != None %}<img id="sig-image" src={{arming.signature_out}} alt="Your signature will go here!" width="100px"/> {% endif %}</td>
                     <td>{% if arming.valid_out != "" and arming.valid_out != None %}<img id="sig-image" src={{arming.valid_out}} alt="Your signature will go here!" width="100px"/> {% endif %}</td>
-                <td><button class="btn btn-info mb-4" type="submit" value="{{arming.id}}" id="change" name="change">שנה</button></td>
+                <td><button class="btn btn-info mb-4" type="submit" value="{{arming.id}}" id="change" name="change">חתימה</button></td>
                 {% else %}
                 <td>{{arming.shift_num|num_to_shift}}</td>
                 <td>{{forloop.counter|counter_shifts:object_list}}</td>
                 <td>{{arming.id_num}}</td>
-                <td>{{arming.name}}</td>
+                <td><a name="user_name{{arming.id}}" id="user_name{{arming.id}}" value="{{arming.name}}">{{arming.name}}</a></td>
                 <td>{{arming.time_in|timestr}}</td>
                 <td><select name="guns{{arming.id}}" id="guns{{arming.id}}">
                     {% for gun in guns %}
@@ -297,6 +297,11 @@
                             style="width: 120px;" value={{validation_log.name_checked_a}} ></td>
                         <td><a style="margin-left: 10px;">שם אחמ"ש:</a><input type="text" placeholder="שם אחמ'ש" name="manager3" id="manager3" 
                             style="width: 120px;" value={{validation_log.name_checked_n}}></td>
+                    </tr>
+                    <tr>
+                      <td>{% if validation_log.sig_m != "" and validation_log.sig_m != None %}<img id="sig-image" src={{validation_log.sig_m}} alt="Your signature will go here!" width="100px"/> {% endif %}</td>
+                      <td>{% if validation_log.sig_a != "" and validation_log.sig_a != None %}<img id="sig-image" src={{validation_log.sig_a}} alt="Your signature will go here!" width="100px"/> {% endif %}</td>
+                      <td>{% if validation_log.sig_n != "" and validation_log.sig_n != None %}<img id="sig-image" src={{validation_log.sig_n}} alt="Your signature will go here!" width="100px"/> {% endif %}</td>
                     </tr>
                     <tr>
                         <td><button class="btn btn-info mb-4" type="submit" name="shift1" id="shift1">חתימה</button></td>
