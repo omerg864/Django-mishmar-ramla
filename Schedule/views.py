@@ -305,7 +305,7 @@ class ArmingLogUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     
     def post(self, request, *args, **kwargs):
         reqtype = request.session["reqtype"]
-        session_keyes = ["gun_id", "shift_num", "id_num", "time_in", "num_mags", "hand_cuffs", "gun_case", "mag_case", "keys", "radio", "radio_kit", "time_out", "reqtype"]
+        session_keyes = ["gun_id", "name", "shift_num", "id_num", "time_in", "num_mags", "hand_cuffs", "gun_case", "mag_case", "keys", "radio", "radio_kit", "time_out", "reqtype"]
         log = Arming_Log.objects.filter(id=self.get_object().id).first()
         gun_id = request.session["gun_id"]
         gun  = Gun.objects.filter(id=gun_id).first()
