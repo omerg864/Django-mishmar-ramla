@@ -6,6 +6,15 @@
         <table class="responsive-table-input-matrix" style="align-items: center">
             <thead>
                 <tr>
+                    <th style="width:74%">שעות החודש</th>
+                    <th>{{object_list|gethours:user}}</th>
+                </tr>
+                </thead>
+        </table>
+        <small>*השעות לא מחושבות עם החתמות בלי יציאה</small>
+        <table class="responsive-table-input-matrix" style="align-items: center">
+            <thead>
+                <tr>
                     <th style="width:84.9%">טופס מסירה - קבלת ציוד</th>
                     <th>החזרת ציוד - כליי ירייה</th>
                 </tr>
@@ -35,7 +44,7 @@
                 <form method="POST">
                     {% csrf_token %}
                 {% for arming in object_list %}
-                {% if arming.name == user|getfullname %}
+                {% if arming.username == user %}
             <tr style="align-content: end">
                 <td>{{arming.shift_num|num_to_shift}}</td>
                 <td>{{arming.date|date:"d/m/Y"}}</td>

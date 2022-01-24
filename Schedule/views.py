@@ -170,6 +170,7 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
                 request.session["name"] = request.user.first_name + " " + request.user.last_name
             else:
                 request.session["name"] = request.POST.get(f"user_name")
+            request.session["user_id"] = request.user.id
             session_keyes = ["id_num", "time_in", "num_mags", "hand_cuffs", "gun_case", "mag_case", "keys", "radio", "radio_kit"]
             int_keyes = ["num_mags", "hand_cuffs", "gun_case", "mag_case"]
             bool_keyes = ["keys", "radio", "radio_kit"]
@@ -200,6 +201,7 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
             log = Arming_Log.objects.get(id=request.POST.get("change"))
             request.session["gun_id"] = request.POST.get(f"guns{log.id}")
             request.session["shift_num"] = int(request.POST.get(f"shifts{log.id}"))
+            request.session["user_id"] = request.user.id
             session_keyes = ["id_num", "time_in", "num_mags", "hand_cuffs", "gun_case", "mag_case", "keys", "radio", "radio_kit"]
             int_keyes = ["num_mags", "hand_cuffs", "gun_case", "mag_case"]
             bool_keyes = ["keys", "radio", "radio_kit"]
@@ -274,8 +276,8 @@ class ArmingLogUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     context_object_name = 'arming'
 
     def test_func(self):
-        name = self.request.user.first_name + " " + self.request.user.last_name
-        if self.get_object().name == name or self.request.user.groups.filter(name="manager").exists() or self.request.user.username == "metagber":
+        user_id = self.request.session["user_id"]
+        if user_id == self.get_object().username.id or self.request.user.groups.filter(name="manager").exists():
             return True
         return False
 
@@ -403,8 +405,9 @@ class ArmingCreateView(LoginRequiredMixin, CreateView):
         radio = request.session["radio"]
         radio_kit = request.session["radio_kit"]
         time_out = request.session["time_out"]
+        user = User.objects.filter(id=request.session["user_id"]).first()
         date1 = Date(request.session["year"], request.session["month"], request.session["day"])
-        new_log  = Arming_Log(name=name, id_num=id_num, shift_num=shift_num, date=date1, time_in=time_in,
+        new_log  = Arming_Log(name=name, username=user, id_num=id_num, shift_num=shift_num, date=date1, time_in=time_in,
         gun=gun, num_mags=num_mags, hand_cuffs=hand_cuffs, gun_case=gun_case, mag_case=mag_case, keys=keys,
         radio=radio, radio_kit=radio_kit)
         if time_out != "":
@@ -2347,6 +2350,20 @@ class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, Detail
 # filters
 
 @register.filter
+def gethours(obj_list, user):
+    hours = datetime.timedelta(0)
+    for log in obj_list:
+        if log.username == user:
+            if log.time_out != None and log.time_out != "":
+                time_1 = datetime.datetime.strptime(log.time_in.strftime("%H:%M"),"%H:%M")
+                time_2 = datetime.datetime.strptime(log.time_out.strftime("%H:%M"),"%H:%M")
+                time_cal = time_2 - time_1
+                time_cal += datetime.timedelta(days=(time_cal.days * -1))
+                hours += time_cal 
+    return hours
+
+
+@register.filter
 def getmonth(month):
     letter = month.lower()[0]
     if (letter >= 'a' and letter <= 'z'):
@@ -2369,9 +2386,8 @@ def getday(string):
     return datetime.datetime.now()
 
 @register.filter
-def edit_permission(user, name):
-    username = user.first_name + " " + user.last_name
-    if user.groups.filter(name="manager").exists() or username == name:
+def edit_permission(user, user2):
+    if user.groups.filter(name="manager").exists() or user2.id == user.id:
         return True
     return False
 

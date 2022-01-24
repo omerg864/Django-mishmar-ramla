@@ -492,6 +492,10 @@ class ValidationLog(models.Model):
     name_checked_n = models.CharField(max_length=50, verbose_name="שם בודק לילה", blank=True, default="")
     sig_n = models.TextField(verbose_name="חתימה לילה", blank=True, null=True)
 
+
+    def __str__(self):
+        return str(self.date)
+
 class Arming_Log(models.Model):
     name = models.CharField(max_length=50, verbose_name="שם", blank=False, default="")
     username = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="שם משתמש", blank=False, null=True)
