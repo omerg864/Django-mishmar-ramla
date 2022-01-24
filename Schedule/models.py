@@ -480,14 +480,17 @@ class ValidationLog(models.Model):
     num_guns_shift_m = models.IntegerField(verbose_name="מספר נשקים במשמרת בוקר", blank=True, default=0)
     time_checked_m = models.TimeField(verbose_name="שעת בדיקה בוקר", blank=True, default=timezone.now)
     name_checked_m = models.CharField(max_length=50, verbose_name="שם בודק בוקר", blank=True, default="")
+    sig_m = models.TextField(verbose_name="חתימה בוקר", blank=True, null=True)
     num_guns_safe_a = models.IntegerField(verbose_name="מספר נשקים בכספת צהריים", blank=True, default=0)
     num_guns_shift_a = models.IntegerField(verbose_name="מספר נשקים במשמרת צהריים", blank=True, default=0)
     time_checked_a = models.TimeField(verbose_name="שעת בדיקה צהריים", blank=True, default=timezone.now)
     name_checked_a = models.CharField(max_length=50, verbose_name="שם בודק צהריים", blank=True, default="")
+    sig_a = models.TextField(verbose_name="חתימה צהריים", blank=True, null=True)
     num_guns_safe_n = models.IntegerField(verbose_name="מספר נשקים בכספת לילה", blank=True, default=0)
     num_guns_shift_n = models.IntegerField(verbose_name="מספר נשקים במשמרת לילה", blank=True, default=0)
     time_checked_n = models.TimeField(verbose_name="שעת בדיקה לילה", blank=True, default=timezone.now)
     name_checked_n = models.CharField(max_length=50, verbose_name="שם בודק לילה", blank=True, default="")
+    sig_n = models.TextField(verbose_name="חתימה לילה", blank=True, null=True)
 
 class Arming_Log(models.Model):
     name = models.CharField(max_length=50, verbose_name="שם", blank=False, default="")
@@ -509,6 +512,8 @@ class Arming_Log(models.Model):
     signature_in = models.TextField(verbose_name="חתימת כניסה", null=True, blank=True)
     signature_out = models.TextField(verbose_name="חתימת יציאה", null=True, blank=True)
 
+    def get_absolute_url(self):
+        return reverse("signature", kwargs={"pk": self.pk})
 
     def __str__(self):
-        return self.name + str(self.date)
+        return self.name + " " + str(self.date)

@@ -1,43 +1,10 @@
 {% extends "Schedule/base.html" %}
 {% block content %}
 
-<ul>
-        <h1>יומן חימוש - {{ day|date:"d/m/Y" }}</h1>   
+<ul style="margin-right: -200px">
+        <h1>יומן חימוש - {{ day|date:"d/m/Y" }}</h1> 
         <form method="POST">
             {% csrf_token %}
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-12">
-                        <h1>E-Signature</h1>
-                        <p>Sign in the canvas below and save your signature as an image!</p>
-                    </div>
-                </div>
-                <div class="row" id="sigdiv">
-                    <div class="col-md-12">
-                         <canvas id="sig-canvas" name="sig-canvas" width="620" height="160">
-                             Get a better browser, bro.
-                         </canvas>
-                     </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <button class="btn btn-primary" id="sig-submitBtn" name="sig-submitBtn">Submit Signature</button>
-                        <button class="btn btn-default" id="sig-clearBtn">Clear Signature</button>
-                    </div>
-                </div>
-                <br/>
-                <div class="row">
-                    <div class="col-md-12">
-                        <textarea id="sig-dataUrl" hidden name="sig-dataUrl" class="form-control" rows="5">Data URL for your signature will go here!</textarea>
-                    </div>
-                </div>
-                <br/>
-                <div class="row">
-                    <div class="col-md-12">
-                        <img id="sig-image" src="" alt="Your signature will go here!"/>
-                    </div>
-                </div>
-            </div>
         <button class="but effect01" type="submit" name="month_log"><span>יומן חימוש אישי</span></button>
     </form>
         <table class="responsive-table-input-matrix" style="align-items: center">
@@ -83,7 +50,11 @@
                     </select></td>
                     <td>0</td>
                     <td><input type="text" name="id_num" id="id_num" required maxlength="9" minlength="9" style="width:100px;"></td>
+                    {% if user.username != 'metagber' %}
                     <td>{{user_name}}</td>
+                    {% else %}
+                    <td><input type="text" name="user_name" id="user_name" required style="width:100px;"></td>
+                    {% endif %}
                     <td><input type="time" name="time_in" id="time_in" required value="07:00"></td>
                     <td><select name="guns" id="guns">
                         {% for gun in guns %}
@@ -115,7 +86,7 @@
                     <td><input type="checkbox" name="radio_kit" id="radio_kit"></td>
                     <td></td>
                     <td></td>
-                    <td><input type="time" name="time_out" id="time_out" style="width: 70px; height: 30px"></td>
+                    <td><input type="time" name="time_out" id="time_out" style="width: 80px; height: 30px"></td>
                     <td></td>
                     <td></td>
                     <td style="padding-top:20px;"><button class="btn btn-info mb-4" type="submit" name="add" id="add">הוסף</button></td>
@@ -133,7 +104,11 @@
                 </select></td>
                 <td>{{forloop.counter|counter_shifts:object_list}}</td>
                 <td><input type="text" name="id_num{{arming.id}}" id="id_num{{arming.id}}" required maxlength="9" minlength="9" value="{{arming.id_num}}" style="width: 100px;"></td>
+                {% if user.username != 'metagber' %}
                 <td>{{arming.name}}</td>
+                {% else %}
+                <td><input type="text" name="user_name{{arming.id}}" id="user_name{{arming.id}}" required value="{{arming.name}}" style="width: 100px;"></td>
+                {% endif %}
                 <td><input type="time" value="{{arming.time_in|timestr}}" name="time_in{{arming.id}}" id="time_in{{arming.id}}"></td>
                 <td><select name="guns{{arming.id}}" id="guns{{arming.id}}">
                     {% for gun in guns %}
@@ -195,8 +170,12 @@
                     {% else %}
                     <td><input type="checkbox" name="radio_kit{{arming.id}}" id="radio_kit{{arming.id}}"></td>
                     {% endif %}
-                <td><input type="time" {% if arming.time_out != None %} value="{{arming.time_out|timestr}}" {% else %} style="width: 70px; height: 30px" {% endif %}
+                    <td>{% if arming.signature_in != "" and arming.signature_in != None %}<img id="sig-image" src={{arming.signature_in}} alt="Your signature will go here!" width="100px"/> {% endif %}</td>
+                    <td>{% if arming.valid_in != "" and arming.valid_in != None %}<img id="sig-image" src={{arming.valid_in}} alt="Your signature will go here!" width="100px"/> {% endif %}</td>
+                <td><input type="time" {% if arming.time_out != None %} value="{{arming.time_out|timestr}}" {% else %} style="width: 80px; height: 30px" {% endif %}
                     name="time_out{{arming.id}}" id="time_out{{arming.id}}"></td>
+                    <td>{% if arming.signature_out != "" and arming.signature_out != None %}<img id="sig-image" src={{arming.signature_out}} alt="Your signature will go here!" width="100px"/> {% endif %}</td>
+                    <td>{% if arming.valid_out != "" and arming.valid_out != None %}<img id="sig-image" src={{arming.valid_out}} alt="Your signature will go here!" width="100px"/> {% endif %}</td>
                 <td><button class="btn btn-info mb-4" type="submit" value="{{arming.id}}" id="change" name="change">שנה</button></td>
                 {% else %}
                 <td>{{arming.shift_num|num_to_shift}}</td>
@@ -264,7 +243,11 @@
                     {% else %}
                     <td><input type="checkbox" name="radio_kit{{arming.id}}" id="radio_kit{{arming.id}}" disabled></td>
                     {% endif %}
-                <td>{{arming.time_out|timestr}}</td>
+                <td>{% if arming.signature_in != "" and arming.signature_in != None %}<img id="sig-image" src={{arming.signature_in}} alt="Your signature will go here!" width="100px"/> {% endif %}</td>
+                <td>{% if arming.valid_in != "" and arming.valid_in != None %}<img id="sig-image" src={{arming.valid_in}} alt="Your signature will go here!" width="100px"/> {% endif %}</td>
+                <td>{% if arming.time_out != None %} {{arming.time_out|timestr}} {% else %} <a>אין יציאה</a> {% endif %}</td>
+                <td>{% if arming.signature_out != "" and arming.signature_out != None %}<img id="sig-image" src={{arming.signature_out}} alt="Your signature will go here!" width="100px"/> {% endif %}</td>
+                <td>{% if arming.valid_out != "" and arming.valid_out != None %}<img id="sig-image" src={{arming.valid_out}} alt="Your signature will go here!" width="100px"/> {% endif %}</td>
                 <td><button class="btn btn-info mb-4" type="submit" value="{{arming.id}}" id="change" name="change" disabled>שנה</button></td>
                 {% endif %}
             </tr>
@@ -326,156 +309,26 @@
 </ul>
 <div class="center_div">
     <ul>
+      <form method="POST">
+        {% csrf_token %}
+      <div class="row">
         {% if previous_day %}
-                <a class="btn btn-info mb-4" href="{% url 'armingday' year=previous_day|date:'Y' month=previous_day|date:'b'|getmonth day=previous_day|date:'d' %}" style="margin-top: 10px; margin-left: 60%;">
+                <a class="btn btn-info mb-4" href="{% url 'armingday' year=previous_day|date:'Y' month=previous_day|date:'b'|getmonth day=previous_day|date:'d' %}" style="width: 80px; margin-top: 10px; margin-left: 20px">
                     אתמול
                 </a>
         {% endif %}
+        <div style="margin-top: 15px">
+      <input type="date" name="goto_date" value="{{ day|date:"Y-m-d" }}">
+  </div>
         {% if next_day %}
-                <a class="btn btn-info mb-4" href="{% url 'armingday' year=next_day|date:'Y' month=next_day|date:'b'|getmonth day=next_day|date:'d' %}" style="margin-top: 10px;">
+                <a class="btn btn-info mb-4" href="{% url 'armingday' year=next_day|date:'Y' month=next_day|date:'b'|getmonth day=next_day|date:'d' %}" style="margin-top: 10px;  margin-right: 20px">
                     מחר</a>
         {% endif %}
+      </div>
+      <div style="margin-right: 105px; margin-top: -10px">
+        <button type="submit" name="goto" class="btn btn-info mb-4">לך לתאריך</button>
+      </div>
+    </form>
     </ul>
 </div>
-<script>
-    (function() {
-  window.requestAnimFrame = (function(callback) {
-    return window.requestAnimationFrame ||
-      window.webkitRequestAnimationFrame ||
-      window.mozRequestAnimationFrame ||
-      window.oRequestAnimationFrame ||
-      window.msRequestAnimaitonFrame ||
-      function(callback) {
-        window.setTimeout(callback, 1000 / 60);
-      };
-  })();
-
-  var canvas = document.getElementById("sig-canvas");
-  var ctx = canvas.getContext("2d");
-  ctx.strokeStyle = "#222222";
-  ctx.lineWidth = 4;
-
-  var drawing = false;
-  var mousePos = {
-    x: 0,
-    y: 0
-  };
-  var lastPos = mousePos;
-
-  canvas.addEventListener("mousedown", function(e) {
-    drawing = true;
-    lastPos = getMousePos(canvas, e);
-  }, false);
-
-  canvas.addEventListener("mouseup", function(e) {
-    drawing = false;
-  }, false);
-
-  canvas.addEventListener("mousemove", function(e) {
-    mousePos = getMousePos(canvas, e);
-  }, false);
-
-  // Add touch event support for mobile
-  canvas.addEventListener("touchstart", function(e) {
-
-  }, false);
-
-  canvas.addEventListener("touchmove", function(e) {
-    var touch = e.touches[0];
-    var me = new MouseEvent("mousemove", {
-      clientX: touch.clientX,
-      clientY: touch.clientY
-    });
-    canvas.dispatchEvent(me);
-  }, false);
-
-  canvas.addEventListener("touchstart", function(e) {
-    mousePos = getTouchPos(canvas, e);
-    var touch = e.touches[0];
-    var me = new MouseEvent("mousedown", {
-      clientX: touch.clientX,
-      clientY: touch.clientY
-    });
-    canvas.dispatchEvent(me);
-  }, false);
-
-  canvas.addEventListener("touchend", function(e) {
-    var me = new MouseEvent("mouseup", {});
-    canvas.dispatchEvent(me);
-  }, false);
-
-  function getMousePos(canvasDom, mouseEvent) {
-    var rect = canvasDom.getBoundingClientRect();
-    return {
-      x: mouseEvent.clientX - rect.left,
-      y: mouseEvent.clientY - rect.top
-    }
-  }
-
-  function getTouchPos(canvasDom, touchEvent) {
-    var rect = canvasDom.getBoundingClientRect();
-    return {
-      x: touchEvent.touches[0].clientX - rect.left,
-      y: touchEvent.touches[0].clientY - rect.top
-    }
-  }
-
-  function renderCanvas() {
-    if (drawing) {
-      ctx.moveTo(lastPos.x, lastPos.y);
-      ctx.lineTo(mousePos.x, mousePos.y);
-      ctx.stroke();
-      lastPos = mousePos;
-    }
-  }
-
-  // Prevent scrolling when touching the canvas
-  document.body.addEventListener("touchstart", function(e) {
-    if (e.target == canvas) {
-      e.preventDefault();
-    }
-  }, false);
-  document.body.addEventListener("touchend", function(e) {
-    if (e.target == canvas) {
-      e.preventDefault();
-    }
-  }, false);
-  document.body.addEventListener("touchmove", function(e) {
-    if (e.target == canvas) {
-      e.preventDefault();
-    }
-  }, false);
-  document.body.addEventListener("touchcancel", function(e) {
-    if (e.target == canvas) {
-      e.preventDefault();
-    }
-  }, false);
-
-  (function drawLoop() {
-    requestAnimFrame(drawLoop);
-    renderCanvas();
-  })();
-
-  function clearCanvas() {
-    canvas.width = canvas.width;
-  }
-
-  // Set up the UI
-  var sigText = document.getElementById("sig-dataUrl");
-  var sigImage = document.getElementById("sig-image");
-  var clearBtn = document.getElementById("sig-clearBtn");
-  var submitBtn = document.getElementById("sig-submitBtn");
-  clearBtn.addEventListener("click", function(e) {
-    clearCanvas();
-    sigText.innerHTML = "Data URL for your signature will go here!";
-    sigImage.setAttribute("src", "");
-  }, false);
-  submitBtn.addEventListener("click", function(e) {
-    var dataUrl = canvas.toDataURL();
-    sigText.innerHTML = dataUrl;
-    sigImage.setAttribute("src", dataUrl);
-  }, false);
-
-})();
-</script>
 {% endblock content %}

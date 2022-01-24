@@ -375,9 +375,3 @@ input[type=password]{
     height: 20px;
     box-sizing: border-box;
 }
-#sig-canvas {
-  border: 2px dotted #CCCCCC;
-  border-radius: 15px;
-  cursor: crosshair;
-  touch-action: none;
-}

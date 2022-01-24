@@ -5,7 +5,7 @@ from .views import OrganizationDetailView, ShifttableView
 from .views import ServedSumListView, ServedSumShiftDetailView, ServedSumReinforcementsDetailView
 from .views import OrganizationSuggestionView, OrganizationCreateView, OrganizationListView
 from .views import organization_update
-from .views import ArmingDayView, ArmingMonthView, ArmingLogUpdate
+from .views import ArmingDayView, ArmingMonthView, ArmingLogUpdate, ArmingCreateView, Validation_Log_Signature
 
 urlpatterns = [
     path("", views.home, name="Schedule-Home"),
@@ -24,4 +24,6 @@ urlpatterns = [
     path('<int:year>/<str:month>/<int:day>/', ArmingDayView.as_view(), name="armingday"),
     path('<int:year>/<str:month>/',  ArmingMonthView.as_view(), name="armingmonth"),
     path('signature/<int:pk>/',  ArmingLogUpdate.as_view(), name="signature"),
+    path('ArmingLog/new/',  ArmingCreateView.as_view(), name="arming-new"),
+    path('validation/signature', Validation_Log_Signature, name="validation-signature"),
 ]

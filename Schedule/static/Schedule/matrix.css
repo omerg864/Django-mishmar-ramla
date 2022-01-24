@@ -79,3 +79,27 @@ textarea{
   flex: 1;
   justify-content: space-between;
 }
+#sig-canvas {
+  border: 2px dotted #CCCCCC;
+  border-radius: 15px;
+  cursor: crosshair;
+  touch-action: none;
+}
+#sig-canvas_out {
+  border: 2px dotted #CCCCCC;
+  border-radius: 15px;
+  cursor: crosshair;
+  touch-action: none;
+}
+#sig-canvas_valid {
+  border: 2px dotted #CCCCCC;
+  border-radius: 15px;
+  cursor: crosshair;
+  touch-action: none;
+}
+#sig-canvas_out_valid {
+  border: 2px dotted #CCCCCC;
+  border-radius: 15px;
+  cursor: crosshair;
+  touch-action: none;
+}

@@ -1,8 +1,10 @@
 import datetime
 from datetime import date as Date
+from datetime import time as Time
 import io
 import random
 from time import time
+from click import pass_obj
 import xlsxwriter as xlsxwriter
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
@@ -34,6 +36,10 @@ import requests
 from deep_translator import GoogleTranslator
 import os
 from django.views.generic.dates import DayArchiveView, MonthArchiveView
+
+
+EMPTY_SIGNATURE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAACgCAYAAAC2eFFiAAAAAXNSR0IArs4c6QAABKtJREFUeF7t1AEJAAAMAsHZv/RyPNwSyDncOQIECEQEFskpJgECBM5geQICBDICBitTlaAECBgsP0CAQEbAYGWqEpQAAYPlBwgQyAgYrExVghIgYLD8AAECGQGDlalKUAIEDJYfIEAgI2CwMlUJSoCAwfIDBAhkBAxWpipBCRAwWH6AAIGMgMHKVCUoAQIGyw8QIJARMFiZqgQlQMBg+QECBDICBitTlaAECBgsP0CAQEbAYGWqEpQAAYPlBwgQyAgYrExVghIgYLD8AAECGQGDlalKUAIEDJYfIEAgI2CwMlUJSoCAwfIDBAhkBAxWpipBCRAwWH6AAIGMgMHKVCUoAQIGyw8QIJARMFiZqgQlQMBg+QECBDICBitTlaAECBgsP0CAQEbAYGWqEpQAAYPlBwgQyAgYrExVghIgYLD8AAECGQGDlalKUAIEDJYfIEAgI2CwMlUJSoCAwfIDBAhkBAxWpipBCRAwWH6AAIGMgMHKVCUoAQIGyw8QIJARMFiZqgQlQMBg+QECBDICBitTlaAECBgsP0CAQEbAYGWqEpQAAYPlBwgQyAgYrExVghIgYLD8AAECGQGDlalKUAIEDJYfIEAgI2CwMlUJSoCAwfIDBAhkBAxWpipBCRAwWH6AAIGMgMHKVCUoAQIGyw8QIJARMFiZqgQlQMBg+QECBDICBitTlaAECBgsP0CAQEbAYGWqEpQAAYPlBwgQyAgYrExVghIgYLD8AAECGQGDlalKUAIEDJYfIEAgI2CwMlUJSoCAwfIDBAhkBAxWpipBCRAwWH6AAIGMgMHKVCUoAQIGyw8QIJARMFiZqgQlQMBg+QECBDICBitTlaAECBgsP0CAQEbAYGWqEpQAAYPlBwgQyAgYrExVghIgYLD8AAECGQGDlalKUAIEDJYfIEAgI2CwMlUJSoCAwfIDBAhkBAxWpipBCRAwWH6AAIGMgMHKVCUoAQIGyw8QIJARMFiZqgQlQMBg+QECBDICBitTlaAECBgsP0CAQEbAYGWqEpQAAYPlBwgQyAgYrExVghIgYLD8AAECGQGDlalKUAIEDJYfIEAgI2CwMlUJSoCAwfIDBAhkBAxWpipBCRAwWH6AAIGMgMHKVCUoAQIGyw8QIJARMFiZqgQlQMBg+QECBDICBitTlaAECBgsP0CAQEbAYGWqEpQAAYPlBwgQyAgYrExVghIgYLD8AAECGQGDlalKUAIEDJYfIEAgI2CwMlUJSoCAwfIDBAhkBAxWpipBCRAwWH6AAIGMgMHKVCUoAQIGyw8QIJARMFiZqgQlQMBg+QECBDICBitTlaAECBgsP0CAQEbAYGWqEpQAAYPlBwgQyAgYrExVghIgYLD8AAECGQGDlalKUAIEDJYfIEAgI2CwMlUJSoCAwfIDBAhkBAxWpipBCRAwWH6AAIGMgMHKVCUoAQIGyw8QIJARMFiZqgQlQMBg+QECBDICBitTlaAECBgsP0CAQEbAYGWqEpQAAYPlBwgQyAgYrExVghIgYLD8AAECGQGDlalKUAIEDJYfIEAgI2CwMlUJSoCAwfIDBAhkBAxWpipBCRAwWH6AAIGMgMHKVCUoAQIPBfEAoeZvv+sAAAAASUVORK5CYII="
+
 
 default_language = os.environ.get("DEFAULT_LANGUAGE")
 
@@ -200,97 +206,318 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
 
     
     def post(self, request, *args, **kwargs):
+        shift = 0
         if "add" in request.POST:
-            gun_id = request.POST.get("guns")
-            gun = Gun.objects.get(id=gun_id)
-            name = request.user.first_name + " " + request.user.last_name
-            id_num = request.POST.get("id_num")
-            shift_num = int(request.POST.get("shifts"))
-            time_in = request.POST.get("time_in")
-            num_mags = int(request.POST.get("num_mags"))
-            hand_cuffs = int(request.POST.get("hand_cuffs"))
-            gun_case = int(request.POST.get("gun_case"))
-            mag_case = int(request.POST.get("mag_case"))
-            keys = checkbox(request.POST.get("keys"))
-            radio = checkbox(request.POST.get("radio"))
-            radio_kit = checkbox(request.POST.get("radio_kit"))
-            time_out = request.POST.get("time_out")
-            months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
-            date1 = Date(self.kwargs['year'], months.index(getmonth(self.kwargs['month'].lower())) + 1, self.kwargs['day'])
-            if time_out != "":
-                new_log  = Arming_Log(name=name, id_num=id_num, shift_num=shift_num, date=date1, time_in=time_in,
-                gun=gun, num_mags=num_mags, hand_cuffs=hand_cuffs, gun_case=gun_case, mag_case=mag_case, keys=keys,
-                radio=radio, radio_kit=radio_kit, time_out=time_out)
+            request.session["gun_id"] = request.POST.get(f"guns")
+            if request.user.username != "metagber": 
+                request.session["name"] = request.user.first_name + " " + request.user.last_name
             else:
-                new_log  = Arming_Log(name=name, id_num=id_num, shift_num=shift_num, date=date1, time_in=time_in,
-                gun=gun, num_mags=num_mags, hand_cuffs=hand_cuffs, gun_case=gun_case, mag_case=mag_case, keys=keys,
-                radio=radio, radio_kit=radio_kit)
-            new_log.save()
-            messages.success(request, "הנתונים נשמרו בהצלחה")
-            return HttpResponseRedirect(request.path_info)
+                request.session["name"] = request.POST.get(f"user_name")
+            session_keyes = ["id_num", "time_in", "num_mags", "hand_cuffs", "gun_case", "mag_case", "keys", "radio", "radio_kit"]
+            int_keyes = ["num_mags", "hand_cuffs", "gun_case", "mag_case"]
+            bool_keyes = ["keys", "radio", "radio_kit"]
+            for key in session_keyes:
+                if key in int_keyes:
+                    request.session[key] = int(request.POST[f"{key}"])
+                elif key in bool_keyes:
+                    request.session[key] = checkbox(request.POST.get(f"{key}", None))
+                else:
+                    request.session[key] = request.POST[f"{key}"]
+            request.session["shift_num"] = int(request.POST.get("shifts"))
+            time_out = request.POST.get("time_out")
+            if request.user.groups.filter(name="manager").exists():
+                request.session["reqtype"] = "manager"
+            else:
+                request.session["reqtype"] = "add"
+            if time_out != "":
+                request.session["time_out"] = time_out
+            else:
+                request.session["time_out"] = ""
+            months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
+            request.session["year"] = self.kwargs['year']
+            request.session["month"] = months.index(getmonth(self.kwargs['month'].lower())) + 1
+            request.session["day"] = self.kwargs['day']
+            messages.success(request, "הנתונים הועברו בהצלחה")
+            return redirect("arming-new")
         elif "change" in request.POST:
             log = Arming_Log.objects.get(id=request.POST.get("change"))
-            gun_id = request.POST.get(f"guns{log.id}")
-            gun = Gun.objects.get(id=gun_id)
-            id_num = request.POST.get(f"id_num{log.id}")
-            time_in = request.POST.get(f"time_in{log.id}")
-            shift_num = int(request.POST.get(f"shifts{log.id}"))
-            num_mags = int(request.POST.get(f"num_mags{log.id}"))
-            hand_cuffs = int(request.POST.get(f"hand_cuffs{log.id}"))
-            gun_case = int(request.POST.get(f"gun_case{log.id}"))
-            mag_case = int(request.POST.get(f"mag_case{log.id}"))
-            keys = checkbox(request.POST.get(f"keys{log.id}"))
-            radio = checkbox(request.POST.get(f"radio{log.id}"))
-            radio_kit = checkbox(request.POST.get(f"radio_kit{log.id}"))
+            request.session["gun_id"] = request.POST.get(f"guns{log.id}")
+            request.session["shift_num"] = int(request.POST.get(f"shifts{log.id}"))
+            session_keyes = ["id_num", "time_in", "num_mags", "hand_cuffs", "gun_case", "mag_case", "keys", "radio", "radio_kit"]
+            int_keyes = ["num_mags", "hand_cuffs", "gun_case", "mag_case"]
+            bool_keyes = ["keys", "radio", "radio_kit"]
+            for key in session_keyes:
+                if key in int_keyes:
+                    request.session[key] = int(request.POST[f"{key}{log.id}"])
+                elif key in bool_keyes:
+                    request.session[key] = checkbox(request.POST.get(f"{key}{log.id}", None))
+                else:
+                    request.session[key] = request.POST[f"{key}{log.id}"]
             time_out = request.POST.get(f"time_out{log.id}")
-            log.shift_num = shift_num
-            log.gun = gun
-            log.id_num = id_num
-            log.time_in = time_in
-            log.num_mags = num_mags
-            log.hand_cuffs = hand_cuffs
-            log.gun_case = gun_case
-            log.mag_case = mag_case
-            log.keys = keys
-            log.radio = radio
-            log.radio_kit = radio_kit
-            log.time_out = time_out
-            log.save()
-            messages.success(request, "הנתונים נשמרו בהצלחה")
-            return HttpResponseRedirect(request.path_info)
+            request.session["log_id"] = log.id
+            if request.user.username != "metagber":
+                name = request.user.first_name + " " + request.user.last_name
+            else:
+                name = request.POST.get(f"user_name{log.id}")
+            request.session["name"] = name
+            if name == log.name and request.user.groups.filter(name="manager").exists():
+                request.session["reqtype"] = "change manager"
+            elif name == log.name:
+                request.session["reqtype"] = "change"
+            else:
+                request.session["reqtype"] = "validation"
+            if time_out != "":
+                request.session["time_out"] = time_out
+            else:
+                request.session["time_out"] = ""
+            messages.info(request, " הנתונים הועברו בהצלחה כדי לשמור יש לחתום")
+            return redirect("signature", log.id)
         elif "month_log" in request.POST:
             return redirect("armingmonth", year=self.kwargs['year'], month=self.kwargs['month'])
-        elif 'sig-submitBtn' in request.POST:
-            sig = request.POST.get(f"sig-dataUrl")
-            print(sig)
-            return HttpResponseRedirect(request.path_info)
         elif "shift1" in request.POST:
+            shift = 1
             valid = self.validation_submit(request, 1)
             if valid:
                 messages.success(request, "הנתונים נשמרו בהצלחה")
             return HttpResponseRedirect(request.path_info)
         elif "shift2" in request.POST:
+            shift = 2
             valid = self.validation_submit(request, 2)
             if valid:
                 messages.success(request, "הנתונים נשמרו בהצלחה")
             return HttpResponseRedirect(request.path_info)
         elif "shift3" in request.POST:
+            shift = 3
             valid = self.validation_submit(request, 3)
             if valid:
                 messages.success(request, "הנתונים נשמרו בהצלחה")
             return HttpResponseRedirect(request.path_info)
+        elif "goto" in request.POST:
+            date = request.POST.get("goto_date")
+            print(date)
+            print(type(date))
+            date1 = Date(int(date[0:4]), int(date[5:7]), int(date[8:10]))
+            months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
+            return redirect('armingday', year=date1.year, month=getmonth(date1.strftime("%b")), day=date1.day)
+        if shift != 0:
+            manager = request.POST.get(f"manager{shift}")
+            if manager == "":
+                messages.info(request, translate_text("נא למלא את שם המנהל", request.user, "hebrew"))
+                return HttpResponseRedirect(request.path_info)
+            val_logs = ValidationLog.objects.all()
+            months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
+            request.session["year"] = self.kwargs['year']
+            request.session["month"] = months.index(getmonth(self.kwargs['month'].lower())) + 1
+            request.session["day"] = self.kwargs['day']
+            date1 = Date(self.kwargs['year'], months.index(getmonth(self.kwargs['month'].lower())) + 1, self.kwargs['day'])
+            log = val_logs.filter(date=date1)
+            if len(log) == 0:
+                request.session["reqtype"] = "add"
+            else:
+                request.session["reqtype"] = "change"
+            session_keyes = ["gun_safe", "gun_shift", "time", "manager"]
+            for key in session_keyes:
+                request.session[key] = request.POST[f"{key}{shift}"]
+            request.session["shift"] = shift
+            messages.info(request, " הנתונים הועברו בהצלחה כדי לשמור יש לחתום")
+            return redirect("validation-signature")
 
 class ArmingLogUpdate(LoginRequiredMixin, UpdateView):
     model = Arming_Log
     template_name = "Schedule/signature_page.html"
-    fields = ('date')
+    fields = ('valid_in', 'valid_out', 'signature_in', 'signature_out')
+    context_object_name = 'arming'
 
     def get_context_data(self, **kwargs):
         ctx = super(ArmingLogUpdate, self).get_context_data(**kwargs)
+        guns = Gun.objects.all()
+        user_name = self.request.user.first_name + " " + self.request.user.last_name
+        num_mags_list = [1, 2, 3]
+        hand_cuffs_list = [6, 1, 2, 3, 4, 5, 7, 8]
+        mag_case_list = [6, 1, 2, 3, 4, 5, 7]
+        gun_case_list = [6, 1, 2, 3, 4, 5, 7, 8]
+        ctx["num_mags_list"] = num_mags_list
+        ctx["hand_cuffs_list"] = hand_cuffs_list
+        ctx["mag_case_list"] = mag_case_list
+        ctx["gun_case_list"] = gun_case_list
+        ctx["guns"] = guns
+        ctx["user_name"] = user_name
+        session_keyes = ["gun_id","name", "shift_num", "id_num", "time_in", "num_mags", "hand_cuffs", "gun_case", "mag_case", "keys", "radio", "radio_kit", "time_out", "reqtype"]
+        for key in session_keyes:
+            ctx[key] = self.request.session[key]
+        gun_id = self.request.session["gun_id"]
+        short_name = guns.filter(id=gun_id).first().short_name
+        ctx["short_name"] = short_name
         return ctx
     
     def post(self, request, *args, **kwargs):
-        return HttpResponseRedirect(request.path_info)
+        reqtype = request.session["reqtype"]
+        session_keyes = ["gun_id", "shift_num", "id_num", "time_in", "num_mags", "hand_cuffs", "gun_case", "mag_case", "keys", "radio", "radio_kit", "time_out", "reqtype"]
+        log = Arming_Log.objects.filter(id=self.get_object().id).first()
+        gun_id = request.session["gun_id"]
+        gun  = Gun.objects.filter(id=gun_id).first()
+        log.gun = gun
+        log.name = request.session["name"]
+        log.shift_num = request.session["shift_num"]
+        log.id_num = request.session["id_num"]
+        log.time_in = request.session["time_in"]
+        log.num_mags = request.session["num_mags"]
+        log.hand_cuffs = request.session["hand_cuffs"]
+        log.gun_case = request.session["gun_case"]
+        log.mag_case = request.session["mag_case"]
+        log.keys = request.session["keys"]
+        log.radio = request.session["radio"]
+        log.radio_kit = request.session["radio_kit"]
+        if request.session["time_out"] != "":
+            log.time_out = request.session["time_out"]
+        sig_in = request.POST.get('sig-dataUrl')
+        sig_out = request.POST.get('sig-dataUrl_out')
+        print(sig_in)
+        print(sig_out)
+        if reqtype == "change manager":
+            valid_in = request.POST.get('sig-dataUrl_valid')
+            valid_out = request.POST.get('sig-dataUrl_out_valid')
+            if sig_in != EMPTY_SIGNATURE:
+                log.signature_in = sig_in
+            if sig_out != EMPTY_SIGNATURE:
+                log.signature_out = sig_out
+            if valid_in != EMPTY_SIGNATURE:
+                log.valid_in = valid_in
+            if valid_out != EMPTY_SIGNATURE:
+                log.valid_out = valid_out
+        elif reqtype == "change":
+            if sig_in != EMPTY_SIGNATURE:
+                log.signature_in = sig_in
+            if sig_out != EMPTY_SIGNATURE:
+                log.signature_out = sig_out
+        else:
+            if sig_in != EMPTY_SIGNATURE:
+                log.valid_in = sig_in
+            if sig_out != EMPTY_SIGNATURE:
+                log.valid_out = sig_out
+        if sig_in == EMPTY_SIGNATURE and sig_out == EMPTY_SIGNATURE and reqtype != "change manager":
+            messages.warning(request, "אנא הכנס את החתימה שלך")
+            return HttpResponseRedirect(request.path_info)
+        elif reqtype == "change manager" and sig_in == EMPTY_SIGNATURE and sig_out == EMPTY_SIGNATURE and valid_in == EMPTY_SIGNATURE and valid_out == EMPTY_SIGNATURE:
+            messages.warning(request, "אנא הכנס את החתימה שלך")
+            return HttpResponseRedirect(request.path_info)
+        else:
+            for key in session_keyes:
+                del request.session[key]
+            log.save()
+            messages.success(request, "הנתונים נשמרו בהצלחה")
+            return redirect('armingday', year=int(self.get_object().date.strftime("%Y")), month=self.get_object().date.strftime("%b"), day=int(self.get_object().date.strftime("%d")))
+        
+class ArmingCreateView(LoginRequiredMixin, CreateView):
+    model = Arming_Log
+    template_name = "Schedule/signature_create.html"
+    fields = "__all__"
+
+    def get_context_data(self, **kwargs):
+        ctx = super(ArmingCreateView, self).get_context_data(**kwargs)
+        guns = Gun.objects.all()
+        user_name = self.request.user.first_name + " " + self.request.user.last_name
+        num_mags_list = [1, 2, 3]
+        hand_cuffs_list = [6, 1, 2, 3, 4, 5, 7, 8]
+        mag_case_list = [6, 1, 2, 3, 4, 5, 7]
+        gun_case_list = [6, 1, 2, 3, 4, 5, 7, 8]
+        ctx["num_mags_list"] = num_mags_list
+        ctx["hand_cuffs_list"] = hand_cuffs_list
+        ctx["mag_case_list"] = mag_case_list
+        ctx["gun_case_list"] = gun_case_list
+        ctx["guns"] = guns
+        ctx["user_name"] = user_name
+        session_keyes = ["gun_id", "name", "shift_num", "id_num", "time_in", "num_mags", "hand_cuffs", "gun_case", "mag_case", "keys", "radio", "radio_kit", "time_out", "reqtype"]
+        for key in session_keyes:
+            ctx[key] = self.request.session[key]
+        ctx["date"] = Date(self.request.session["year"], self.request.session["month"], self.request.session["day"])
+        ctx["gun_s"] = Gun.objects.filter(id=self.request.session["gun_id"]).first()
+        return ctx
+    
+    def post(self, request, *args, **kwargs):
+        session_keyes = ["gun_id", "name", "shift_num", "id_num", "time_in", "num_mags", "hand_cuffs", "gun_case", "mag_case", "keys", "radio", "radio_kit", "time_out", "reqtype"]
+        reqtype = request.session["reqtype"]
+        name = request.session["name"]
+        gun_id = request.session["gun_id"]
+        gun  = Gun.objects.filter(id=gun_id).first()
+        gun = gun
+        shift_num = request.session["shift_num"]
+        id_num = request.session["id_num"]
+        time_in = request.session["time_in"]
+        num_mags = request.session["num_mags"]
+        hand_cuffs = request.session["hand_cuffs"]
+        gun_case = request.session["gun_case"]
+        mag_case = request.session["mag_case"]
+        keys = request.session["keys"]
+        radio = request.session["radio"]
+        radio_kit = request.session["radio_kit"]
+        time_out = request.session["time_out"]
+        date1 = Date(request.session["year"], request.session["month"], request.session["day"])
+        new_log  = Arming_Log(name=name, id_num=id_num, shift_num=shift_num, date=date1, time_in=time_in,
+        gun=gun, num_mags=num_mags, hand_cuffs=hand_cuffs, gun_case=gun_case, mag_case=mag_case, keys=keys,
+        radio=radio, radio_kit=radio_kit)
+        if time_out != "":
+            new_log.time_out = time_out
+        sig_in = request.POST.get('sig-dataUrl')
+        sig_out = request.POST.get('sig-dataUrl_out')
+        signature = False
+        if sig_in != EMPTY_SIGNATURE:
+            new_log.signature_in = sig_in
+            signature = True
+        if sig_out != EMPTY_SIGNATURE:
+            new_log.signature_out = sig_out
+            signature = True
+        if reqtype == "manager":
+            valid_in = request.POST.get('sig-dataUrl_valid')
+            valid_out = request.POST.get('sig-dataUrl_out_valid')
+            if valid_in != EMPTY_SIGNATURE:
+                new_log.valid_in = request.POST.get('sig-dataUrl_valid')
+            if valid_out != EMPTY_SIGNATURE:
+                new_log.valid_out = request.POST.get('sig-dataUrl_out_valid')
+        if signature:
+            for key in session_keyes:
+                del request.session[key]
+            new_log.save()
+            return redirect('armingday', year=int(date1.strftime("%Y")), month=date1.strftime("%b"), day=int(date1.strftime("%d")))
+        else:
+            messages.warning(request, "אנא הכנס את החתימה שלך")
+            return HttpResponseRedirect(request.path_info)
+
+def Validation_Log_Signature(request):
+    context = {}
+    session_keyes = ["gun_safe", "gun_shift", "time", "manager", "reqtype", "shift", "year", "month", "day"]
+    for key in session_keyes:
+        context[key] = request.session[key]
+    if request.method == "POST":
+        sig = request.POST.get('sig-dataUrl')
+        if sig == EMPTY_SIGNATURE:
+            messages.warning(request, "אנא הכנס את החתימה שלך")
+            return HttpResponseRedirect(request.path_info)
+        else:
+            shift = context["shift"]
+            if shift == 1:
+                shift = "m"
+            elif shift == 2:
+                shift = "a"
+            else:
+                shift = "n"
+            date1 = Date(int(context["year"]), int(context["month"]), int(context["day"]))
+            if context["reqtype"] == "add":
+                log = ValidationLog()
+                log.date = date1
+            else:
+                log = ValidationLog.objects.filter(date=date1).first()
+            log[f"num_guns_safe_{shift}"] = context["gun_safe"]
+            log[f"num_guns_shift_{shift}"] = context["gun_shift"]
+            log[f"time_{shift}"] = context["time"]
+            log[f"manager_{shift}"] = context["manager"]
+            for key in session_keyes:
+                del request.session[key]
+            log.save()
+            messages.success(request, "החתימה נשמרה בהצלחה")
+            return redirect('armingday', year=int(date1.strftime("%Y")), month=date1.strftime("%b"), day=int(date1.strftime("%d")))
+    return render(request, "validation-signature.html", context)
+
 
 
 class ArmingMonthView(LoginRequiredMixin, MonthArchiveView):
@@ -322,9 +549,10 @@ class ArmingMonthView(LoginRequiredMixin, MonthArchiveView):
 
 
 def checkbox(value):
-        if value == "on":
-            return True
-        return False
+    print(value)
+    if value == "on":
+        return True
+    return False
 
 
 @login_required
@@ -2196,7 +2424,10 @@ def edit_permission(user, name):
 
 @register.filter
 def timestr(time):
-    return time.strftime("%H:%M")
+    if type(time) == Time:
+        return time.strftime("%H:%M")
+    else:
+        return time
 
 @register.filter
 def num_to_shift(num):
