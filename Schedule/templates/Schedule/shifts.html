@@ -3,6 +3,7 @@
 {% load crispy_forms_tags %}
 <html dir = rtl lang="he">
 {% block content %}
+{% if user.username != 'metagber' %}
     {% if manager %}
         <h1>{{ userview }}</h1>
     {% endif %}
@@ -31,5 +32,6 @@
     </div>
      </div>
         </form>
+    {% endif %}
     {% endif %}
 {% endblock content %}

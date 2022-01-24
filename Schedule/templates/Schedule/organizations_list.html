@@ -1,5 +1,6 @@
 {% extends "Schedule/base.html" %}
 {% block content %}
+{% if request.user.username != 'metagber' %}
     {% for organization in organizations %}
         <h3 style="align-items: center">סידור בין תאריך {{ organization|get_days|first|date:"d.m" }} לתאריך {{ organization|get_days|last|date:"d.m" }}</h3>
         {% if organization.published or organization|get_num_organization != 0 %}
@@ -173,4 +174,5 @@
       {% endif %}
 
     {% endif %}
+{% endif %}
 {% endblock content %}

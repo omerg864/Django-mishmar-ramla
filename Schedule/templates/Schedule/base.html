@@ -28,8 +28,10 @@
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav ">
               {% if user.is_authenticated %}
+              {% if user.username != 'metagber' %}
               <a style="margin-right: 0.5em" class="nav-item nav-link" href="{% url 'Schedule-Serve' %}">{{ user|get_base_string:"1" }}</a>
                 <a  class="nav-item nav-link" href="{% url 'Schedule-Organization' %}">{{ user|get_base_string:"2" }}</a>
+                {% endif %}
                 <a  class="nav-item nav-link" href="{% url 'armingday' year='today'|getday|date:'Y' month='today'|getday|date:'b'|getmonth day='today'|getday|date:'d' %}">יומן חימוש</a>
                 {% endif %}
                 {% if user.is_staff %}
