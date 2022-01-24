@@ -43,7 +43,9 @@
             <!-- Navbar Right Side -->
             <div class="navbar-nav mr-auto">
                 {% if user.is_authenticated %}
+                {% if user.username != 'metagber' %}
                     <a class="nav-item nav-link" href="{% url 'profile' %}">{{ user|get_base_string:"6" }}</a>
+                    {% endif %}
                     <a class="nav-item nav-link" href="{% url 'logout' %}">{{ user|get_base_string:"7" }}</a>
                  {% else %}
                     <a class="nav-item nav-link" href="{% url 'login' %}">{{ user|get_base_string:"8" }}</a>

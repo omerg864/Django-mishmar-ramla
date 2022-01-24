@@ -1,6 +1,7 @@
 {% extends "Schedule/base.html" %}
 {% load crispy_forms_tags %}
 {% block content %}
+{% if user.username != 'metagber' %}
     <div class="row">
     <div dir="rtl" style="text-align: right" class="content-section">
       <div style="text-align: right" class="media" dir="rtl">
@@ -89,4 +90,5 @@
         <h6>שישי לילה/מוצ"ש: {{ sat_night }}</h6>
     </div>
     </div>
+{% endif %}
 {% endblock content %}
