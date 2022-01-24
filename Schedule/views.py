@@ -2351,7 +2351,7 @@ class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, Detail
 
 @register.filter
 def gethours(obj_list, user):
-    hours = datetime.timedelta(0)
+    time_go = datetime.timedelta(0)
     for log in obj_list:
         if log.username == user:
             if log.time_out != None and log.time_out != "":
@@ -2359,7 +2359,14 @@ def gethours(obj_list, user):
                 time_2 = datetime.datetime.strptime(log.time_out.strftime("%H:%M"),"%H:%M")
                 time_cal = time_2 - time_1
                 time_cal += datetime.timedelta(days=(time_cal.days * -1))
-                hours += time_cal 
+                time_go += time_cal
+    hours = time_go.days * 24
+    temp_h = str(time_go)
+    if time_go.days != 0:
+        temp_h = temp_h.replace(f"{time_go.days} day, ", "")
+    add_h = temp_h.split(":")
+    hours += int(add_h[0])
+    hours = str(hours) + "." + add_h[1]
     return hours
 
 
