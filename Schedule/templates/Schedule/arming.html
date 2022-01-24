@@ -1,7 +1,7 @@
 {% extends "Schedule/base.html" %}
 {% block content %}
 
-<ul style="margin-right: -200px">
+<ul style="padding-left: 100px; padding-right: 10px">
         <h1>יומן חימוש - {{ day|date:"d/m/Y" }}</h1> 
         <form method="POST">
             {% csrf_token %}
