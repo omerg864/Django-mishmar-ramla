@@ -101,7 +101,7 @@ input[type=text]{
   font-size: 14px;
   border-radius: 6px;
   box-shadow: 2px 2px 8px black;
-  border: 0;
+  border: 1;
 }
 input[type=email]{
 	width: 170px;
@@ -110,7 +110,7 @@ input[type=email]{
   font-size: 14px;
   border-radius: 6px;
   box-shadow: 2px 2px 8px black;
-  border: 0;
+  border: 1;
 }
 input[type=password]{
 	width: 170px;
@@ -119,7 +119,7 @@ input[type=password]{
   font-size: 14px;
   border-radius: 6px;
   box-shadow: 2px 2px 8px black;
-  border: 0;
+  border: 1;
 }
 .dropdown {
   display: inline-block;

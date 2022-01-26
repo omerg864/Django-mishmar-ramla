@@ -5,7 +5,6 @@ from .models import Shift1 as Shift
 from .models import Organization as Organization
 from .models import Week as Week
 from .models import ShiftWeek as ShiftWeek
-from .models import Arming_Log
 from django.contrib.auth.models import User
 
 

@@ -3,8 +3,6 @@ from datetime import date as Date
 from datetime import time as Time
 import io
 import random
-from time import time
-from click import pass_obj
 import xlsxwriter as xlsxwriter
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
@@ -17,7 +15,7 @@ from django.http import HttpResponseRedirect
 from django.template.defaulttags import register
 from django.views.generic import UpdateView, ListView, DetailView, CreateView
 from .backend.Schedule.Organizer import Organizer
-from .forms import SettingsForm, ShiftForm, ShiftViewForm, WeekUpdateForm, ShiftWeekForm, ShiftWeekViewForm
+from .forms import SettingsForm, WeekUpdateForm, ShiftWeekForm, ShiftWeekViewForm
 from django.forms.models import model_to_dict
 from .models import Post, ValidationLog
 from .models import Settings3 as Settings
