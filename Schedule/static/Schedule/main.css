@@ -100,7 +100,7 @@ input[type=text]{
   overflow: hidden;
   font-size: 14px;
   border-radius: 6px;
-  box-shadow: 2px 2px 8px black;
+  box-shadow: 1px 1px 5px black;
   border: 1;
 }
 input[type=email]{
@@ -109,7 +109,7 @@ input[type=email]{
   overflow: hidden;
   font-size: 14px;
   border-radius: 6px;
-  box-shadow: 2px 2px 8px black;
+  box-shadow: 1px 1px 5px black;
   border: 1;
 }
 input[type=password]{
@@ -118,7 +118,53 @@ input[type=password]{
   overflow: hidden;
   font-size: 14px;
   border-radius: 6px;
-  box-shadow: 2px 2px 8px black;
+  box-shadow: 1px 1px 5px black;
+  border: 1;
+}
+input[type=number]{
+	width: 170px;
+	height: 30px;
+  overflow: hidden;
+  font-size: 14px;
+  border-radius: 6px;
+  box-shadow: 1px 1px 5px black;
+  border: 1;
+}
+input[type=time]{
+  overflow: hidden;
+  font-size: 14px;
+  border-radius: 6px;
+  box-shadow: 1px 1px 5px black;
+  border: 1;
+}
+input[type=checkbox]{
+  width: 30px;
+	height: 30px;
+  overflow: hidden;
+  font-size: 14px;
+  border-radius: 6px;
+  box-shadow: 1px 1px 5px black;
+  border: 1;
+}
+select{
+  overflow: hidden;
+  font-size: 14px;
+  border-radius: 6px;
+  box-shadow: 1px 1px 5px black;
+  border: 1;
+}
+textarea{
+  overflow: hidden;
+  font-size: 14px;
+  border-radius: 6px;
+  box-shadow: 1px 1px 5px black;
+  border: 1;
+}
+input[type=date]{
+  overflow: hidden;
+  font-size: 14px;
+  border-radius: 6px;
+  box-shadow: 1px 1px 5px black;
   border: 1;
 }
 .dropdown {
