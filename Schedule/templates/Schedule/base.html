@@ -37,7 +37,7 @@
                 {% if user.is_staff %}
                     <a  class="nav-item nav-link" href="{% url 'Schedule-Served-sum' %}">{{ user|get_base_string:"3" }}</a>
                     <a  class="nav-item nav-link" href="{% url 'Schedule-Settings' %}">{{ user|get_base_string:"4" }}</a>
-                    <a  class="nav-item nav-link" href="https://mishmarramla.herokuapp.com/admin">{{ user|get_base_string:"5" }}</a>
+                    <a  class="nav-item nav-link" href="{% url 'admin:index' %}">{{ user|get_base_string:"5" }}</a>
                 {% endif %}
             </div>
             <!-- Navbar Right Side -->
