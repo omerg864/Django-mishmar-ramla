@@ -9,9 +9,13 @@
                     <th style="width:74%">שעות החודש</th>
                     <th>{{object_list|gethours:user}} שעות</th>
                 </tr>
+                <tr>
+                    <th style="width:74%">כמות משמרות</th>
+                    <th>{{object_list|countshifts:user}}</th>
+                </tr>
                 </thead>
         </table>
-        <small>*השעות לא מחושבות עם החתמות בלי יציאה</small>
+        <small>*השעות מחושבות על משמרות עם זמן יציאה בלבד</small>
         <table class="responsive-table-input-matrix" style="align-items: center">
             <thead>
                 <tr>

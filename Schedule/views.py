@@ -2339,6 +2339,14 @@ class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, Detail
 # filters
 
 @register.filter
+def countshifts(obj_list, user):
+    count = 0
+    for obj in obj_list:
+        if obj.username == user:
+            count += 1
+    return count
+
+@register.filter
 def gethours(obj_list, user):
     time_go = datetime.timedelta(0)
     for log in obj_list:
