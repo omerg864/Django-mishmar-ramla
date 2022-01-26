@@ -231,6 +231,7 @@
 
   var canvas = document.getElementById("sig-canvas");
   var ctx = canvas.getContext("2d");
+  var movement = false;
   ctx.strokeStyle = "#222222";
   ctx.lineWidth = 4;
 
@@ -254,8 +255,8 @@
     mousePos = getMousePos(canvas, e);
   }, false);
 
-  // Add touch event support for mobile
-  canvas.addEventListener("touchstart", function(e) {
+    // Add touch event support for mobile
+    canvas.addEventListener("touchstart", function(e) {
 
   }, false);
 
@@ -301,6 +302,7 @@
 
   function renderCanvas() {
     if (drawing) {
+      movement = true;
       ctx.moveTo(lastPos.x, lastPos.y);
       ctx.lineTo(mousePos.x, mousePos.y);
       ctx.stroke();
@@ -311,21 +313,25 @@
   // Prevent scrolling when touching the canvas
   document.body.addEventListener("touchstart", function(e) {
     if (e.target == canvas) {
+      movement = true;
       e.preventDefault();
     }
   }, false);
   document.body.addEventListener("touchend", function(e) {
     if (e.target == canvas) {
+      movement = true;
       e.preventDefault();
     }
   }, false);
   document.body.addEventListener("touchmove", function(e) {
     if (e.target == canvas) {
+      movement = true;
       e.preventDefault();
     }
   }, false);
   document.body.addEventListener("touchcancel", function(e) {
     if (e.target == canvas) {
+      movement = true;
       e.preventDefault();
     }
   }, false);
@@ -347,9 +353,13 @@
     clearCanvas();
   }, false);
   submitBtn.addEventListener("click", function(e) {
+    if(movement){
     var dataUrl = canvas.toDataURL();
     sigText.innerHTML = dataUrl;
-  }, false);
+    } else {
+      sigText.innerHTML = "Empty"
+    }
+  }, false); 
 
 })();
 </script>
@@ -370,6 +380,7 @@
   var ctx = canvas.getContext("2d");
   ctx.strokeStyle = "#222222";
   ctx.lineWidth = 4;
+  var movement = false;
 
   var drawing = false;
   var mousePos = {
@@ -438,6 +449,7 @@
 
   function renderCanvas() {
     if (drawing) {
+      movement = true;
       ctx.moveTo(lastPos.x, lastPos.y);
       ctx.lineTo(mousePos.x, mousePos.y);
       ctx.stroke();
@@ -449,21 +461,25 @@
   document.body.addEventListener("touchstart", function(e) {
     if (e.target == canvas) {
       e.preventDefault();
+      movement = true;
     }
   }, false);
   document.body.addEventListener("touchend", function(e) {
     if (e.target == canvas) {
       e.preventDefault();
+      movement = true;
     }
   }, false);
   document.body.addEventListener("touchmove", function(e) {
     if (e.target == canvas) {
       e.preventDefault();
+      movement = true;
     }
   }, false);
   document.body.addEventListener("touchcancel", function(e) {
     if (e.target == canvas) {
       e.preventDefault();
+      movement = true;
     }
   }, false);
 
@@ -484,8 +500,12 @@
     clearCanvas();
   }, false);
   submitBtn.addEventListener("click", function(e) {
+    if(movement){
     var dataUrl = canvas.toDataURL();
     sigText.innerHTML = dataUrl;
+    } else {
+      sigText.innerHTML = "Empty"
+    }
   }, false);
 
 })();
@@ -507,6 +527,7 @@ var canvas = document.getElementById("sig-canvas_valid");
 var ctx = canvas.getContext("2d");
 ctx.strokeStyle = "#222222";
 ctx.lineWidth = 4;
+var movement = false;
 
 var drawing = false;
 var mousePos = {
@@ -575,6 +596,7 @@ function getTouchPos(canvasDom, touchEvent) {
 
 function renderCanvas() {
   if (drawing) {
+    movement = true;
     ctx.moveTo(lastPos.x, lastPos.y);
     ctx.lineTo(mousePos.x, mousePos.y);
     ctx.stroke();
@@ -586,21 +608,25 @@ function renderCanvas() {
 document.body.addEventListener("touchstart", function(e) {
   if (e.target == canvas) {
     e.preventDefault();
+    movement = true;
   }
 }, false);
 document.body.addEventListener("touchend", function(e) {
   if (e.target == canvas) {
     e.preventDefault();
+    movement = true;
   }
 }, false);
 document.body.addEventListener("touchmove", function(e) {
   if (e.target == canvas) {
     e.preventDefault();
+    movement = true;
   }
 }, false);
 document.body.addEventListener("touchcancel", function(e) {
   if (e.target == canvas) {
     e.preventDefault();
+    movement = true;
   }
 }, false);
 
@@ -621,8 +647,12 @@ clearBtn.addEventListener("click", function(e) {
   clearCanvas();
 }, false);
 submitBtn.addEventListener("click", function(e) {
+  if(movement){
   var dataUrl = canvas.toDataURL();
   sigText.innerHTML = dataUrl;
+  } else {
+    sigText.innerHTML = "Empty"
+  }
 }, false);
 
 })();
@@ -644,6 +674,7 @@ var canvas = document.getElementById("sig-canvas_out_valid");
 var ctx = canvas.getContext("2d");
 ctx.strokeStyle = "#222222";
 ctx.lineWidth = 4;
+var movement = false;
 
 var drawing = false;
 var mousePos = {
@@ -712,6 +743,7 @@ function getTouchPos(canvasDom, touchEvent) {
 
 function renderCanvas() {
   if (drawing) {
+    movement = true;
     ctx.moveTo(lastPos.x, lastPos.y);
     ctx.lineTo(mousePos.x, mousePos.y);
     ctx.stroke();
@@ -723,21 +755,25 @@ function renderCanvas() {
 document.body.addEventListener("touchstart", function(e) {
   if (e.target == canvas) {
     e.preventDefault();
+    movement = true;
   }
 }, false);
 document.body.addEventListener("touchend", function(e) {
   if (e.target == canvas) {
     e.preventDefault();
+    movement = true;
   }
 }, false);
 document.body.addEventListener("touchmove", function(e) {
   if (e.target == canvas) {
     e.preventDefault();
+    movement = true;
   }
 }, false);
 document.body.addEventListener("touchcancel", function(e) {
   if (e.target == canvas) {
     e.preventDefault();
+    movement = true;
   }
 }, false);
 
@@ -758,8 +794,12 @@ clearBtn.addEventListener("click", function(e) {
   clearCanvas();
 }, false);
 submitBtn.addEventListener("click", function(e) {
+  if(movement){
   var dataUrl = canvas.toDataURL();
   sigText.innerHTML = dataUrl;
+  } else {
+    sigText.innerHTML = "Empty"
+  }
 }, false);
 
 })();

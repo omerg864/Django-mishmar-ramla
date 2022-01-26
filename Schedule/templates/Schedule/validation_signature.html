@@ -83,6 +83,7 @@
   var ctx = canvas.getContext("2d");
   ctx.strokeStyle = "#222222";
   ctx.lineWidth = 4;
+  var movement = false;
 
   var drawing = false;
   var mousePos = {
@@ -151,6 +152,7 @@
 
   function renderCanvas() {
     if (drawing) {
+      movement = true;
       ctx.moveTo(lastPos.x, lastPos.y);
       ctx.lineTo(mousePos.x, mousePos.y);
       ctx.stroke();
@@ -162,21 +164,25 @@
   document.body.addEventListener("touchstart", function(e) {
     if (e.target == canvas) {
       e.preventDefault();
+      movement = true;
     }
   }, false);
   document.body.addEventListener("touchend", function(e) {
     if (e.target == canvas) {
       e.preventDefault();
+      movement = true;
     }
   }, false);
   document.body.addEventListener("touchmove", function(e) {
     if (e.target == canvas) {
       e.preventDefault();
+      movement = true;
     }
   }, false);
   document.body.addEventListener("touchcancel", function(e) {
     if (e.target == canvas) {
       e.preventDefault();
+      movement = true;
     }
   }, false);
 
@@ -197,8 +203,12 @@
     clearCanvas();
   }, false);
   submitBtn.addEventListener("click", function(e) {
+    if(movement){
     var dataUrl = canvas.toDataURL();
     sigText.innerHTML = dataUrl;
+    } else {
+      sigText.innerHTML = "Empty";
+    }
   }, false);
 
 })();

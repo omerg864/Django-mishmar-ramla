@@ -38,8 +38,6 @@ import os
 from django.views.generic.dates import DayArchiveView, MonthArchiveView
 
 
-EMPTY_SIGNATURE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAACgCAYAAAC2eFFiAAAAAXNSR0IArs4c6QAABKtJREFUeF7t1AEJAAAMAsHZv/RyPNwSyDncOQIECEQEFskpJgECBM5geQICBDICBitTlaAECBgsP0CAQEbAYGWqEpQAAYPlBwgQyAgYrExVghIgYLD8AAECGQGDlalKUAIEDJYfIEAgI2CwMlUJSoCAwfIDBAhkBAxWpipBCRAwWH6AAIGMgMHKVCUoAQIGyw8QIJARMFiZqgQlQMBg+QECBDICBitTlaAECBgsP0CAQEbAYGWqEpQAAYPlBwgQyAgYrExVghIgYLD8AAECGQGDlalKUAIEDJYfIEAgI2CwMlUJSoCAwfIDBAhkBAxWpipBCRAwWH6AAIGMgMHKVCUoAQIGyw8QIJARMFiZqgQlQMBg+QECBDICBitTlaAECBgsP0CAQEbAYGWqEpQAAYPlBwgQyAgYrExVghIgYLD8AAECGQGDlalKUAIEDJYfIEAgI2CwMlUJSoCAwfIDBAhkBAxWpipBCRAwWH6AAIGMgMHKVCUoAQIGyw8QIJARMFiZqgQlQMBg+QECBDICBitTlaAECBgsP0CAQEbAYGWqEpQAAYPlBwgQyAgYrExVghIgYLD8AAECGQGDlalKUAIEDJYfIEAgI2CwMlUJSoCAwfIDBAhkBAxWpipBCRAwWH6AAIGMgMHKVCUoAQIGyw8QIJARMFiZqgQlQMBg+QECBDICBitTlaAECBgsP0CAQEbAYGWqEpQAAYPlBwgQyAgYrExVghIgYLD8AAECGQGDlalKUAIEDJYfIEAgI2CwMlUJSoCAwfIDBAhkBAxWpipBCRAwWH6AAIGMgMHKVCUoAQIGyw8QIJARMFiZqgQlQMBg+QECBDICBitTlaAECBgsP0CAQEbAYGWqEpQAAYPlBwgQyAgYrExVghIgYLD8AAECGQGDlalKUAIEDJYfIEAgI2CwMlUJSoCAwfIDBAhkBAxWpipBCRAwWH6AAIGMgMHKVCUoAQIGyw8QIJARMFiZqgQlQMBg+QECBDICBitTlaAECBgsP0CAQEbAYGWqEpQAAYPlBwgQyAgYrExVghIgYLD8AAECGQGDlalKUAIEDJYfIEAgI2CwMlUJSoCAwfIDBAhkBAxWpipBCRAwWH6AAIGMgMHKVCUoAQIGyw8QIJARMFiZqgQlQMBg+QECBDICBitTlaAECBgsP0CAQEbAYGWqEpQAAYPlBwgQyAgYrExVghIgYLD8AAECGQGDlalKUAIEDJYfIEAgI2CwMlUJSoCAwfIDBAhkBAxWpipBCRAwWH6AAIGMgMHKVCUoAQIGyw8QIJARMFiZqgQlQMBg+QECBDICBitTlaAECBgsP0CAQEbAYGWqEpQAAYPlBwgQyAgYrExVghIgYLD8AAECGQGDlalKUAIEDJYfIEAgI2CwMlUJSoCAwfIDBAhkBAxWpipBCRAwWH6AAIGMgMHKVCUoAQIGyw8QIJARMFiZqgQlQMBg+QECBDICBitTlaAECBgsP0CAQEbAYGWqEpQAAYPlBwgQyAgYrExVghIgYLD8AAECGQGDlalKUAIEDJYfIEAgI2CwMlUJSoCAwfIDBAhkBAxWpipBCRAwWH6AAIGMgMHKVCUoAQIPBfEAoeZvv+sAAAAASUVORK5CYII="
-
 
 default_language = os.environ.get("DEFAULT_LANGUAGE")
 
@@ -241,8 +239,6 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
             shift = 3
         elif "goto" in request.POST:
             date = request.POST.get("goto_date")
-            print(date)
-            print(type(date))
             date1 = Date(int(date[0:4]), int(date[5:7]), int(date[8:10]))
             months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
             return redirect('armingday', year=date1.year, month=getmonth(date1.strftime("%b")), day=date1.day)
@@ -325,33 +321,31 @@ class ArmingLogUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             log.time_out = request.session["time_out"]
         sig_in = request.POST.get('sig-dataUrl')
         sig_out = request.POST.get('sig-dataUrl_out')
-        print(sig_in)
-        print(sig_out)
         if reqtype == "change manager":
             valid_in = request.POST.get('sig-dataUrl_valid')
             valid_out = request.POST.get('sig-dataUrl_out_valid')
-            if sig_in != EMPTY_SIGNATURE:
+            if sig_in != "Empty":
                 log.signature_in = sig_in
-            if sig_out != EMPTY_SIGNATURE:
+            if sig_out != "Empty":
                 log.signature_out = sig_out
-            if valid_in != EMPTY_SIGNATURE:
+            if valid_in != "Empty":
                 log.valid_in = valid_in
-            if valid_out != EMPTY_SIGNATURE:
+            if valid_out != "Empty":
                 log.valid_out = valid_out
         elif reqtype == "change":
-            if sig_in != EMPTY_SIGNATURE:
+            if sig_in != "Empty":
                 log.signature_in = sig_in
-            if sig_out != EMPTY_SIGNATURE:
+            if sig_out != "Empty":
                 log.signature_out = sig_out
         else:
-            if sig_in != EMPTY_SIGNATURE:
+            if sig_in != "Empty":
                 log.valid_in = sig_in
-            if sig_out != EMPTY_SIGNATURE:
+            if sig_out != "Empty":
                 log.valid_out = sig_out
-        if sig_in == EMPTY_SIGNATURE and sig_out == EMPTY_SIGNATURE and reqtype != "change manager":
+        if sig_in == "Empty" and sig_out == "Empty" and reqtype != "change manager":
             messages.warning(request, "אנא הכנס את החתימה שלך")
             return HttpResponseRedirect(request.path_info)
-        elif reqtype == "change manager" and sig_in == EMPTY_SIGNATURE and sig_out == EMPTY_SIGNATURE and valid_in == EMPTY_SIGNATURE and valid_out == EMPTY_SIGNATURE:
+        elif reqtype == "change manager" and sig_in == "Empty" and sig_out == "Empty" and valid_in == "Empty" and valid_out == "Empty":
             messages.warning(request, "אנא הכנס את החתימה שלך")
             return HttpResponseRedirect(request.path_info)
         else:
@@ -415,18 +409,18 @@ class ArmingCreateView(LoginRequiredMixin, CreateView):
         sig_in = request.POST.get('sig-dataUrl')
         sig_out = request.POST.get('sig-dataUrl_out')
         signature = False
-        if sig_in != EMPTY_SIGNATURE:
+        if sig_in != "Empty":
             new_log.signature_in = sig_in
             signature = True
-        if sig_out != EMPTY_SIGNATURE:
+        if sig_out != "Empty":
             new_log.signature_out = sig_out
             signature = True
         if reqtype == "manager":
             valid_in = request.POST.get('sig-dataUrl_valid')
             valid_out = request.POST.get('sig-dataUrl_out_valid')
-            if valid_in != EMPTY_SIGNATURE:
+            if valid_in != "Empty":
                 new_log.valid_in = request.POST.get('sig-dataUrl_valid')
-            if valid_out != EMPTY_SIGNATURE:
+            if valid_out != "Empty":
                 new_log.valid_out = request.POST.get('sig-dataUrl_out_valid')
         if signature:
             for key in session_keyes:
@@ -446,7 +440,7 @@ def Validation_Log_Signature(request):
     context["date"] = date1
     if request.method == "POST":
         sig = request.POST.get('sig-dataUrl')
-        if sig == EMPTY_SIGNATURE:
+        if sig == "Empty":
             messages.warning(request, "אנא הכנס את החתימה שלך")
             return HttpResponseRedirect(request.path_info)
         else:
@@ -505,7 +499,6 @@ class ArmingMonthView(LoginRequiredMixin, MonthArchiveView):
 
 
 def checkbox(value):
-    print(value)
     if value == "on":
         return True
     return False
@@ -996,7 +989,6 @@ class ShifttableView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
             if count == 7:
                 count = 0
                 num_week += 1
-        print(table_content)
         ctx["table"] = table_content
         ctx["sum"] = sum_content
         days = []
@@ -2054,7 +2046,6 @@ def WriteToExcel(served, notes, notes_general, dates, user):
     row = 4
     col = 1
     for key in served:
-        print(key)
         if key.count("M"):
             row = 4
             split = served[key].split("\n")
