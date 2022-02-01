@@ -96,7 +96,7 @@
                     {% csrf_token %}
                 {% for arming in object_list %} 
             <tr style="align-content: end">
-                {% if request.user|edit_permission:arming.username %}
+                {% if request.user|edit_permission:arming %}
                 <td><select name="shifts{{arming.id}}" id="shifts{{arming.id}}">
                     <option value="1" {% if arming.shift_num == 1 %}selected{% endif %}>בוקר</option>
                     <option value="2" {% if arming.shift_num == 2 %}selected{% endif %}>צהריים</option>

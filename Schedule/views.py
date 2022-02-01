@@ -2390,9 +2390,16 @@ def getday(string):
     return datetime.datetime.now()
 
 @register.filter
-def edit_permission(user, user2):
-    if user.groups.filter(name="manager").exists() or user2.id == user.id:
+def edit_permission(user, log):
+    if user.groups.filter(name="manager").exists():
         return True
+    if log.username.id == user.id:
+        if log.shift_num != 3:
+            if datetime.datetime.now().date() == log.date:
+                return True
+        else:
+            if datetime.datetime.now().date() == log.date or datetime.datetime.now().date() == log.date + datetime.timedelta(days=1):
+                return True
     return False
 
 @register.filter
