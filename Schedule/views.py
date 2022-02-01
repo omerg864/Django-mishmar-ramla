@@ -228,6 +228,10 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
             messages.info(request, " הנתונים הועברו בהצלחה כדי לשמור יש לחתום")
             return redirect("signature", log.id)
         elif "month_log" in request.POST:
+            request.session["reqtype"] = ""
+            return redirect("armingmonth", year=self.kwargs['year'], month=self.kwargs['month'])
+        elif "month_log_manager" in request.POST:
+            request.session["reqtype"] = "manager"
             return redirect("armingmonth", year=self.kwargs['year'], month=self.kwargs['month'])
         elif "shift1" in request.POST:
             shift = 1
@@ -271,8 +275,15 @@ class ArmingLogUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def test_func(self):
         user_id = self.request.session["user_id"]
-        if user_id == self.get_object().username.id or self.request.user.groups.filter(name="manager").exists():
+        if self.request.user.groups.filter(name="manager").exists():
             return True
+        if self.get_object().username.id == user_id:
+            if self.get_object().shift_num != 3:
+                if datetime.datetime.now().date() == self.get_object().date:
+                    return True
+            else:
+                if datetime.datetime.now().date() == self.get_object().date or datetime.datetime.now().date() == self.get_object().date + datetime.timedelta(days=1):
+                    return True
         return False
 
     def get_context_data(self, **kwargs):
@@ -490,6 +501,7 @@ class ArmingMonthView(LoginRequiredMixin, MonthArchiveView):
         ctx["gun_case_list"] = gun_case_list
         ctx["guns"] = guns
         ctx["user_name"] = user_name
+        ctx["reqtype"] = self.request.session["reqtype"]
         return ctx
     
     def post(self, request, *args, **kwargs):
@@ -1163,9 +1175,10 @@ class ServedSumShiftDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailVi
     model = Organization
     template_name = "Schedule/Served-sum.html"
 
-    def get_data(self):
-        ctx = {}
+    def get_context_data(self, **kwargs):
+        ctx = super(ServedSumShiftDetailView, self).get_context_data(**kwargs)
         served = {}
+        counters = {}
         for i in range(1, self.get_object().num_weeks * 7 + 1):
             served["M" + str(i)] = ""
             served["A" + str(i)] = ""
@@ -1202,6 +1215,10 @@ class ServedSumShiftDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailVi
                     if count == 0:
                         morning = True
                         served[kind + str(index + (shift.num_week * 7))] += name
+                        if f"M-{name}-{shift.num_week}" in counters and index < 6:
+                            counters[f"M-{name}-{shift.num_week}"] += 1
+                        else:
+                            counters[f"M-{name}-{shift.num_week}"] = 1
                     else:
                         if count == 1:
                             if morning:
@@ -1210,6 +1227,10 @@ class ServedSumShiftDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailVi
                         else:
                             if count == 2:
                                 kind = "A"
+                                if f"A-{name}-{shift.num_week}" in counters and index < 6:
+                                    counters[f"A-{name}-{shift.num_week}"] += 1
+                                else:
+                                    counters[f"A-{name}-{shift.num_week}"] = 1
                             elif count == 3:
                                 kind = "N"
                             served[kind + str(index + (shift.num_week * 7))] += name + "\n"
@@ -1219,10 +1240,10 @@ class ServedSumShiftDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailVi
                         served[kind + str(index + (shift.num_week * 7))] += "\n" + "(לא משיכה)" + "\n"
                 if count == 3:
                     count = 0
-                    index = index + 1
+                    index += 1
                     kind = "M"
                 else:
-                    count = count + 1
+                    count += 1
             notes1 = [shift.notes1, shift.notes2, shift.notes3,
                       shift.notes4, shift.notes5, shift.notes6, shift.notes7]
             index = 1
@@ -1234,6 +1255,15 @@ class ServedSumShiftDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailVi
             if main_shift.notes != "" and name not in user_notes_added:
                 notes_general += name + ": " + main_shift.notes + "\n"
                 user_notes_added.append(name)
+        not_qual_users = {}
+        for key in counters:
+            shift, name, week = key.split("-")
+            if shift == 'M':
+                if counters[key] < 2:
+                    not_qual_users[name] = users[name]
+            else:
+                if counters[key] < 1:
+                    not_qual_users[name] = users[name]
         days = []
         for x in range(self.get_object().num_weeks * 7):
             days.append(self.get_object().date + datetime.timedelta(days=x))
@@ -1243,13 +1273,8 @@ class ServedSumShiftDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailVi
         ctx["notes_general"] = notes_general
         ctx["num_served"] = len(main_shifts_served)
         ctx["users"] = users
-        return ctx
-
-    def get_context_data(self, **kwargs):
-        ctx = super(ServedSumShiftDetailView, self).get_context_data(**kwargs)
-        context = self.get_data()
-        for c in context:
-            ctx[c] = context[c]
+        ctx["not_qual_users"] = not_qual_users
+        ctx["not_qual_num"] = len(not_qual_users.keys())
         return ctx
 
     def test_func(self):
@@ -1259,7 +1284,7 @@ class ServedSumShiftDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailVi
 
     def post(self, request, *args, **kwargs):
         if request.method == "POST":
-            ctx = self.get_data()
+            ctx = self.get_context_data()
             return WriteToExcel(ctx["served"], ctx["notes"], ctx["notes_general"],ctx["days"], self.request.user)
 
 
@@ -2337,6 +2362,18 @@ class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, Detail
 
 
 # filters
+
+@register.filter
+def merge_user(obj_list, user):
+    return [user, obj_list]
+
+@register.filter
+def object_list_cutter(data, reqtype):
+    user = data[0]
+    obj_list = data[1]
+    if reqtype == "":
+        return obj_list.filter(username=user)
+    return obj_list
 
 @register.filter
 def countshifts(obj_list, user):

@@ -16,11 +16,22 @@
     </form>
     </div>
     <div style="margin-top: 3.5em">
-        <a>מספר אנשים שהגישו: {{ num_served }}</a>
+        <a>מספר אנשים שהגישו: {{ num_served }} - </a>
     </div>
-    <div style="margin-top: 3.5em">
+    <div style="margin-top: 3.5em; margin-right: 2px;">
     {% for user in users %}
         <a href="{% url 'shift-update' users|get_item:user %}"> {{ user }}, </a>
+        {% if forloop.counter|is_divided5 %}
+            </br>
+        {% endif %}
+    {% endfor %}
+    </div>
+    <div style="margin-top: 3.5em; margin-right: 10px;">
+        <a>מספר אנשים שלא הגישו מינימום: {{ not_qual_num }} - </a>
+    </div>
+    <div style="margin-top: 3.5em; margin-right: 2px;">
+    {% for user in not_qual_users %}
+        <a href="{% url 'shift-update' not_qual_users|get_item:user %}"> {{ user }}, </a>
         {% if forloop.counter|is_divided5 %}
             </br>
         {% endif %}

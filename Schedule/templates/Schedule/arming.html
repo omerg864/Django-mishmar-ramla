@@ -3,10 +3,22 @@
 
 <ul style="padding-left: 100px; padding-right: 10px">
         <h1>יומן חימוש - {{ day|date:"d/m/Y" }}</h1> 
+        <div class="row" style="margin-right: 0px;">
+            <div>
         <form method="POST">
             {% csrf_token %}
         <button class="but effect01" type="submit" name="month_log"><span>יומן חימוש אישי</span></button>
     </form>
+</div>
+{% if user.is_staff %}
+<div style="margin-right: 10px;">
+    <form method="POST">
+        {% csrf_token %}
+    <button class="but effect01" type="submit" name="month_log_manager"><span>יומן חימוש חודשי</span></button>
+</form>
+</div>
+{% endif %}
+</div>
         <table class="responsive-table-input-matrix" style="align-items: center">
             <thead>
                 <tr>
