@@ -4,6 +4,15 @@ from django.contrib.auth.forms import UserCreationForm
 from .models import UserSettings as UserSettings
 
 
+
+class AuthenticationForm(forms.ModelForm):
+    username = forms.CharField()
+    password = forms.PasswordInput()
+
+    class Meta:
+        model = User
+        fields = ['username', 'password']
+
 class UserRegisterForm(UserCreationForm):
     first_name = forms.CharField()
     last_name = forms.CharField()

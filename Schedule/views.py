@@ -46,6 +46,12 @@ if len(Settings.objects.all()) == 0:
 base_strings = {1: "הגשת משמרות", 2: "סידור", 3: "סידורים", 4: "הגדרות", 5: "ניהול נתונים", 6: "פרופיל", 7: "התנתק",
                 8: "התחבר", 9: "הירשם"}
 
+MORNING_KEYS = ["_630", "_700_search", "_700_manager", "_720_1", "_720_pull", "_720_2", "_720_3"]
+NOON_KEYS = ["_1400", "_1500","_1500_1900"]
+NIGHT_KEYS = ["_2300"]
+
+SHIFT_KEYS = MORNING_KEYS + NOON_KEYS + NIGHT_KEYS
+
 
 @staff_member_required
 def settings_view(request):
@@ -739,8 +745,7 @@ def get_input(organization_last):
     for week_obj in weeks_obj:
         weeks[week_obj.num_week] = week_obj
     organization_last_input = {}
-    fields = ["_630", "_700_search", "_700_manager", "_720_1", "_720_pull", "_720_2", "_720_3", "_1400", "_1500",
-              "_1500_1900", "_2300", "_notes"]
+    fields = SHIFT_KEYS + ["_notes"]
     for j in range(organization_last.num_weeks):
         for i in range(1, 8):
             day1 = f'Day{i}'
@@ -1025,23 +1030,19 @@ class ServedSumReinforcementsDetailView(LoginRequiredMixin, UserPassesTestMixin,
             organization = self.get_object()
             organization_input = get_input(organization)
             input_days = {}
-            keys = ["_630", "_700_search", "_720_1", "_720_pull", "_720_2", "_720_3", "_1400", "_1500",
-                    "_1500_1900",
-                    "_2300"]
-        for i in range(1, 15):
+        for i in range(1, self.get_object().num_weeks * 7 + 1):
             served["day" + str(i)] = ""
             if calculated:
                 day = "day" + str(i)
                 input_days[day + "M"] = []
                 input_days[day + "A"] = []
                 input_days[day + "N"] = []
-                for x in range(10):
-                    if x < 6:
-                        input_days[day + "M"] += organization_input[day + keys[x]].split("\n")
-                    elif x < 9:
-                        input_days[day + "A"] += organization_input[day + keys[x]].split("\n")
-                    else:
-                        input_days[day + "N"] += organization_input[day + keys[x]].split("\n")
+                for key in MORNING_KEYS:
+                    input_days[day + "M"] += organization_input[day + key].split("\n")
+                for key in NOON_KEYS:
+                    input_days[day + "A"] += organization_input[day + key].split("\n")
+                for key in NIGHT_KEYS:
+                    input_days[day + "N"] += organization_input[day + key].split("\n")
         if calculated:
             for key in input_days:
                 for i in range(len(input_days[key])):
@@ -1096,7 +1097,7 @@ class ServedSumReinforcementsDetailView(LoginRequiredMixin, UserPassesTestMixin,
                     if s not in input_days[day + "A"] and s != "" and s != " " and s != "\n":
                         day_before = "day" + str(x - 1)
                         day_after = "day" + str(x + 1)
-                        if x != 1 and x != 14:
+                        if x != 1 and x != self.get_object().num_weeks * 7:
                             if s not in input_days[day + "M"] and s not in input_days[day + "N"] and \
                                     s not in input_days[day_before + "N"] and s not in input_days[day_after + "M"]:
                                 calc_served[day] += s + "\n"
@@ -1811,21 +1812,17 @@ def organization_valid(organization, request):
     organization1 = get_input(organization)
     input_days = {}
     valid = True
-    keys = ["_630", "_700_manager", "_700_search", "_720_1", "_720_pull", "_720_2", "_720_3", "_1400", "_1500",
-            "_1500_1900",
-            "_2300"]
     for i in range(1, organization.num_weeks * 7 + 1):
         day = "day" + str(i)
         input_days[day + "M"] = []
         input_days[day + "A"] = []
         input_days[day + "N"] = []
-        for x in range(len(keys)):
-            if x < 7:
-                input_days[day + "M"] += organization1[day + keys[x]].split("\n")
-            elif x < 10:
-                input_days[day + "A"] += organization1[day + keys[x]].split("\n")
-            else:
-                input_days[day + "N"] += organization1[day + keys[x]].split("\n")
+        for key in MORNING_KEYS:
+            input_days[day + "M"] += organization1[day + key].split("\n")
+        for key in NOON_KEYS:
+            input_days[day + "A"] += organization1[day + key].split("\n")
+        for key in NIGHT_KEYS:
+            input_days[day + "N"] += organization1[day + key].split("\n")
     for key in input_days:
         for i in range(len(input_days[key])):
             input_days[key][i] = input_days[key][i].replace(" ", "")

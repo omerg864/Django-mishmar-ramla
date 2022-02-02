@@ -1,15 +1,35 @@
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm
+from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm, AuthenticationForm
 from Schedule.models import Settings3 as Settings
 from django.utils.translation import activate
 from .models import UserSettings as USettings
 from requests import get
 from Schedule.models import IpBan
+from django.contrib.auth import authenticate
+from django.contrib.auth import login as auth_login
 
 
+def login(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(request.POST)
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(username=username, password=password)
 
+        if user is not None:
+            if user.is_active:
+                auth_login(request, user)
+                return redirect('Schedule-Home')
+        else:
+            messages.warning(request, "שם משתמש או סיסמא לא נכונים")
+            return HttpResponseRedirect('/login')
+
+    else:
+        form = AuthenticationForm()
+    return render(request, 'users/login.html', {'form': form})
 
 def register(request, *args, **kwargs):
     settings = Settings.objects.first()
