@@ -1176,8 +1176,8 @@ class ServedSumShiftDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailVi
     model = Organization
     template_name = "Schedule/Served-sum.html"
 
-    def get_context_data(self, **kwargs):
-        ctx = super(ServedSumShiftDetailView, self).get_context_data(**kwargs)
+    def get_data(self):
+        ctx = {}
         served = {}
         counters = {}
         for i in range(1, self.get_object().num_weeks * 7 + 1):
@@ -1278,6 +1278,13 @@ class ServedSumShiftDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailVi
         ctx["not_qual_num"] = len(not_qual_users.keys())
         return ctx
 
+    def get_context_data(self, **kwargs):
+        ctx = super(ServedSumShiftDetailView, self).get_context_data(**kwargs)
+        context = self.get_data()
+        for c in context:
+            ctx[c] = context[c]
+        return ctx
+
     def test_func(self):
         if self.request.user.is_staff:
             return True
@@ -1285,7 +1292,7 @@ class ServedSumShiftDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailVi
 
     def post(self, request, *args, **kwargs):
         if request.method == "POST":
-            ctx = self.get_context_data()
+            ctx = self.get_data()
             return WriteToExcel(ctx["served"], ctx["notes"], ctx["notes_general"],ctx["days"], self.request.user)
 
 
