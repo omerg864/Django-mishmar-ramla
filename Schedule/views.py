@@ -136,6 +136,10 @@ def error_404_view(request, exception):
     return render(request, 'Schedule/404.html')
 
 
+class ArmingRequestView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    pass
+
+
 class ArmingDayView(LoginRequiredMixin, DayArchiveView):
     queryset = Arming_Log.objects.all()
     date_field = "date"
@@ -1206,6 +1210,8 @@ class ServedSumShiftDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailVi
             morning = False
             count = 0
             index = 1
+            counters[f"M-{name}-{shift.num_week}"] = 0
+            counters[f"A-{name}-{shift.num_week}"] = 0
             shifts = [shift.M1, shift.P1, shift.A1, shift.N1, shift.M2, shift.P2, shift.A2, shift.N2, shift.M3,
                       shift.P3,
                       shift.A3, shift.N3, shift.M4, shift.P4, shift.A4, shift.N4, shift.M5, shift.P5, shift.A5,
@@ -1216,10 +1222,8 @@ class ServedSumShiftDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailVi
                     if count == 0:
                         morning = True
                         served[kind + str(index + (shift.num_week * 7))] += name
-                        if f"M-{name}-{shift.num_week}" in counters and index < 6:
+                        if index < 6:
                             counters[f"M-{name}-{shift.num_week}"] += 1
-                        else:
-                            counters[f"M-{name}-{shift.num_week}"] = 1
                     else:
                         if count == 1:
                             if morning:
@@ -1228,10 +1232,8 @@ class ServedSumShiftDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailVi
                         else:
                             if count == 2:
                                 kind = "A"
-                                if f"A-{name}-{shift.num_week}" in counters and index < 6:
+                                if index < 6:
                                     counters[f"A-{name}-{shift.num_week}"] += 1
-                                else:
-                                    counters[f"A-{name}-{shift.num_week}"] = 1
                             elif count == 3:
                                 kind = "N"
                             served[kind + str(index + (shift.num_week * 7))] += name + "\n"

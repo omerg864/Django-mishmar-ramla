@@ -310,3 +310,25 @@ class Arming_Log(models.Model):
     class Meta:
         verbose_name = "הזנה ביומן חימוש"
         verbose_name_plural = "הזנות ביומן חימוש"
+
+class ArmingRequest(models.Model):
+    log = models.ForeignKey(Arming_Log, on_delete=models.CASCADE, verbose_name="הזנה ביומן חימוש", blank=False)
+    id_num = models.CharField(max_length=9, verbose_name="תעודת זהות", blank=False, default="")
+    shift_num = models.IntegerField(verbose_name="מספר משמרת", default=1, blank=False)
+    date = models.DateField(default=timezone.now, verbose_name="תאריך", blank=False)
+    time_in = models.TimeField(default=timezone.now, verbose_name="זמן כניסה", blank=False)
+    gun = models.ForeignKey(Gun, on_delete=models.CASCADE, verbose_name="מספר נשק", blank=False)
+    num_mags = models.IntegerField(default=2, verbose_name="מספר מחסניות", blank=False)
+    hand_cuffs = models.IntegerField(default=6, verbose_name="אזיקים", blank=False)
+    gun_case = models.IntegerField(default=6, verbose_name="פונדה", blank=False)
+    mag_case = models.IntegerField(default=6, verbose_name="נרתיק", blank=False)
+    keys = models.BooleanField(default=False, verbose_name="מפתחות", blank=False)
+    radio = models.BooleanField(default=False, verbose_name="קשר", blank=False)
+    radio_kit = models.BooleanField(default=False, verbose_name="ערכת שמע", blank=False)
+    time_out = models.TimeField(verbose_name="זמן יציאה", blank=True, null=True)
+    valid_in = models.TextField(verbose_name="חתימת מנהל כניסה", null=True, blank=True)
+    valid_out = models.TextField(verbose_name="חתימת מנהל יציאה", null=True, blank=True) 
+    signature_in = models.TextField(verbose_name="חתימת כניסה", null=True, blank=True)
+    signature_out = models.TextField(verbose_name="חתימת יציאה", null=True, blank=True)
+    read = models.BooleanField(default=False, verbose_name="טופל?", blank=False)
+    reason = models.TextField(verbose_name="סיבה", blank=False, default="")
