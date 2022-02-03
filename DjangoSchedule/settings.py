@@ -131,10 +131,10 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 LOGIN_REDIRECT_URL = "Schedule-Home"
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "apikey"
+EMAIL_HOST_USER = os.environ.get("DEFAULT_FROM_EMAIL_RAMLA")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD_RAMLA")
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL_RAMLA")
 
