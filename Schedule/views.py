@@ -145,7 +145,7 @@ class ArmingRequestDetailView(UserPassesTestMixin,DetailView):
     model = ArmingRequest
     template_name = 'Schedule/arming_request_detail.html'
     context_object_name = 'armingrequest'
-    ordering = ['-read']
+    ordering = ['read', ]
 
     def test_func(self):
         return self.request.user.is_staff
