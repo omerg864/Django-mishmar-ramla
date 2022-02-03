@@ -17,6 +17,13 @@
     <button class="but effect01" type="submit" name="month_log_manager"><span>יומן חימוש חודשי</span></button>
 </form>
 </div>
+<div style="margin-right: 10px;">
+    <form method="POST">
+        {% csrf_token %}
+    <button class="but effect01" type="submit" name="change_requests"><span>בקשות שינוי{% if num_requests > 0 %}
+        <a style="color:white; background-color:red; border-radius: 50%; margin-right:4px; padding: 5px;">{{ num_requests }}</a>{% endif %}</span></button>
+</form>
+</div>
 {% endif %}
 </div>
         <table class="responsive-table-input-matrix" style="align-items: center">
@@ -48,7 +55,7 @@
                 <th>שעה</th>
                 <th>חתימה</th>
                 <th>חתימת מורשה</th>
-                <th></th>
+                <th>אישור והחתמה</th>
             </tr>
             </thead>
             <tbody>
@@ -108,7 +115,7 @@
                     {% csrf_token %}
                 {% for arming in object_list %} 
             <tr style="align-content: end">
-                {% if request.user|edit_permission:arming %}
+                {% if request.user|edit_permission:arming or request.user|request_permission:arming %}
                 <td><select name="shifts{{arming.id}}" id="shifts{{arming.id}}">
                     <option value="1" {% if arming.shift_num == 1 %}selected{% endif %}>בוקר</option>
                     <option value="2" {% if arming.shift_num == 2 %}selected{% endif %}>צהריים</option>
@@ -188,7 +195,11 @@
                     name="time_out{{arming.id}}" id="time_out{{arming.id}}"></td>
                     <td>{% if arming.signature_out != "" and arming.signature_out != None %}<img id="sig-image" src={{arming.signature_out}} alt="Your signature will go here!" width="100px"/> {% endif %}</td>
                     <td>{% if arming.valid_out != "" and arming.valid_out != None %}<img id="sig-image" src={{arming.valid_out}} alt="Your signature will go here!" width="100px"/> {% endif %}</td>
-                <td><button class="btn btn-info mb-4" type="submit" value="{{arming.id}}" id="change" name="change">חתימה</button></td>
+                {% if request.user|edit_permission:arming %}
+                    <td><button class="btn btn-info mb-4" type="submit" value="{{arming.id}}" id="change" name="change">חתימה</button></td>
+                {% else %}
+                <td><button class="btn btn-info mb-4" type="submit" value="{{arming.id}}" id="request" name="request">בקשה לשינוי</button></td>
+                {% endif %}
                 {% else %}
                 <td>{{arming.shift_num|num_to_shift}}</td>
                 <td>{{forloop.counter|counter_shifts:object_list}}</td>
@@ -260,7 +271,7 @@
                 <td>{% if arming.time_out != None %} {{arming.time_out|timestr}} {% else %} <a>אין יציאה</a> {% endif %}</td>
                 <td>{% if arming.signature_out != "" and arming.signature_out != None %}<img id="sig-image" src={{arming.signature_out}} alt="Your signature will go here!" width="100px"/> {% endif %}</td>
                 <td>{% if arming.valid_out != "" and arming.valid_out != None %}<img id="sig-image" src={{arming.valid_out}} alt="Your signature will go here!" width="100px"/> {% endif %}</td>
-                <td><button class="btn btn-info mb-4" type="submit" value="{{arming.id}}" id="change" name="change" disabled>שנה</button></td>
+                <td><button class="btn btn-info mb-4" type="submit" value="{{arming.id}}" id="change" name="change" disabled>בקשה בתהליך</button></td>
                 {% endif %}
             </tr>
             {% endfor %}
