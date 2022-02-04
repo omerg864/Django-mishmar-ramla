@@ -17,6 +17,8 @@
     <button class="but effect01" type="submit" name="month_log_manager"><span>יומן חימוש חודשי</span></button>
 </form>
 </div>
+{% endif %}
+{% if user|is_manager %}
 <div style="margin-right: 10px;">
     <form method="POST">
         {% csrf_token %}
@@ -327,9 +329,9 @@
                       <td>{% if validation_log.sig_n != "" and validation_log.sig_n != None %}<img id="sig-image" src={{validation_log.sig_n}} alt="Your signature will go here!" width="100px"/> {% endif %}</td>
                     </tr>
                     <tr>
-                        <td><button class="btn btn-info mb-4" type="submit" name="shift1" id="shift1">חתימה</button></td>
-                        <td><button class="btn btn-info mb-4" type="submit" name="shift2" id="shift2">חתימה</button></td>
-                        <td><button class="btn btn-info mb-4" type="submit" name="shift3" id="shift3">חתימה</button></td>
+                        <td><button class="btn btn-info mb-4" type="submit" name="shift1" id="shift1"{% if validation_log|validation_log_check:1 %} disabled {% endif %}>חתימה</button></td>
+                        <td><button class="btn btn-info mb-4" type="submit" name="shift2" id="shift2"{% if validation_log|validation_log_check:2 %} disabled {% endif %}>חתימה</button></td>
+                        <td><button class="btn btn-info mb-4" type="submit" name="shift3" id="shift3"{% if validation_log|validation_log_check:3 %} disabled {% endif %}>חתימה</button></td>
                     </tr>
                 </tbody>
                 </form>

@@ -2,6 +2,7 @@
 {% block content %}
 
 <ul >
+  {% if not denied %}
         <h1>יומן חימוש חתימת אחמ"ש</h1>
         <h2> {{ date|date:"d/m/Y" }}</h2>
         <table style="margin-top: 20px;">
@@ -65,6 +66,7 @@
         </div>
     </div>
             </form>
+    {% endif %}
 </ul>
 <script>
     (function() {

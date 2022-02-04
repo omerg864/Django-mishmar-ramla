@@ -126,7 +126,7 @@ def home(request):
     posts = Post.objects.all()
     armingrequests = ArmingRequest.objects.all().filter(read=False)
     if request.user.is_authenticated:
-        if request.user.is_staff:
+        if request.user.groups.filter(name='manager').exists():
             num_requests = len(armingrequests)
             if num_requests > 0:
                 messages.info(request, f'יש {num_requests} בקשות לשינוי ביומן חימוש')
@@ -141,6 +141,18 @@ def home(request):
 def error_404_view(request, exception):
     return render(request, 'Schedule/404.html')
 
+def put_arming_context(ctx):
+    num_mags_list = [1, 2, 3]
+    hand_cuffs_list = [6, 1, 2, 3, 4, 5, 7, 8]
+    mag_case_list = [6, 1, 2, 3, 4, 5, 7]
+    gun_case_list = [6, 1, 2, 3, 4, 5, 7, 8]
+    ctx["num_mags_list"] = num_mags_list
+    ctx["hand_cuffs_list"] = hand_cuffs_list
+    ctx["mag_case_list"] = mag_case_list
+    ctx["gun_case_list"] = gun_case_list
+    ctx["guns"] = Gun.objects.all()
+    return ctx
+
 class ArmingRequestDetailView(UserPassesTestMixin,DetailView):
     model = ArmingRequest
     template_name = 'Schedule/arming_request_detail.html'
@@ -148,21 +160,12 @@ class ArmingRequestDetailView(UserPassesTestMixin,DetailView):
     ordering = ['read', ]
 
     def test_func(self):
-        return self.request.user.is_staff
+        return self.request.user.groups.filter(name='manager').exists()
 
     def get_context_data(self, **kwargs):
         ctx = super(ArmingRequestDetailView, self).get_context_data(**kwargs)
         ctx['arming'] = self.get_object().log
-        guns = Gun.objects.all()
-        num_mags_list = [1, 2, 3]
-        hand_cuffs_list = [6, 1, 2, 3, 4, 5, 7, 8]
-        mag_case_list = [6, 1, 2, 3, 4, 5, 7]
-        gun_case_list = [6, 1, 2, 3, 4, 5, 7, 8]
-        ctx["num_mags_list"] = num_mags_list
-        ctx["hand_cuffs_list"] = hand_cuffs_list
-        ctx["mag_case_list"] = mag_case_list
-        ctx["gun_case_list"] = gun_case_list
-        ctx["guns"] = guns
+        ctx = put_arming_context(ctx)
         return ctx
     
     def post(self, request, *args, **kwargs):
@@ -209,7 +212,7 @@ class ArmingRequestListView(UserPassesTestMixin, ListView):
     paginate_by = 8
 
     def test_func(self):
-        return self.request.user.is_staff
+        return self.request.user.groups.filter(name='manager').exists()
 
     def get_context_data(self, **kwargs):
         context = super(ArmingRequestListView, self).get_context_data(**kwargs)
@@ -229,19 +232,10 @@ class ArmingRequestView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         ctx = super(ArmingRequestView, self).get_context_data(**kwargs)
-        guns = Gun.objects.all()
+        ctx = put_arming_context(ctx)
         log_id = self.request.session['log_id']
         log = Arming_Log.objects.filter(id=log_id).first()
         user_name = self.request.user.first_name + " " + self.request.user.last_name
-        num_mags_list = [1, 2, 3]
-        hand_cuffs_list = [6, 1, 2, 3, 4, 5, 7, 8]
-        mag_case_list = [6, 1, 2, 3, 4, 5, 7]
-        gun_case_list = [6, 1, 2, 3, 4, 5, 7, 8]
-        ctx["num_mags_list"] = num_mags_list
-        ctx["hand_cuffs_list"] = hand_cuffs_list
-        ctx["mag_case_list"] = mag_case_list
-        ctx["gun_case_list"] = gun_case_list
-        ctx["guns"] = guns
         ctx["user_name"] = user_name
         session_keyes = ["gun_id", "name", "shift_num", "id_num", "time_in", "num_mags", "hand_cuffs", "gun_case", "mag_case", "keys", "radio", "radio_kit", "time_out"]
         for key in session_keyes:
@@ -291,7 +285,6 @@ class ArmingRequestView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
             messages.info(request, "אנא מלא סיבת שינוי")
             return HttpResponseRedirect(request.path_info)
 
-
 class ArmingDayView(LoginRequiredMixin, DayArchiveView):
     queryset = Arming_Log.objects.all()
     date_field = "date"
@@ -302,20 +295,11 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
 
     def get_context_data(self, **kwargs):
         ctx = super(ArmingDayView, self).get_context_data(**kwargs)
-        guns = Gun.objects.all()
+        ctx = put_arming_context(ctx)
         user_name = self.request.user.first_name + " " + self.request.user.last_name
         months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
         date1 = Date(self.kwargs['year'], months.index(getmonth(self.kwargs['month'].lower())) + 1, self.kwargs['day'])
         validation_log = ValidationLog.objects.all().filter(date=date1).first()
-        num_mags_list = [1, 2, 3]
-        hand_cuffs_list = [6, 1, 2, 3, 4, 5, 7, 8]
-        mag_case_list = [6, 1, 2, 3, 4, 5, 7]
-        gun_case_list = [6, 1, 2, 3, 4, 5, 7, 8]
-        ctx["num_mags_list"] = num_mags_list
-        ctx["hand_cuffs_list"] = hand_cuffs_list
-        ctx["mag_case_list"] = mag_case_list
-        ctx["gun_case_list"] = gun_case_list
-        ctx["guns"] = guns
         ctx["user_name"] = user_name
         ctx["validation_log"] = validation_log
         armingrequests = ArmingRequest.objects.all().filter(read=False)
@@ -487,16 +471,8 @@ class ArmingLogUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def get_context_data(self, **kwargs):
         ctx = super(ArmingLogUpdate, self).get_context_data(**kwargs)
         guns = Gun.objects.all()
+        ctx = put_arming_context(ctx)
         user_name = self.request.session["name"]
-        num_mags_list = [1, 2, 3]
-        hand_cuffs_list = [6, 1, 2, 3, 4, 5, 7, 8]
-        mag_case_list = [6, 1, 2, 3, 4, 5, 7]
-        gun_case_list = [6, 1, 2, 3, 4, 5, 7, 8]
-        ctx["num_mags_list"] = num_mags_list
-        ctx["hand_cuffs_list"] = hand_cuffs_list
-        ctx["mag_case_list"] = mag_case_list
-        ctx["gun_case_list"] = gun_case_list
-        ctx["guns"] = guns
         ctx["user_name"] = user_name
         session_keyes = ["gun_id","name", "shift_num", "id_num", "time_in", "num_mags", "hand_cuffs", "gun_case", "mag_case", "keys", "radio", "radio_kit", "time_out", "reqtype"]
         for key in session_keyes:
@@ -569,17 +545,8 @@ class ArmingCreateView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         ctx = super(ArmingCreateView, self).get_context_data(**kwargs)
-        guns = Gun.objects.all()
+        ctx = put_arming_context(ctx)
         user_name = self.request.user.first_name + " " + self.request.user.last_name
-        num_mags_list = [1, 2, 3]
-        hand_cuffs_list = [6, 1, 2, 3, 4, 5, 7, 8]
-        mag_case_list = [6, 1, 2, 3, 4, 5, 7]
-        gun_case_list = [6, 1, 2, 3, 4, 5, 7, 8]
-        ctx["num_mags_list"] = num_mags_list
-        ctx["hand_cuffs_list"] = hand_cuffs_list
-        ctx["mag_case_list"] = mag_case_list
-        ctx["gun_case_list"] = gun_case_list
-        ctx["guns"] = guns
         ctx["user_name"] = user_name
         session_keyes = ["gun_id", "name", "shift_num", "id_num", "time_in", "num_mags", "hand_cuffs", "gun_case", "mag_case", "keys", "radio", "radio_kit", "time_out", "reqtype"]
         for key in session_keyes:
@@ -638,6 +605,7 @@ class ArmingCreateView(LoginRequiredMixin, CreateView):
             messages.warning(request, "אנא הכנס את החתימה שלך")
             return HttpResponseRedirect(request.path_info)
 
+@login_required
 def Validation_Log_Signature(request):
     context = {}
     session_keyes = ["gun_safe", "gun_shift", "time", "manager", "reqtype", "shift", "year", "month", "day"]
@@ -645,6 +613,10 @@ def Validation_Log_Signature(request):
         context[key] = request.session[key]
     date1 = Date(int(context["year"]), int(context["month"]), int(context["day"]))
     context["date"] = date1
+    log = ValidationLog.objects.filter(date=date1).first()
+    context["denied"] = False
+    if log != None:
+        context["denied"] = validation_log_check(log, context["shift"])
     if request.method == "POST":
         sig = request.POST.get('sig-dataUrl')
         if sig == "Empty":
@@ -687,17 +659,8 @@ class ArmingMonthView(LoginRequiredMixin, MonthArchiveView):
 
     def get_context_data(self, **kwargs):
         ctx = super(ArmingMonthView, self).get_context_data(**kwargs)
-        guns = Gun.objects.all()
+        ctx = put_arming_context(ctx)
         user_name = self.request.user.first_name + " " + self.request.user.last_name
-        num_mags_list = [1, 2, 3]
-        hand_cuffs_list = [6, 1, 2, 3, 4, 5, 7, 8]
-        mag_case_list = [6, 1, 2, 3, 4, 5, 7]
-        gun_case_list = [6, 1, 2, 3, 4, 5, 7, 8]
-        ctx["num_mags_list"] = num_mags_list
-        ctx["hand_cuffs_list"] = hand_cuffs_list
-        ctx["mag_case_list"] = mag_case_list
-        ctx["gun_case_list"] = gun_case_list
-        ctx["guns"] = guns
         ctx["user_name"] = user_name
         ctx["reqtype"] = self.request.session["reqtype"]
         return ctx
@@ -1562,17 +1525,8 @@ def organization_update(request, pk=None):
             for j in range(len(forms)):
                 forms[j].data._mutable = True
                 for i in range(1, 8):
-                    forms[j].data["Day" + str(i) + "_630"] = ""
-                    forms[j].data["Day" + str(i) + "_700_search"] = ""
-                    forms[j].data["Day" + str(i) + "_700_manager"] = ""
-                    forms[j].data["Day" + str(i) + "_720_1"] = ""
-                    forms[j].data["Day" + str(i) + "_720_pull"] = ""
-                    forms[j].data["Day" + str(i) + "_720_2"] = ""
-                    forms[j].data["Day" + str(i) + "_720_3"] = ""
-                    forms[j].data["Day" + str(i) + "_1400"] = ""
-                    forms[j].data["Day" + str(i) + "_1500"] = ""
-                    forms[j].data["Day" + str(i) + "_1500_1900"] = ""
-                    forms[j].data["Day" + str(i) + "_2300"] = ""
+                    for key in SHIFT_KEYS:
+                        forms[j].data["Day" + str(i) + key] = ""
                 forms[j].data._mutable = False
             error = False
             for form in forms:
@@ -1586,6 +1540,7 @@ def organization_update(request, pk=None):
                 messages.info(request, translate_text(f'איפוס לא הושלם תקלה טכנית', request.user, "hebrew"))
             return HttpResponseRedirect(request.path_info)
         elif 'delete' == action:
+            Week.objects.filter(date=organization.date).delete()
             Organization.objects.filter(id=organization.id).delete()
             messages.success(request, translate_text(f'מחיקה הושלמה', request.user, "hebrew"))
             return redirect("Schedule-Served-sum")
@@ -1703,12 +1658,16 @@ def uplaod_organize(request, organization):
     if before_organization is not None:
         week_before = Week.objects.all().filter(date=before_organization.date,
                                                 num_week=before_organization.num_weeks - 1).first()
-        before_names = {"motsash": week_before.Day7_2300.split("\n"),
-                        "noon": week_before.Day7_1500.split("\n"),
-                        "morning": week_before.Day7_630.split("\n") +
-                                   week_before.Day7_700_search.split("\n") +
-                                   week_before.Day7_700_manager.split("\n") +
-                                   week_before.Day7_720_1.split("\n")}
+        morning_names = []
+        for key in MORNING_KEYS:
+            morning_names +=  getattr(week_before, f'Day7{key}').split("\n")
+        noon_names = []
+        for key in NOON_KEYS:
+            noon_names += getattr(week_before, f'Day7{key}').split("\n")
+        night_names = []
+        for key in NIGHT_KEYS:
+            night_names +=  getattr(week_before, f'Day7{key}').split("\n")
+        before_names = {"motsash": night_names, "noon": noon_names, "morning": morning_names}
         for key in before_names:
             for v in before_names[key]:
                 if v == '' or v == '\r' or v == ' ':
@@ -2092,17 +2051,8 @@ def organization_valid(organization, request):
 
 def to_week_form(form, request, j):
     for i in range(1, 8):
-        setattr(form.instance, f"Day{i}_630", request.POST.get(f"day{i}_630_{j}"))
-        setattr(form.instance, f"Day{i}_700_search", request.POST.get(f"day{i}_700_search_{j}"))
-        setattr(form.instance, f"Day{i}_700_manager", request.POST.get(f"day{i}_700_manager_{j}"))
-        setattr(form.instance, f"Day{i}_720_1", request.POST.get(f"day{i}_720_1_{j}"))
-        setattr(form.instance, f"Day{i}_720_pull", request.POST.get(f"day{i}_720_pull_{j}"))
-        setattr(form.instance, f"Day{i}_720_2", request.POST.get(f"day{i}_720_2_{j}"))
-        setattr(form.instance, f"Day{i}_720_3", request.POST.get(f"day{i}_720_3_{j}"))
-        setattr(form.instance, f"Day{i}_1400", request.POST.get(f"day{i}_1400_{j}"))
-        setattr(form.instance, f"Day{i}_1500_1900", request.POST.get(f"day{i}_1500_1900_{j}"))
-        setattr(form.instance, f"Day{i}_1500", request.POST.get(f"day{i}_1500_{j}"))
-        setattr(form.instance, f"Day{i}_2300", request.POST.get(f"day{i}_2300_{j}"))
+        for key in SHIFT_KEYS:
+            setattr(form.instance, f"Day{i}{key}", request.POST.get(f"day{i}{key}_{j}"))
         setattr(form.instance, f"Day{i}_notes", request.POST.get(f"day{i}_notes_{j}"))
 
 
@@ -2556,6 +2506,24 @@ class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, Detail
 
 
 # filters
+
+@register.filter
+def validation_log_check(log, shift):
+    if log != None:
+        if shift == 1:
+            if log.name_checked_m != "" and log.name_checked_m != None:
+                return True
+        elif shift == 2:
+            if log.name_checked_a != "" and log.name_checked_a != None:
+                return True
+        else:
+            if log.name_checked_n != "" and log.name_checked_n != None:
+                return True
+    return False
+
+@register.filter
+def is_manager(user):
+    return user.groups.filter(name='manager').exists()
 
 @register.filter
 def merge_user(obj_list, user):
