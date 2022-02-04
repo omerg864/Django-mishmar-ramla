@@ -141,6 +141,7 @@ def home(request):
 def error_404_view(request, exception):
     return render(request, 'Schedule/404.html')
 
+# Get context for select inputs for arming views
 def put_arming_context(ctx):
     num_mags_list = [1, 2, 3]
     hand_cuffs_list = [6, 1, 2, 3, 4, 5, 7, 8]
@@ -153,11 +154,11 @@ def put_arming_context(ctx):
     ctx["guns"] = Gun.objects.all()
     return ctx
 
+# Arming log chnage request to authorize change view
 class ArmingRequestDetailView(UserPassesTestMixin,DetailView):
     model = ArmingRequest
     template_name = 'Schedule/arming_request_detail.html'
     context_object_name = 'armingrequest'
-    ordering = ['read', ]
 
     def test_func(self):
         return self.request.user.groups.filter(name='manager').exists()
@@ -205,6 +206,7 @@ class ArmingRequestDetailView(UserPassesTestMixin,DetailView):
             messages.success(request, "הבקשה טופלה בהצלחה")
             return redirect('arming-requests-list')
 
+# Arming log change request list view
 class ArmingRequestListView(UserPassesTestMixin, ListView):
     model = ArmingRequest
     template_name = 'Schedule/arming_request_list.html'
@@ -219,6 +221,7 @@ class ArmingRequestListView(UserPassesTestMixin, ListView):
         return context
 
 
+# Arming log change request to send to manager view
 class ArmingRequestView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = ArmingRequest
     template_name = "Schedule/change-request.html"
@@ -285,6 +288,7 @@ class ArmingRequestView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
             messages.info(request, "אנא מלא סיבת שינוי")
             return HttpResponseRedirect(request.path_info)
 
+# Arming log Day view
 class ArmingDayView(LoginRequiredMixin, DayArchiveView):
     queryset = Arming_Log.objects.all()
     date_field = "date"
@@ -449,6 +453,7 @@ class ArmingDayView(LoginRequiredMixin, DayArchiveView):
             messages.info(request, " הנתונים הועברו בהצלחה כדי לשמור יש לחתום")
             return redirect("validation-signature")
 
+# Arming log update view
 class ArmingLogUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Arming_Log
     template_name = "Schedule/signature_page.html"
@@ -537,7 +542,9 @@ class ArmingLogUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             log.save()
             messages.success(request, "הנתונים נשמרו בהצלחה")
             return redirect('armingday', year=int(self.get_object().date.strftime("%Y")), month=self.get_object().date.strftime("%b"), day=int(self.get_object().date.strftime("%d")))
-        
+
+
+# Arming log create view
 class ArmingCreateView(LoginRequiredMixin, CreateView):
     model = Arming_Log
     template_name = "Schedule/signature_create.html"
@@ -605,6 +612,7 @@ class ArmingCreateView(LoginRequiredMixin, CreateView):
             messages.warning(request, "אנא הכנס את החתימה שלך")
             return HttpResponseRedirect(request.path_info)
 
+# View to create or edit Validation log 
 @login_required
 def Validation_Log_Signature(request):
     context = {}
@@ -648,7 +656,7 @@ def Validation_Log_Signature(request):
     return render(request, "Schedule/validation_signature.html", context)
 
 
-
+# Arming log month view
 class ArmingMonthView(LoginRequiredMixin, MonthArchiveView):
     queryset = Arming_Log.objects.all()
     date_field = "date"
@@ -668,13 +676,14 @@ class ArmingMonthView(LoginRequiredMixin, MonthArchiveView):
     def post(self, request, *args, **kwargs):
         pass
 
-
+# return boolean values for checkboxes
 def checkbox(value):
     if value == "on":
         return True
     return False
 
 
+# View to serv shifts to create or edit ShiftWeek and Shift
 @login_required
 def shift_view(request):
     organization = Organization.objects.order_by('-date')[0]
@@ -705,7 +714,6 @@ def shift_view(request):
                     messages.info(request, message)
     if request.method == 'POST':
         if not already_submitted(request.user):
-            #form = ShiftForm(request.POST)
             shift = Shift()
             for i in range(organization.num_weeks):
                 new_form = ShiftWeekForm(request.POST)
@@ -715,7 +723,6 @@ def shift_view(request):
             shifts = Shift.objects.filter(date=last_date)
             shift = shifts.filter(username=request.user).first()
             notes_text = str(shift.notes)
-            #form = ShiftForm(request.POST, instance=shift)
             weeks = shifts_weeks_served.filter(username=request.user).order_by('num_week')
             for week in weeks:
                 new_form = ShiftWeekForm(request.POST, instance=week)
@@ -846,11 +853,9 @@ def shift_view(request):
                 notes_text = str(shift.notes)
                 for i in range(len(weeks)):
                     forms[i] = ShiftWeekViewForm(instance=weeks[i])
-                #form = ShiftViewForm(instance=shift)
             else:
                 empty = True
         elif not already_submitted(request.user):
-            #form = ShiftForm()
             shift = Shift()
             for i in range(organization.num_weeks):
                 forms[i] = ShiftWeekForm()
@@ -859,7 +864,6 @@ def shift_view(request):
             shifts = Shift.objects.filter(date=last_date)
             shift = shifts.filter(username=request.user).first()
             notes_text = str(shift.notes)
-            #form = ShiftForm(instance=shift)
             weeks = shifts_weeks_served.filter(username=request.user).order_by('num_week')
             for i in range(len(weeks)):
                 forms[i] = ShiftWeekForm(instance=weeks[i])
@@ -881,6 +885,7 @@ def shift_view(request):
     return render(request, "Schedule/shifts.html", context)
 
 
+# Check if the user has already submitted shifts
 def already_submitted(user):
     last_date = Organization.objects.order_by('-date')[0].date
     shifts = Shift.objects.filter(date=last_date)
@@ -891,7 +896,7 @@ def already_submitted(user):
             return False
     return True
 
-
+# Get organization data and return as dictionary
 def get_input(organization_last):
     weeks_obj = Week.objects.all().filter(date=organization_last.date)
     weeks = []
@@ -910,6 +915,7 @@ def get_input(organization_last):
     return organization_last_input
 
 
+# Organizations list view by date
 class ServedSumListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = Organization
     template_name = "Schedule/Served_sum_list.html"
@@ -923,6 +929,7 @@ class ServedSumListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return False
 
 
+# View to staff member to edit shifts served 
 @staff_member_required
 def shift_update_view(request, pk=None):
     main_shift = Shift.objects.all().filter(id=pk).first()
@@ -1044,16 +1051,18 @@ def shift_update_view(request, pk=None):
     return render(request, "Schedule/shifts.html", context)
 
 
-class OrganizationDetailView(LoginRequiredMixin, DetailView):
+# View to show staff memeber ready form of the organization
+class OrganizationDetailView(LoginRequiredMixin, DetailView, UserPassesTestMixin):
     model = Organization
     template_name = "Schedule/organization-detail.html"
 
+    def test_func(self):
+        return self.request.user.is_staff
+    
     def get_context_data(self, **kwargs):
         ctx = super(OrganizationDetailView, self).get_context_data(**kwargs)
         weeks_obj = Week.objects.all().filter(date=self.get_object().date)
-        weeks = []
-        for w in weeks_obj:
-            weeks.append(0)
+        weeks = {}
         for week_obj in weeks_obj:
             weeks[week_obj.num_week] = week_obj
         ctx["weeks"] = weeks
@@ -1063,7 +1072,7 @@ class OrganizationDetailView(LoginRequiredMixin, DetailView):
         ctx["days"] = days
         return ctx
 
-
+# View to create an organization with date and num weeks
 class OrganizationCreateView(LoginRequiredMixin, CreateView, UserPassesTestMixin):
     model = Organization
     template_name = "Schedule/organization-new.html"
@@ -1084,6 +1093,7 @@ class OrganizationCreateView(LoginRequiredMixin, CreateView, UserPassesTestMixin
         return super().form_valid(form)
 
 
+# View to show staff memeber a table of shifts users got based on the organization
 class ShifttableView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Organization
     template_name = "Schedule/shift-table-view.html"
@@ -1174,6 +1184,7 @@ class ShifttableView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         return False
 
 
+# View to show staff member shift reinforcements served
 class ServedSumReinforcementsDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Organization
     template_name = "Schedule/served_sum_reinforcements.html"
@@ -1327,6 +1338,7 @@ class ServedSumReinforcementsDetailView(LoginRequiredMixin, UserPassesTestMixin,
             return render(request, "Schedule/served_sum_reinforcements.html", ctx)
 
 
+# View to show staff member shifts served based on organization
 class ServedSumShiftDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Organization
     template_name = "Schedule/Served-sum.html"
@@ -1449,6 +1461,7 @@ class ServedSumShiftDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailVi
             return WriteToExcel(ctx["served"], ctx["notes"], ctx["notes_general"],ctx["days"], self.request.user)
 
 
+# View to update organizaytion by staff memebers
 @staff_member_required
 def organization_update(request, pk=None):
     organization = Organization.objects.all().filter(id=pk).first()
@@ -1498,16 +1511,10 @@ def organization_update(request, pk=None):
             forms = []
             for i in range(organization.num_weeks):
                 forms.append("")
-            #for week in weeks:
-            #    new_form = WeekUpdateForm(request.POST, instance=week)
-            #    forms[week.num_week] = new_form
             for i in range(len(weeks)):
                 for key in weeks_dicts[i].keys():
                     setattr(weeks[i], key, weeks_dicts[i][key])
             error = False
-            #for form in forms:
-            #    if not form.is_valid():
-            #        error = True
             if not error:
                 for week in weeks:
                     week.save()
@@ -1560,8 +1567,8 @@ def organization_update(request, pk=None):
     return render(request, "Schedule/organization_update.html", context)
 
 
+# Extract data from excel and return it as a list of variables
 def extract_data(request, organization):
-    # extract from excel
     myfile = request.FILES['myfile']
     file_object = myfile.file
     wb = openpyxl.load_workbook(file_object)
@@ -1643,6 +1650,7 @@ def extract_data(request, organization):
     return [names_days, no_pull_names, sequence_count, max_out_names, max_seq0, max_seq1]
 
 
+# Given data from excel and puts it in the organization database based on hours
 def uplaod_organize(request, organization):
     extracted_data = extract_data(request, organization)
     names_days = extracted_data[0]
@@ -1907,7 +1915,7 @@ def uplaod_organize(request, organization):
         days_count += 1
     return weeks_dicts
 
-
+# Searches free space to put user 
 def search_and_put(weeks_dict, for_list, check_list, day, time, max_out_names, seq,
                    sequence_count, max_seq0, max_seq1, is_seq, extra_seq):
     if seq == 0:
@@ -1938,12 +1946,13 @@ def search_and_put(weeks_dict, for_list, check_list, day, time, max_out_names, s
     return False
 
 
+# insert data to form
 def insert_all_to_form(weeks_dict, for_list, day, time):
     weeks_dict[f'Day{day}_{time}'] = '\n'.join(for_list)
     for name in for_list:
         for_list.remove(name)
 
-
+# seperate user that reached max sequence count
 def seperate_list(shift, max_out_names):
     new_list = []
     for s in shift:
@@ -1951,7 +1960,7 @@ def seperate_list(shift, max_out_names):
             new_list.append(s)
     return new_list
 
-
+# insert random user
 def insert_random(weeks_dict, list1, time, day, count):
     if len(list1) > 0:
         r = random.randint(0, len(list1) - 1)
@@ -1964,6 +1973,7 @@ def insert_random(weeks_dict, list1, time, day, count):
         return None
 
 
+# Checks if organization is valid
 def organization_valid(organization, request):
     organization1 = get_input(organization)
     input_days = {}
@@ -2049,13 +2059,14 @@ def organization_valid(organization, request):
     if valid:
         messages.success(request, translate_text("סידור תקין", request.user, "hebrew"))
 
+# Insert to Week form
 def to_week_form(form, request, j):
     for i in range(1, 8):
         for key in SHIFT_KEYS:
             setattr(form.instance, f"Day{i}{key}", request.POST.get(f"day{i}{key}_{j}"))
         setattr(form.instance, f"Day{i}_notes", request.POST.get(f"day{i}_notes_{j}"))
 
-
+# Check if name apears more than once in list
 def is_more_than_once(list, name):
     num = 0
     for n in list:
@@ -2065,13 +2076,7 @@ def is_more_than_once(list, name):
         return True
     return False
 
-
-def check_if_in_list(names, name):
-    if name in names:
-        return True
-    return None
-
-
+# View to show users all the organizations paginated by 1
 class OrganizationListView(LoginRequiredMixin, ListView):
     model = Organization
     template_name = "Schedule/organizations_list.html"
@@ -2086,6 +2091,7 @@ class OrganizationListView(LoginRequiredMixin, ListView):
         return ctx
 
 
+# Write shifts served data to excel
 def WriteToExcel(served, notes, notes_general, dates, user):
     # Create a workbook and add a worksheet.
     buffer = io.BytesIO()
@@ -2321,24 +2327,14 @@ def WriteToExcel(served, notes, notes_general, dates, user):
     return FileResponse(buffer, as_attachment=True, filename=f'{file_name}.xlsx')
 
 
+# Day number to string name
 def number_to_day2(num):
     day = "יום "
-    if num == 1:
-        return day + "ראשון"
-    elif num == 2:
-        return day + "שני"
-    elif num == 3:
-        return day + "שלישי"
-    elif num == 4:
-        return day + "רביעי"
-    elif num == 5:
-        return day + "חמישי"
-    elif num == 6:
-        return day + "שישי"
-    else:
-        return day + "שבת"
+    days = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"]
+    return day + days[num - 1]
 
 
+# initialize default shift numbers for suggestion organization
 guards_num = {}
 for x in range(14):
     guards_num[f"M{x}"] = 5
@@ -2357,7 +2353,7 @@ guards_num["N6"] = 2
 guards_num["N5"] = 2
 guards_num["M6"] = 2
 
-
+# Compare different organization suggestions
 def compare_organizations(served, guards_num, organization, officer, sat_night, users, users_settings):
     organizer = Organizer(served, guards_num, organization, officer, sat_night, users, users_settings)
     organizer.organize()
@@ -2371,6 +2367,7 @@ def compare_organizations(served, guards_num, organization, officer, sat_night, 
     return organizer
 
 
+# View to show suggestion organization calculated
 class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Organization
     template_name = "Schedule/Suggestion.html"
