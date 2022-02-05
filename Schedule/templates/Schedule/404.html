@@ -1,43 +1,21 @@
 {% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'Schedule/404.css' %}">
-<a target="_blank">
-  <header class="top-header">
-</header>
-
-<!--dust particel-->
-<div>
-  <div class="starsec"></div>
-  <div class="starthird"></div>
-  <div class="starfourth"></div>
-  <div class="starfifth"></div>
-</div>
-<!--Dust particle end--->
-
-
-<div class="lamp__wrap">
-  <div class="lamp">
-    <div class="cable"></div>
-    <div class="cover"></div>
-    <div class="in-cover">
-      <div class="bulb"></div>
-    </div>
-    <div class="light"></div>
-  </div>
-</div>
-<!-- END Lamp -->
-<section class="error">
-  <!-- Content -->
-  <div class="error__content">
-    <div class="error__message message">
-      <h1 class="message__title">עמוד לא נמצא</h1>
-      <p class="message__text">סליחה עמוד לא נמצא או נמחק.</p>
-    </div>
-    <div class="error__nav e-nav">
-      <a href="{% url 'Schedule-Home' %}" class="e-nav__link"></a>
-    </div>
-  </div>
-  <!-- END Content -->
-
-</section>
-
-  </a>
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>404 Error page</title>
+        <link rel="stylesheet" type="text/css" href="{% static 'Schedule/404.css' %}">
+    </head>
+    <body>
+        <div id="error-frame">
+            <div class="container">
+                <h1>404</h1>
+                <h4>Opps! Page not found</h4>
+                <p>Soory, the page you're looling for doesn't exist. you can go to home page.</p>
+                <div class="btn">
+                    <a href="#">Return home</a>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
