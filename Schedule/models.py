@@ -229,6 +229,9 @@ class Event(models.Model):
     after_noon = models.BooleanField(default=False, verbose_name="צהריים")
     night = models.BooleanField(default=False, verbose_name="לילה")
 
+    def __str__(self):
+        return '{self.nickname} {self.date2}'
+
     class Meta:
         verbose_name = "אירוע"
         verbose_name_plural = "אירועים"
@@ -237,6 +240,9 @@ class Event(models.Model):
 class IpBan(models.Model):
     ipaddress = models.GenericIPAddressField(verbose_name="כתובת IP")
     num_tries = models.IntegerField(default=0, verbose_name="מספר ניסיונות")
+
+    def __str__(self):
+        return f'{self.ipaddress} ({self.num_tries})'
 
     class Meta:
         verbose_name = "חסימת IP"
@@ -329,6 +335,9 @@ class ArmingRequest(models.Model):
     signature_out = models.TextField(verbose_name="חתימת יציאה", null=True, blank=True)
     read = models.BooleanField(default=False, verbose_name="טופל?", blank=False)
     reason = models.TextField(verbose_name="סיבה", blank=False, default="")
+
+    def __str__(self):
+        return self.log.name + " " + str(self.log.date)
 
     class Meta:
         verbose_name = "בקשה לשינוי יומן חימוש"
