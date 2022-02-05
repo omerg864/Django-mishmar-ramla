@@ -52,7 +52,27 @@ NIGHT_KEYS = ["_2300"]
 
 SHIFT_KEYS = MORNING_KEYS + NOON_KEYS + NIGHT_KEYS
 
+# initialize default shift numbers for suggestion organization
+guards_num = {}
+for x in range(14):
+    guards_num[f"M{x}"] = 5
+    guards_num[f"A{x}"] = 3
+    guards_num[f"N{x}"] = 1
+guards_num["A13"] = 0
+guards_num["A12"] = 0
+guards_num["M12"] = 0
+guards_num["A6"] = 0
+guards_num["M5"] = 0
+guards_num["A5"] = 0
+guards_num["N13"] = 2
+guards_num["N12"] = 2
+guards_num["M13"] = 2
+guards_num["N6"] = 2
+guards_num["N5"] = 2
+guards_num["M6"] = 2
 
+
+# Website settings view
 @staff_member_required
 def settings_view(request):
     settings = Settings.objects.all().last()
@@ -81,6 +101,7 @@ def settings_view(request):
     return render(request, "Schedule/settings.html", context)
 
 
+# Home view
 def home(request):
     settings = Settings.objects.all().first()
     data = {}
@@ -137,22 +158,9 @@ def home(request):
     }
     return render(request, "Schedule/Home.html", context)
 
-
+# Error 404 custom view
 def error_404_view(request, exception):
     return render(request, 'Schedule/404.html')
-
-# Get context for select inputs for arming views
-def put_arming_context(ctx):
-    num_mags_list = [1, 2, 3]
-    hand_cuffs_list = [6, 1, 2, 3, 4, 5, 7, 8]
-    mag_case_list = [6, 1, 2, 3, 4, 5, 7]
-    gun_case_list = [6, 1, 2, 3, 4, 5, 7, 8]
-    ctx["num_mags_list"] = num_mags_list
-    ctx["hand_cuffs_list"] = hand_cuffs_list
-    ctx["mag_case_list"] = mag_case_list
-    ctx["gun_case_list"] = gun_case_list
-    ctx["guns"] = Gun.objects.all()
-    return ctx
 
 # Arming log chnage request to authorize change view
 class ArmingRequestDetailView(UserPassesTestMixin,DetailView):
@@ -676,11 +684,6 @@ class ArmingMonthView(LoginRequiredMixin, MonthArchiveView):
     def post(self, request, *args, **kwargs):
         pass
 
-# return boolean values for checkboxes
-def checkbox(value):
-    if value == "on":
-        return True
-    return False
 
 
 # View to serv shifts to create or edit ShiftWeek and Shift
@@ -744,48 +747,7 @@ def shift_view(request):
                     forms[j].instance.username = request.user
                     forms[j].instance.date = Organization.objects.order_by('-date')[0].date
                     forms[j].instance.num_week = j
-                    forms[j].instance.M1 = request.POST.get(f"M1_{j}", False)
-                    forms[j].instance.M2 = request.POST.get(f"M2_{j}", False)
-                    forms[j].instance.M3 = request.POST.get(f"M3_{j}", False)
-                    forms[j].instance.M4 = request.POST.get(f"M4_{j}", False)
-                    forms[j].instance.M5 = request.POST.get(f"M5_{j}", False)
-                    forms[j].instance.M6 = request.POST.get(f"M6_{j}", False)
-                    forms[j].instance.M7 = request.POST.get(f"M7_{j}", False)
-                    forms[j].instance.A1 = request.POST.get(f"A1_{j}", False)
-                    forms[j].instance.A2 = request.POST.get(f"A2_{j}", False)
-                    forms[j].instance.A3 = request.POST.get(f"A3_{j}", False)
-                    forms[j].instance.A4 = request.POST.get(f"A4_{j}", False)
-                    forms[j].instance.A5 = request.POST.get(f"A5_{j}", False)
-                    forms[j].instance.A6 = request.POST.get(f"A6_{j}", False)
-                    forms[j].instance.A7 = request.POST.get(f"A7_{j}", False)
-                    forms[j].instance.N1 = request.POST.get(f"N1_{j}", False)
-                    forms[j].instance.N2 = request.POST.get(f"N2_{j}", False)
-                    forms[j].instance.N3 = request.POST.get(f"N3_{j}", False)
-                    forms[j].instance.N4 = request.POST.get(f"N4_{j}", False)
-                    forms[j].instance.N5 = request.POST.get(f"N5_{j}", False)
-                    forms[j].instance.N6 = request.POST.get(f"N6_{j}", False)
-                    forms[j].instance.N7 = request.POST.get(f"N7_{j}", False)
-                    forms[j].instance.P1 = request.POST.get(f"P1_{j}", False)
-                    forms[j].instance.P2 = request.POST.get(f"P2_{j}", False)
-                    forms[j].instance.P3 = request.POST.get(f"P3_{j}", False)
-                    forms[j].instance.P4 = request.POST.get(f"P4_{j}", False)
-                    forms[j].instance.P5 = request.POST.get(f"P5_{j}", False)
-                    forms[j].instance.P6 = request.POST.get(f"P6_{j}", False)
-                    forms[j].instance.P7 = request.POST.get(f"P7_{j}", False)
-                    forms[j].instance.R1 = request.POST.get(f"R1_{j}", False)
-                    forms[j].instance.R2 = request.POST.get(f"R2_{j}", False)
-                    forms[j].instance.R3 = request.POST.get(f"R3_{j}", False)
-                    forms[j].instance.R4 = request.POST.get(f"R4_{j}", False)
-                    forms[j].instance.R5 = request.POST.get(f"R5_{j}", False)
-                    forms[j].instance.R6 = request.POST.get(f"R6_{j}", False)
-                    forms[j].instance.R7 = request.POST.get(f"R7_{j}", False)
-                    forms[j].instance.notes1 = request.POST.get(f"notes1_{j}", False)
-                    forms[j].instance.notes2 = request.POST.get(f"notes2_{j}", False)
-                    forms[j].instance.notes3 = request.POST.get(f"notes3_{j}", False)
-                    forms[j].instance.notes4 = request.POST.get(f"notes4_{j}", False)
-                    forms[j].instance.notes5 = request.POST.get(f"notes5_{j}", False)
-                    forms[j].instance.notes6 = request.POST.get(f"notes6_{j}", False)
-                    forms[j].instance.notes7 = request.POST.get(f"notes7_{j}", False)
+                    forms[j].instance = insert_shift_data(forms[j].instance, request, j)
                     forms[j].save()
             else:
                 for j in range(organization.num_weeks):
@@ -794,49 +756,7 @@ def shift_view(request):
                     new_shift.username = request.user
                     new_shift.date = Organization.objects.order_by('-date')[0].date
                     new_shift.num_week = j
-                    new_shift.M1 = request.POST.get(f"M1_{j}", False)
-                    new_shift.M2 = request.POST.get(f"M2_{j}", False)
-                    new_shift.M3 = request.POST.get(f"M3_{j}", False)
-                    new_shift.M4 = request.POST.get(f"M4_{j}", False)
-                    new_shift.M5 = request.POST.get(f"M5_{j}", False)
-                    new_shift.M6 = request.POST.get(f"M6_{j}", False)
-                    new_shift.M7 = request.POST.get(f"M7_{j}", False)
-                    new_shift.A1 = request.POST.get(f"A1_{j}", False)
-                    new_shift.A2 = request.POST.get(f"A2_{j}", False)
-                    new_shift.A3 = request.POST.get(f"A3_{j}", False)
-                    new_shift.A4 = request.POST.get(f"A4_{j}", False)
-                    new_shift.A5 = request.POST.get(f"A5_{j}", False)
-                    new_shift.A6 = request.POST.get(f"A6_{j}", False)
-                    new_shift.A7 = request.POST.get(f"A7_{j}", False)
-                    new_shift.N1 = request.POST.get(f"N1_{j}", False)
-                    new_shift.N2 = request.POST.get(f"N2_{j}", False)
-                    new_shift.N3 = request.POST.get(f"N3_{j}", False)
-                    new_shift.N4 = request.POST.get(f"N4_{j}", False)
-                    new_shift.N5 = request.POST.get(f"N5_{j}", False)
-                    new_shift.N6 = request.POST.get(f"N6_{j}", False)
-                    new_shift.N7 = request.POST.get(f"N7_{j}", False)
-                    new_shift.P1 = request.POST.get(f"P1_{j}", False)
-                    new_shift.P2 = request.POST.get(f"P2_{j}", False)
-                    new_shift.P3 = request.POST.get(f"P3_{j}", False)
-                    new_shift.P4 = request.POST.get(f"P4_{j}", False)
-                    new_shift.P5 = request.POST.get(f"P5_{j}", False)
-                    new_shift.P6 = request.POST.get(f"P6_{j}", False)
-                    new_shift.P7 = request.POST.get(f"P7_{j}", False)
-                    new_shift.R1 = request.POST.get(f"R1_{j}", False)
-                    new_shift.R2 = request.POST.get(f"R2_{j}", False)
-                    new_shift.R3 = request.POST.get(f"R3_{j}", False)
-                    new_shift.R4 = request.POST.get(f"R4_{j}", False)
-                    new_shift.R5 = request.POST.get(f"R5_{j}", False)
-                    new_shift.R6 = request.POST.get(f"R6_{j}", False)
-                    new_shift.R7 = request.POST.get(f"R7_{j}", False)
-                    new_shift.notes1 = request.POST.get(f"notes1_{j}", False)
-                    new_shift.notes2 = request.POST.get(f"notes2_{j}", False)
-                    new_shift.notes3 = request.POST.get(f"notes3_{j}", False)
-                    new_shift.notes4 = request.POST.get(f"notes4_{j}", False)
-                    new_shift.notes5 = request.POST.get(f"notes5_{j}", False)
-                    new_shift.notes6 = request.POST.get(f"notes6_{j}", False)
-                    new_shift.notes7 = request.POST.get(f"notes7_{j}", False)
-                    new_shift.save()
+                    new_shift = insert_shift_data(new_shift, request, j)
             if not already_submitted(request.user):
                 messages.success(request, translate_text(f'משמרות הוגשו בהצלחה!', request.user, "hebrew"))
             else:
@@ -883,36 +803,6 @@ def shift_view(request):
             "manager": False,
         }
     return render(request, "Schedule/shifts.html", context)
-
-
-# Check if the user has already submitted shifts
-def already_submitted(user):
-    last_date = Organization.objects.order_by('-date')[0].date
-    shifts = Shift.objects.filter(date=last_date)
-    if len(shifts) == 0:
-        return False
-    else:
-        if len(shifts.filter(username=user)) == 0:
-            return False
-    return True
-
-# Get organization data and return as dictionary
-def get_input(organization_last):
-    weeks_obj = Week.objects.all().filter(date=organization_last.date)
-    weeks = []
-    for w in weeks_obj:
-        weeks.append(0)
-    for week_obj in weeks_obj:
-        weeks[week_obj.num_week] = week_obj
-    organization_last_input = {}
-    fields = SHIFT_KEYS + ["_notes"]
-    for j in range(organization_last.num_weeks):
-        for i in range(1, 8):
-            day1 = f'Day{i}'
-            day2 = f'day{i + (j * 7)}'
-            for f in fields:
-                organization_last_input[day2 + f] = getattr(weeks[j], day1 + f)
-    return organization_last_input
 
 
 # Organizations list view by date
@@ -982,48 +872,7 @@ def shift_update_view(request, pk=None):
                 forms[j].instance.username = user
                 forms[j].instance.date = organization.date
                 forms[j].instance.num_week = j
-                forms[j].instance.M1 = request.POST.get(f"M1_{j}", False)
-                forms[j].instance.M2 = request.POST.get(f"M2_{j}", False)
-                forms[j].instance.M3 = request.POST.get(f"M3_{j}", False)
-                forms[j].instance.M4 = request.POST.get(f"M4_{j}", False)
-                forms[j].instance.M5 = request.POST.get(f"M5_{j}", False)
-                forms[j].instance.M6 = request.POST.get(f"M6_{j}", False)
-                forms[j].instance.M7 = request.POST.get(f"M7_{j}", False)
-                forms[j].instance.A1 = request.POST.get(f"A1_{j}", False)
-                forms[j].instance.A2 = request.POST.get(f"A2_{j}", False)
-                forms[j].instance.A3 = request.POST.get(f"A3_{j}", False)
-                forms[j].instance.A4 = request.POST.get(f"A4_{j}", False)
-                forms[j].instance.A5 = request.POST.get(f"A5_{j}", False)
-                forms[j].instance.A6 = request.POST.get(f"A6_{j}", False)
-                forms[j].instance.A7 = request.POST.get(f"A7_{j}", False)
-                forms[j].instance.N1 = request.POST.get(f"N1_{j}", False)
-                forms[j].instance.N2 = request.POST.get(f"N2_{j}", False)
-                forms[j].instance.N3 = request.POST.get(f"N3_{j}", False)
-                forms[j].instance.N4 = request.POST.get(f"N4_{j}", False)
-                forms[j].instance.N5 = request.POST.get(f"N5_{j}", False)
-                forms[j].instance.N6 = request.POST.get(f"N6_{j}", False)
-                forms[j].instance.N7 = request.POST.get(f"N7_{j}", False)
-                forms[j].instance.P1 = request.POST.get(f"P1_{j}", False)
-                forms[j].instance.P2 = request.POST.get(f"P2_{j}", False)
-                forms[j].instance.P3 = request.POST.get(f"P3_{j}", False)
-                forms[j].instance.P4 = request.POST.get(f"P4_{j}", False)
-                forms[j].instance.P5 = request.POST.get(f"P5_{j}", False)
-                forms[j].instance.P6 = request.POST.get(f"P6_{j}", False)
-                forms[j].instance.P7 = request.POST.get(f"P7_{j}", False)
-                forms[j].instance.R1 = request.POST.get(f"R1_{j}", False)
-                forms[j].instance.R2 = request.POST.get(f"R2_{j}", False)
-                forms[j].instance.R3 = request.POST.get(f"R3_{j}", False)
-                forms[j].instance.R4 = request.POST.get(f"R4_{j}", False)
-                forms[j].instance.R5 = request.POST.get(f"R5_{j}", False)
-                forms[j].instance.R6 = request.POST.get(f"R6_{j}", False)
-                forms[j].instance.R7 = request.POST.get(f"R7_{j}", False)
-                forms[j].instance.notes1 = request.POST.get(f"notes1_{j}", False)
-                forms[j].instance.notes2 = request.POST.get(f"notes2_{j}", False)
-                forms[j].instance.notes3 = request.POST.get(f"notes3_{j}", False)
-                forms[j].instance.notes4 = request.POST.get(f"notes4_{j}", False)
-                forms[j].instance.notes5 = request.POST.get(f"notes5_{j}", False)
-                forms[j].instance.notes6 = request.POST.get(f"notes6_{j}", False)
-                forms[j].instance.notes7 = request.POST.get(f"notes7_{j}", False)
+                forms[j].instance = insert_shift_data(forms[j].instance, request, j)
                 forms[j].save()
             messages.success(request, translate_text(f'משמרות עודכנו בהצלחה!', user, "hebrew"))
             return redirect("Schedule-Served-sum")
@@ -1567,6 +1416,222 @@ def organization_update(request, pk=None):
     return render(request, "Schedule/organization_update.html", context)
 
 
+# View to show users all the organizations paginated by 1
+class OrganizationListView(LoginRequiredMixin, ListView):
+    model = Organization
+    template_name = "Schedule/organizations_list.html"
+    context_object_name = "organizations"
+    ordering = ["-date"]
+    paginate_by = 1
+
+    def get_context_data(self, **kwargs):
+        ctx = super(OrganizationListView, self).get_context_data(**kwargs)
+        weeks = Week.objects.all()
+        ctx["weeks"] = weeks
+        return ctx
+
+
+# View to show suggestion organization calculated
+class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    model = Organization
+    template_name = "Schedule/Suggestion.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super(OrganizationSuggestionView, self).get_context_data(**kwargs)
+        settings = Settings.objects.all().first()
+        try:
+            last_organization = Organization.objects.all().order_by('-date')[get_num_organization(self.get_object()) - 1]
+        except:
+            last_organization = ""
+        users = User.objects.all()
+        users_settings = USettings.objects.all()
+        days = []
+        for x in range(self.get_object().num_weeks * 7):
+            days.append(self.get_object().date + datetime.timedelta(days=x))
+        ctx["days"] = days
+        served, notes = self.get_served()
+        if last_organization != "":
+            organizer = compare_organizations(served, guards_num, self.get_object(), settings.officer,
+                                          last_organization.Day14_2300.split("\n"), users, users_settings)
+        else:
+            organizer = compare_organizations(served, guards_num, self.get_object(), settings.officer,
+                                              "", users, users_settings)
+        organized_str = {}
+        for key in organizer.organized:
+            organized_str[key] = '\n'.join(organizer.organized[key])
+        ctx["organized"] = organized_str
+        ctx["notes"] = organizer.notes
+        ctx["guardsnumbers"] = guards_num
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        for x in range(14):
+            day = f'M{x}'
+            if x == 6 or x == 13:
+                guards_num[day] = int(self.request.POST.get(day, 2))
+            elif x == 5 or x == 12:
+                guards_num[day] = int(self.request.POST.get(day, 0))
+            else:
+                guards_num[day] = int(self.request.POST.get(day, 5))
+            day = f'A{x}'
+            if x == 5 or x == 6 or x == 12 or x == 13:
+                guards_num[day] = int(self.request.POST.get(day, 0))
+            else:
+                guards_num[day] = int(self.request.POST.get(day, 3))
+            day = f'N{x}'
+            if x == 5 or x == 6 or x == 12 or x == 13:
+                guards_num[day] = int(self.request.POST.get(day, 2))
+            else:
+                guards_num[day] = int(self.request.POST.get(day, 1))
+        settings = Settings.objects.all().first()
+        try:
+            last_organization = Organization.objects.all().order_by('-date')[get_num_organization(self.get_object()) - 1]
+        except:
+            last_organization = ""
+        users = User.objects.all()
+        users_settings = USettings.objects.all()
+        days = []
+        for x in range(self.get_object().num_weeks * 7):
+            days.append(self.get_object().date + datetime.timedelta(days=x))
+        served, notes = self.get_served()
+        if last_organization != "":
+            organizer = compare_organizations(served, guards_num, self.get_object(), settings.officer,
+                                              last_organization.Day14_2300.split("\n"), users, users_settings)
+        else:
+            organizer = compare_organizations(served, guards_num, self.get_object(), settings.officer,
+                                              "", users, users_settings)
+        if 'organize' in request.POST:
+            return HttpResponseRedirect(self.request.path_info)
+        elif 'excel' in request.POST:
+            return organizer.WriteToExcel(notes, days, self.request.user)
+
+    def get_served(self):
+        served = {}
+        for i in range(14):
+            served["M" + str(i)] = []
+            served["A" + str(i)] = []
+            served["N" + str(i)] = []
+        shifts_served = Shift.objects.all().filter(date=self.get_object().date)
+        notes = {"general": "", "week1": "", "week2": ""}
+        for shift in shifts_served:
+            user = User.objects.all().filter(username=shift.username).first()
+            user_settings = USettings.objects.all().filter(user=user).first()
+            name = user_settings.nickname
+            shifts = [shift.M1, shift.A1, shift.N1, shift.M2, shift.A2, shift.N2, shift.M3,
+                      shift.A3, shift.N3, shift.M4, shift.A4, shift.N4, shift.M5, shift.A5, shift.N5,
+                      shift.M6, shift.A6, shift.N6, shift.M7, shift.A7, shift.N7, shift.M8,
+                      shift.A8, shift.N8, shift.M9, shift.A9, shift.N9, shift.M10, shift.A10,
+                      shift.N10, shift.M11, shift.A11, shift.N11, shift.M12, shift.A12, shift.N12,
+                      shift.M13, shift.A13, shift.N13, shift.M14, shift.A14, shift.N14]
+            kind = "M"
+            count = 0
+            index = 0
+            for s in shifts:
+                if s:
+                    served[kind + str(index)].append(user_settings.nickname)
+                count = count + 1
+                if count == 0:
+                    kind = "M"
+                elif count == 1:
+                    kind = "A"
+                elif count == 2:
+                    kind = "N"
+                else:
+                    kind = "M"
+                    index = index + 1
+                    count = 0
+            notes1 = [shift.notes1, shift.notes2, shift.notes3,
+                      shift.notes4, shift.notes5, shift.notes6, shift.notes7]
+            index = 1
+            for n in notes1:
+                if n != "":
+                    notes["week1"] = notes["week1"] + name + ": " \
+                                     + number_to_day2(index) + " - " + n + "\n"
+                index += 1
+            notes2 = [shift.notes8, shift.notes9, shift.notes10,
+                      shift.notes11, shift.notes12, shift.notes13, shift.notes14]
+            index = 1
+            for n in notes2:
+                if n != "":
+                    notes["week2"] = notes["week2"] + name + ": " \
+                                     + number_to_day2(index) + " - " + n + "\n"
+                index += 1
+            if shift.notes != "":
+                notes["general"] = notes["general"] + name + ": " + shift.notes + "\n"
+        return served, notes
+
+    def test_func(self):
+        if self.request.user.is_staff:
+            return True
+        return False
+
+# Side functions
+
+# Day number to string name
+def number_to_day2(num):
+    day = "יום "
+    days = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"]
+    return day + days[num - 1]
+
+# Get context for select inputs for arming views
+def put_arming_context(ctx):
+    num_mags_list = [1, 2, 3]
+    hand_cuffs_list = [6, 1, 2, 3, 4, 5, 7, 8]
+    mag_case_list = [6, 1, 2, 3, 4, 5, 7]
+    gun_case_list = [6, 1, 2, 3, 4, 5, 7, 8]
+    ctx["num_mags_list"] = num_mags_list
+    ctx["hand_cuffs_list"] = hand_cuffs_list
+    ctx["mag_case_list"] = mag_case_list
+    ctx["gun_case_list"] = gun_case_list
+    ctx["guns"] = Gun.objects.all()
+    return ctx
+
+# return boolean values for checkboxes
+def checkbox(value):
+    if value == "on":
+        return True
+    return False
+
+# Check if the user has already submitted shifts
+def already_submitted(user):
+    last_date = Organization.objects.order_by('-date')[0].date
+    shifts = Shift.objects.filter(date=last_date)
+    if len(shifts) == 0:
+        return False
+    else:
+        if len(shifts.filter(username=user)) == 0:
+            return False
+    return True
+
+# Get organization data and return as dictionary
+def get_input(organization_last):
+    weeks_obj = Week.objects.all().filter(date=organization_last.date)
+    weeks = []
+    for w in weeks_obj:
+        weeks.append(0)
+    for week_obj in weeks_obj:
+        weeks[week_obj.num_week] = week_obj
+    organization_last_input = {}
+    fields = SHIFT_KEYS + ["_notes"]
+    for j in range(organization_last.num_weeks):
+        for i in range(1, 8):
+            day1 = f'Day{i}'
+            day2 = f'day{i + (j * 7)}'
+            for f in fields:
+                organization_last_input[day2 + f] = getattr(weeks[j], day1 + f)
+    return organization_last_input
+
+# insert shift data to form or object
+def insert_shift_data(form, request, j):
+    for i in range(1, 8):
+        setattr(form, f"M{i}", request.POST.get(f"M{i}_{j}", False))
+        setattr(form, f"A{i}", request.POST.get(f"A{i}_{j}", False))
+        setattr(form, f"N{i}", request.POST.get(f"N{i}_{j}", False))
+        setattr(form, f"P{i}", request.POST.get(f"P{i}_{j}", False))
+        setattr(form, f"R{i}", request.POST.get(f"R{i}_{j}", False))
+        setattr(form, f"notes{i}", request.POST.get(f"notes{i}_{j}", False))
+    return form
+
 # Extract data from excel and return it as a list of variables
 def extract_data(request, organization):
     myfile = request.FILES['myfile']
@@ -2076,20 +2141,6 @@ def is_more_than_once(list, name):
         return True
     return False
 
-# View to show users all the organizations paginated by 1
-class OrganizationListView(LoginRequiredMixin, ListView):
-    model = Organization
-    template_name = "Schedule/organizations_list.html"
-    context_object_name = "organizations"
-    ordering = ["-date"]
-    paginate_by = 1
-
-    def get_context_data(self, **kwargs):
-        ctx = super(OrganizationListView, self).get_context_data(**kwargs)
-        weeks = Week.objects.all()
-        ctx["weeks"] = weeks
-        return ctx
-
 
 # Write shifts served data to excel
 def WriteToExcel(served, notes, notes_general, dates, user):
@@ -2326,33 +2377,6 @@ def WriteToExcel(served, notes, notes_general, dates, user):
     file_name = "serve" + dates[0].strftime("%d.%m")
     return FileResponse(buffer, as_attachment=True, filename=f'{file_name}.xlsx')
 
-
-# Day number to string name
-def number_to_day2(num):
-    day = "יום "
-    days = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"]
-    return day + days[num - 1]
-
-
-# initialize default shift numbers for suggestion organization
-guards_num = {}
-for x in range(14):
-    guards_num[f"M{x}"] = 5
-    guards_num[f"A{x}"] = 3
-    guards_num[f"N{x}"] = 1
-guards_num["A13"] = 0
-guards_num["A12"] = 0
-guards_num["M12"] = 0
-guards_num["A6"] = 0
-guards_num["M5"] = 0
-guards_num["A5"] = 0
-guards_num["N13"] = 2
-guards_num["N12"] = 2
-guards_num["M13"] = 2
-guards_num["N6"] = 2
-guards_num["N5"] = 2
-guards_num["M6"] = 2
-
 # Compare different organization suggestions
 def compare_organizations(served, guards_num, organization, officer, sat_night, users, users_settings):
     organizer = Organizer(served, guards_num, organization, officer, sat_night, users, users_settings)
@@ -2367,142 +2391,8 @@ def compare_organizations(served, guards_num, organization, officer, sat_night, 
     return organizer
 
 
-# View to show suggestion organization calculated
-class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
-    model = Organization
-    template_name = "Schedule/Suggestion.html"
 
-    def get_context_data(self, **kwargs):
-        ctx = super(OrganizationSuggestionView, self).get_context_data(**kwargs)
-        settings = Settings.objects.all().first()
-        try:
-            last_organization = Organization.objects.all().order_by('-date')[get_num_organization(self.get_object()) - 1]
-        except:
-            last_organization = ""
-        users = User.objects.all()
-        users_settings = USettings.objects.all()
-        days = []
-        for x in range(self.get_object().num_weeks * 7):
-            days.append(self.get_object().date + datetime.timedelta(days=x))
-        ctx["days"] = days
-        served, notes = self.get_served()
-        if last_organization != "":
-            organizer = compare_organizations(served, guards_num, self.get_object(), settings.officer,
-                                          last_organization.Day14_2300.split("\n"), users, users_settings)
-        else:
-            organizer = compare_organizations(served, guards_num, self.get_object(), settings.officer,
-                                              "", users, users_settings)
-        organized_str = {}
-        for key in organizer.organized:
-            organized_str[key] = '\n'.join(organizer.organized[key])
-        ctx["organized"] = organized_str
-        ctx["notes"] = organizer.notes
-        ctx["guardsnumbers"] = guards_num
-        return ctx
-
-    def post(self, request, *args, **kwargs):
-        for x in range(14):
-            day = f'M{x}'
-            if x == 6 or x == 13:
-                guards_num[day] = int(self.request.POST.get(day, 2))
-            elif x == 5 or x == 12:
-                guards_num[day] = int(self.request.POST.get(day, 0))
-            else:
-                guards_num[day] = int(self.request.POST.get(day, 5))
-            day = f'A{x}'
-            if x == 5 or x == 6 or x == 12 or x == 13:
-                guards_num[day] = int(self.request.POST.get(day, 0))
-            else:
-                guards_num[day] = int(self.request.POST.get(day, 3))
-            day = f'N{x}'
-            if x == 5 or x == 6 or x == 12 or x == 13:
-                guards_num[day] = int(self.request.POST.get(day, 2))
-            else:
-                guards_num[day] = int(self.request.POST.get(day, 1))
-        settings = Settings.objects.all().first()
-        try:
-            last_organization = Organization.objects.all().order_by('-date')[get_num_organization(self.get_object()) - 1]
-        except:
-            last_organization = ""
-        users = User.objects.all()
-        users_settings = USettings.objects.all()
-        days = []
-        for x in range(self.get_object().num_weeks * 7):
-            days.append(self.get_object().date + datetime.timedelta(days=x))
-        served, notes = self.get_served()
-        if last_organization != "":
-            organizer = compare_organizations(served, guards_num, self.get_object(), settings.officer,
-                                              last_organization.Day14_2300.split("\n"), users, users_settings)
-        else:
-            organizer = compare_organizations(served, guards_num, self.get_object(), settings.officer,
-                                              "", users, users_settings)
-        if 'organize' in request.POST:
-            return HttpResponseRedirect(self.request.path_info)
-        elif 'excel' in request.POST:
-            return organizer.WriteToExcel(notes, days, self.request.user)
-
-    def get_served(self):
-        served = {}
-        for i in range(14):
-            served["M" + str(i)] = []
-            served["A" + str(i)] = []
-            served["N" + str(i)] = []
-        shifts_served = Shift.objects.all().filter(date=self.get_object().date)
-        notes = {"general": "", "week1": "", "week2": ""}
-        for shift in shifts_served:
-            user = User.objects.all().filter(username=shift.username).first()
-            user_settings = USettings.objects.all().filter(user=user).first()
-            name = user_settings.nickname
-            shifts = [shift.M1, shift.A1, shift.N1, shift.M2, shift.A2, shift.N2, shift.M3,
-                      shift.A3, shift.N3, shift.M4, shift.A4, shift.N4, shift.M5, shift.A5, shift.N5,
-                      shift.M6, shift.A6, shift.N6, shift.M7, shift.A7, shift.N7, shift.M8,
-                      shift.A8, shift.N8, shift.M9, shift.A9, shift.N9, shift.M10, shift.A10,
-                      shift.N10, shift.M11, shift.A11, shift.N11, shift.M12, shift.A12, shift.N12,
-                      shift.M13, shift.A13, shift.N13, shift.M14, shift.A14, shift.N14]
-            kind = "M"
-            count = 0
-            index = 0
-            for s in shifts:
-                if s:
-                    served[kind + str(index)].append(user_settings.nickname)
-                count = count + 1
-                if count == 0:
-                    kind = "M"
-                elif count == 1:
-                    kind = "A"
-                elif count == 2:
-                    kind = "N"
-                else:
-                    kind = "M"
-                    index = index + 1
-                    count = 0
-            notes1 = [shift.notes1, shift.notes2, shift.notes3,
-                      shift.notes4, shift.notes5, shift.notes6, shift.notes7]
-            index = 1
-            for n in notes1:
-                if n != "":
-                    notes["week1"] = notes["week1"] + name + ": " \
-                                     + number_to_day2(index) + " - " + n + "\n"
-                index += 1
-            notes2 = [shift.notes8, shift.notes9, shift.notes10,
-                      shift.notes11, shift.notes12, shift.notes13, shift.notes14]
-            index = 1
-            for n in notes2:
-                if n != "":
-                    notes["week2"] = notes["week2"] + name + ": " \
-                                     + number_to_day2(index) + " - " + n + "\n"
-                index += 1
-            if shift.notes != "":
-                notes["general"] = notes["general"] + name + ": " + shift.notes + "\n"
-        return served, notes
-
-    def test_func(self):
-        if self.request.user.is_staff:
-            return True
-        return False
-
-
-# filters
+# template function filters
 
 @register.filter
 def validation_log_check(log, shift):
