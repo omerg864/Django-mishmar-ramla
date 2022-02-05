@@ -162,6 +162,10 @@ def home(request):
 def error_404_view(request, exception):
     return render(request, 'Schedule/404.html')
 
+# Error 500 custom view
+def error_500_view(request, exception):
+    return render(request, 'Schedule/500.html')
+
 # Arming log chnage request to authorize change view
 class ArmingRequestDetailView(UserPassesTestMixin,DetailView):
     model = ArmingRequest
