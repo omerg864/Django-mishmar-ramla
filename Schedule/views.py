@@ -690,7 +690,6 @@ class ArmingMonthView(LoginRequiredMixin, MonthArchiveView):
         pass
 
 
-
 # View to serv shifts to create or edit ShiftWeek and Shift
 @login_required
 def shift_view(request):
@@ -925,6 +924,7 @@ class OrganizationDetailView(LoginRequiredMixin, DetailView, UserPassesTestMixin
             days.append(self.get_object().date + datetime.timedelta(days=x))
         ctx["days"] = days
         return ctx
+
 
 # View to create an organization with date and num weeks
 class OrganizationCreateView(LoginRequiredMixin, CreateView, UserPassesTestMixin):
@@ -1197,109 +1197,9 @@ class ServedSumShiftDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailVi
     model = Organization
     template_name = "Schedule/Served-sum.html"
 
-    def get_data(self):
-        ctx = {}
-        served = {}
-        counters = {}
-        for i in range(1, self.get_object().num_weeks * 7 + 1):
-            served["M" + str(i)] = ""
-            served["A" + str(i)] = ""
-            served["N" + str(i)] = ""
-        shift_date = self.get_object().date
-        main_shifts_served = Shift.objects.all().filter(date=shift_date)
-        shifts_served = ShiftWeek.objects.all().filter(date=shift_date)
-        weeks_notes = []
-        for i in range(self.get_object().num_weeks):
-            weeks_notes.append("")
-        notes_general = ""
-        user_notes_added = []
-        users = {}
-        for shift in shifts_served:
-            username = shift.username
-            user = User.objects.all().filter(username=username).first()
-            user_settings = USettings.objects.all().filter(user=user).first()
-            main_shift = main_shifts_served.filter(username=username).first()
-            users[user_settings.nickname] = main_shift.id
-            name = user_settings.nickname
-            name = name.replace("\n", "")
-            name = name.replace("\r", "")
-            kind = "M"
-            morning = False
-            count = 0
-            index = 1
-            counters[f"M-{name}-{shift.num_week}"] = 0
-            counters[f"A-{name}-{shift.num_week}"] = 0
-            shifts = [shift.M1, shift.P1, shift.A1, shift.N1, shift.M2, shift.P2, shift.A2, shift.N2, shift.M3,
-                      shift.P3,
-                      shift.A3, shift.N3, shift.M4, shift.P4, shift.A4, shift.N4, shift.M5, shift.P5, shift.A5,
-                      shift.N5,
-                      shift.M6, shift.P6, shift.A6, shift.N6, shift.M7, shift.P7, shift.A7, shift.N7]
-            for s in shifts:
-                if s:
-                    if count == 0:
-                        morning = True
-                        served[kind + str(index + (shift.num_week * 7))] += name
-                        if index < 6:
-                            counters[f"M-{name}-{shift.num_week}"] += 1
-                    else:
-                        if count == 1:
-                            if morning:
-                                served[kind + str(index + (shift.num_week * 7))] += "\n"
-                            morning = False
-                        else:
-                            if count == 2:
-                                kind = "A"
-                                if index < 6:
-                                    counters[f"A-{name}-{shift.num_week}"] += 1
-                            elif count == 3:
-                                kind = "N"
-                            served[kind + str(index + (shift.num_week * 7))] += name + "\n"
-                else:
-                    if count == 1 and morning:
-                        morning = False
-                        served[kind + str(index + (shift.num_week * 7))] += "\n" + "(לא משיכה)" + "\n"
-                if count == 3:
-                    count = 0
-                    index += 1
-                    kind = "M"
-                else:
-                    count += 1
-            notes1 = [shift.notes1, shift.notes2, shift.notes3,
-                      shift.notes4, shift.notes5, shift.notes6, shift.notes7]
-            index = 1
-            for n in notes1:
-                if n != "":
-                    weeks_notes[shift.num_week] += name + ": " \
-                                     + number_to_day2(index) + " - " + n + "\n"
-                index += 1
-            if main_shift.notes != "" and name not in user_notes_added:
-                notes_general += name + ": " + main_shift.notes + "\n"
-                user_notes_added.append(name)
-        not_qual_users = {}
-        for key in counters:
-            shift, name, week = key.split("-")
-            if shift == 'M':
-                if counters[key] < 2:
-                    not_qual_users[name] = users[name]
-            else:
-                if counters[key] < 1:
-                    not_qual_users[name] = users[name]
-        days = []
-        for x in range(self.get_object().num_weeks * 7):
-            days.append(self.get_object().date + datetime.timedelta(days=x))
-        ctx["days"] = days
-        ctx["served"] = served
-        ctx["notes"] = weeks_notes
-        ctx["notes_general"] = notes_general
-        ctx["num_served"] = len(main_shifts_served)
-        ctx["users"] = users
-        ctx["not_qual_users"] = not_qual_users
-        ctx["not_qual_num"] = len(not_qual_users.keys())
-        return ctx
-
     def get_context_data(self, **kwargs):
         ctx = super(ServedSumShiftDetailView, self).get_context_data(**kwargs)
-        context = self.get_data()
+        context = get_data(self.get_object())
         for c in context:
             ctx[c] = context[c]
         return ctx
@@ -1311,8 +1211,9 @@ class ServedSumShiftDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailVi
 
     def post(self, request, *args, **kwargs):
         if request.method == "POST":
-            ctx = self.get_data()
-            return WriteToExcel(ctx["served"], ctx["notes"], ctx["notes_general"],ctx["days"], self.request.user)
+            if "download" in request.POST:
+                ctx = self.get_data()
+                return WriteToExcel(ctx["served"], ctx["notes"], ctx["notes_general"],ctx["days"], self.request.user)
 
 
 # View to update organizaytion by staff memebers
@@ -1570,7 +1471,111 @@ class OrganizationSuggestionView(LoginRequiredMixin, UserPassesTestMixin, Detail
             return True
         return False
 
+
 # Side functions
+
+# get shift served data
+
+def get_data(object):
+    ctx = {}
+    served = {}
+    counters = {}
+    for i in range(1, object.num_weeks * 7 + 1):
+        served["M" + str(i)] = ""
+        served["A" + str(i)] = ""
+        served["N" + str(i)] = ""
+    shift_date = object.date
+    main_shifts_served = Shift.objects.all().filter(date=shift_date)
+    shifts_served = ShiftWeek.objects.all().filter(date=shift_date)
+    weeks_notes = []
+    for i in range(object.num_weeks):
+        weeks_notes.append("")
+    notes_general = ""
+    user_notes_added = []
+    users = {}
+    for shift in shifts_served:
+        username = shift.username
+        user = User.objects.all().filter(username=username).first()
+        user_settings = USettings.objects.all().filter(user=user).first()
+        main_shift = main_shifts_served.filter(username=username).first()
+        users[user_settings.nickname] = main_shift.id
+        name = user_settings.nickname
+        name = name.replace("\n", "")
+        name = name.replace("\r", "")
+        kind = "M"
+        morning = False
+        count = 0
+        index = 1
+        counters[f"M-{name}-{shift.num_week}"] = 0
+        counters[f"A-{name}-{shift.num_week}"] = 0
+        shifts = [shift.M1, shift.P1, shift.A1, shift.N1, shift.M2, shift.P2, shift.A2, shift.N2, shift.M3,
+                    shift.P3,
+                    shift.A3, shift.N3, shift.M4, shift.P4, shift.A4, shift.N4, shift.M5, shift.P5, shift.A5,
+                    shift.N5,
+                    shift.M6, shift.P6, shift.A6, shift.N6, shift.M7, shift.P7, shift.A7, shift.N7]
+        for s in shifts:
+            if s:
+                if count == 0:
+                    morning = True
+                    served[kind + str(index + (shift.num_week * 7))] += name
+                    if index < 6:
+                        counters[f"M-{name}-{shift.num_week}"] += 1
+                else:
+                    if count == 1:
+                        if morning:
+                            served[kind + str(index + (shift.num_week * 7))] += "\n"
+                        morning = False
+                    else:
+                        if count == 2:
+                            kind = "A"
+                            if index < 6:
+                                counters[f"A-{name}-{shift.num_week}"] += 1
+                        elif count == 3:
+                            kind = "N"
+                        served[kind + str(index + (shift.num_week * 7))] += name + "\n"
+            else:
+                if count == 1 and morning:
+                    morning = False
+                    served[kind + str(index + (shift.num_week * 7))] += "\n" + "(לא משיכה)" + "\n"
+            if count == 3:
+                count = 0
+                index += 1
+                kind = "M"
+            else:
+                count += 1
+        notes1 = [shift.notes1, shift.notes2, shift.notes3,
+                    shift.notes4, shift.notes5, shift.notes6, shift.notes7]
+        index = 1
+        for n in notes1:
+            if n != "":
+                weeks_notes[shift.num_week] += name + ": " \
+                                    + number_to_day2(index) + " - " + n + "\n"
+            index += 1
+        if main_shift.notes != "" and name not in user_notes_added:
+            notes_general += name + ": " + main_shift.notes + "\n"
+            user_notes_added.append(name)
+    not_qual_users = {}
+    for key in counters:
+        shift, name, week = key.split("-")
+        if shift == 'M':
+            if counters[key] < 2:
+                not_qual_users[name] = users[name]
+        else:
+            if counters[key] < 1:
+                not_qual_users[name] = users[name]
+    days = []
+    for x in range(object.num_weeks * 7):
+        days.append(object.date + datetime.timedelta(days=x))
+    ctx["days"] = days
+    ctx["served"] = served
+    ctx["notes"] = weeks_notes
+    ctx["notes_general"] = notes_general
+    ctx["num_served"] = len(main_shifts_served)
+    ctx["users"] = users
+    ctx["not_qual_users"] = not_qual_users
+    ctx["not_qual_num"] = len(not_qual_users.keys())
+    return ctx
+
 
 # Day number to string name
 def number_to_day2(num):

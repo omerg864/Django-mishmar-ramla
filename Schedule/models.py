@@ -220,10 +220,6 @@ class ShiftWeek(models.Model):
         verbose_name = "הגשה שבועית"
         verbose_name_plural = "הגשות שבועיות"
 
-class ShiftOrganizer(models.Model):
-    Organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
-    json = JSONField()
-
 
 
 class Event(models.Model):

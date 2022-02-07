@@ -29,5 +29,4 @@ urlpatterns = [
     path('arminglog/changerequest/new', ArmingRequestView.as_view(), name="arming-changerequest"),
     path('arminglog/request/<int:pk>/', ArmingRequestDetailView.as_view(), name="arming-request"),
     path('arminglog/requests/', ArmingRequestListView.as_view(), name="arming-requests-list"),
-
 ]
