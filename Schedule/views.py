@@ -1212,7 +1212,7 @@ class ServedSumShiftDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailVi
     def post(self, request, *args, **kwargs):
         if request.method == "POST":
             if "download" in request.POST:
-                ctx = self.get_data()
+                ctx = get_data(self.get_object())
                 return WriteToExcel(ctx["served"], ctx["notes"], ctx["notes_general"],ctx["days"], self.request.user)
 
 
