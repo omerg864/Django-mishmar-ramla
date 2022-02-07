@@ -6,6 +6,9 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.core.mail import send_mail
 import datetime
+from jsonfield import JSONField
+import collections
+
 
 
 class Post(models.Model):
@@ -216,6 +219,10 @@ class ShiftWeek(models.Model):
     class Meta:
         verbose_name = "הגשה שבועית"
         verbose_name_plural = "הגשות שבועיות"
+
+class ShiftOrganizer(models.Model):
+    Organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    json = JSONField()
 
 
 

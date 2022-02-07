@@ -96,7 +96,8 @@ def settings_view(request):
     context = {
         "settings_form": settings_form,
         "checked": checked,
-        "base": base_strings
+        "base": base_strings,
+        "settings": settings,
     }
     return render(request, "Schedule/settings.html", context)
 
@@ -2397,6 +2398,11 @@ def compare_organizations(served, guards_num, organization, officer, sat_night, 
 
 
 # template function filters
+
+@register.filter
+def get_city(string):
+    settings = Settings.objects.all().first()
+    return settings.city
 
 @register.filter
 def validation_log_check(log, shift):
