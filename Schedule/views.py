@@ -914,11 +914,8 @@ class OrganizationDetailView(LoginRequiredMixin, DetailView, UserPassesTestMixin
     
     def get_context_data(self, **kwargs):
         ctx = super(OrganizationDetailView, self).get_context_data(**kwargs)
-        weeks_obj = Week.objects.all().filter(date=self.get_object().date)
-        weeks = {}
-        for week_obj in weeks_obj:
-            weeks[week_obj.num_week] = week_obj
-        ctx["weeks"] = weeks
+        weeks_obj = Week.objects.all().filter(date=self.get_object().date).order_by('num_week')
+        ctx["weeks"] = weeks_obj
         days = []
         for x in range(self.get_object().num_weeks * 7):
             days.append(self.get_object().date + datetime.timedelta(days=x))

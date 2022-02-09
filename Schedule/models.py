@@ -6,7 +6,6 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.core.mail import send_mail
 import datetime
-from jsonfield import JSONField
 import collections
 
 
@@ -35,7 +34,6 @@ class Settings3(models.Model):
 
     def __str__(self):
         return "הגדרות"
-
 
 class Week(models.Model):
     date = models.DateField(default=timezone.now())
